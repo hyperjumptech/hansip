@@ -13,6 +13,7 @@ import (
 	"github.com/hyperjumptech/hansip/internal/middlewares"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	"github.com/hyperjumptech/jiffy"
+	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
@@ -166,13 +167,30 @@ func Start() {
 	address := fmt.Sprintf("%s:%s", config.Get("server.host"), config.Get("server.port"))
 	log.Info("Server binding to ", address)
 
+	var handler http.Handler
+
+	if config.GetBoolean("server.http.cors.enable") {
+		options := cors.Options{
+			AllowedOrigins:     strings.Split(config.Get("server.http.cors.allow.origins"), ","),
+			AllowedHeaders:     strings.Split(config.Get("server.http.cors.allow.headers"), ","),
+			AllowCredentials:   config.GetBoolean("server.http.cors.allow.credential"),
+			AllowedMethods:     strings.Split(config.Get("server.http.cors.allow.method"), ","),
+			ExposedHeaders:     strings.Split(config.Get("server.http.cors.exposed.headers"), ","),
+			OptionsPassthrough: config.GetBoolean("server.http.cors.optionpassthrough"),
+		}
+		c := cors.New(options)
+		handler = c.Handler(Router)
+	} else {
+		handler = Router
+	}
+
 	srv := &http.Server{
 		Addr: address,
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: WriteTimeout,
 		ReadTimeout:  ReadTimeout,
 		IdleTimeout:  IdleTimeout,
-		Handler:      Router, // Pass our instance of gorilla/mux in.
+		Handler:      handler, // Pass our instance of gorilla/mux in.
 	}
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {

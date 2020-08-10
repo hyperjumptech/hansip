@@ -25,6 +25,13 @@ func initialize() {
 	defCfg["server.timeout.read"] = "15 seconds"
 	defCfg["server.timeout.idle"] = "60 seconds"
 	defCfg["server.timeout.graceshut"] = "15 seconds"
+	defCfg["server.http.cors.enable"] = "true"
+	defCfg["server.http.cors.allow.origins"] = "*"
+	defCfg["server.http.cors.allow.credential"] = "true"
+	defCfg["server.http.cors.allow.method"] = "GET,PUT,DELETE,POST"
+	defCfg["server.http.cors.allow.headers"] = ""
+	defCfg["server.http.cors.exposed.headers"] = ""
+	defCfg["server.http.cors.optionpassthrough"] = "false"
 
 	defCfg["setup.admin.enable"] = "false"
 	defCfg["setup.admin.email"] = "admin@hansip"
