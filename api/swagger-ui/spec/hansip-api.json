@@ -1,0 +1,2688 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Access Authorization and Authentication (AAA) Server specification.",
+    "version": "1.0.0",
+    "title": "HANSIP - AAA API spec.",
+    "termsOfService": "http://swagger.io/terms/",
+    "contact": {
+      "email": "ferdinand@hyperjump.tech"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "basePath": "/api/v1/",
+  "tags": [
+    {
+      "name": "auth",
+      "description": "AAA - Access Authentication and Authorization"
+    },
+    {
+      "name": "recovery",
+      "description": "Recovery process, lost password or lost 2FA secret"
+    },
+    {
+      "name": "management-user",
+      "description": "User management, create, update, delete User, User's Group membership and User's Role"
+    },
+    {
+      "name": "management-group",
+      "description": "Group management, create, update, delete Group. Group's Member and Group's Role"
+    },
+    {
+      "name": "management-role",
+      "description": "Role management, create, update, delete Role. Role's Users and Role's Group"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/auth/authenticate": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login",
+        "description": "Authenticating a user using their credential to produce access and refresh token",
+        "operationId": "authLogin",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "credential",
+            "description": "ceredential",
+            "schema": {
+              "$ref": "#/definitions/AuthRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/AuthResponse"
+            }
+          },
+          "202": {
+            "description": "2FA needed",
+            "schema": {
+              "$ref": "#/definitions/2FANeededResponse"
+            }
+          },
+          "401": {
+            "description": "Invalid login"
+          },
+          "503": {
+            "description": "Backend server response invalid"
+          }
+        }
+      }
+    },
+    "/auth/2fa": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "2 Factor Authentication",
+        "description": "To send 2FA OTP",
+        "operationId": "2fa",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "2FA",
+            "description": "2FA submission",
+            "schema": {
+              "$ref": "#/definitions/2FARequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/AuthResponse"
+            }
+          },
+          "401": {
+            "description": "2FA OTP not valid"
+          },
+          "404": {
+            "description": "2FA Token not found"
+          },
+          "503": {
+            "description": "Backend server response invalid"
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Refreshing token",
+        "description": "To refresh token, you must get authorized first and provide a refresh token in the authorization header.",
+        "operationId": "authRefresh",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Access token refreshed",
+            "schema": {
+              "$ref": "#/definitions/RefreshResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized. Missing authorization"
+          },
+          "403": {
+            "description": "Invalid token or not refresh token"
+          },
+          "500": {
+            "description": "Error while processing response"
+          }
+        }
+      }
+    },
+    "/recovery/recoverPassphrase": {
+      "post": {
+        "tags": [
+          "recovery"
+        ],
+        "summary": "Request for lost passphrase",
+        "description": "Call this API for requesting passphrase reset",
+        "operationId": "requestPassphraseReset",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "credential",
+            "description": "Request contains email",
+            "schema": {
+              "$ref": "#/definitions/RequestPassphraseRecover"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request accepted. Please check password",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          }
+        }
+      }
+    },
+    "/recovery/resetPassphrase": {
+      "post": {
+        "tags": [
+          "recovery"
+        ],
+        "summary": "Send new reset passphrase",
+        "description": "Passphrase reset data after passphrase reset token is received.",
+        "operationId": "resetPassphraseWithToken",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "credential",
+            "description": "Body contains reset token and new password",
+            "schema": {
+              "$ref": "#/definitions/PassphraseResetRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Passphrase success reset",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "400": {
+            "description": "Passphrase rule not met"
+          },
+          "404": {
+            "description": "Passphrase reset token not found"
+          }
+        }
+      }
+    },
+    "/management/users": {
+      "get": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "List all users in the database",
+        "description": "Get user list. Paginated.",
+        "operationId": "ListAllUser",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_no",
+            "type": "number",
+            "description": "Page number to fetch. 1st page is 1"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_size",
+            "type": "number",
+            "description": "Number of items per page"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "order_by",
+            "type": "string",
+            "description": "Field name for sorting"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "sort",
+            "type": "string",
+            "description": "Sort ordering",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all user paginated",
+            "schema": {
+              "$ref": "#/definitions/ListAllUserResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      }
+    },
+    "/management/user": {
+      "post": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Create new User",
+        "description": "Create new user in the database. The user's email is validated for duplication",
+        "operationId": "CreateNewUser",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "New user detail",
+            "description": "Create new user information",
+            "schema": {
+              "$ref": "#/definitions/CreateUserRequest"
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success populating user",
+            "schema": {
+              "$ref": "#/definitions/CreateUserResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      }
+    },
+    "/management/user/{userRecId}/passwd": {
+      "post": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Change passphrase",
+        "description": "Change user's passphrase, this will validate the token to match the request",
+        "operationId": "ChangePassphrase",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "required": true,
+            "name": "New user detail",
+            "description": "Create new user information",
+            "schema": {
+              "$ref": "#/definitions/ChangeUserPassword"
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success populating user",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      }
+    },
+    "/management/user/{userRecId}/2FAQR": {
+      "get": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Fetch the 2FA QR Code",
+        "description": "Returning a QR code to be imported into authenticator device",
+        "operationId": "Show2FAQR",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "image/png"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "file",
+              "format": "binary"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      }
+    },
+    "/management/user/activate": {
+      "post": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Activate a user",
+        "description": "Validate user's activation code and if its correct, enable it",
+        "operationId": "UserActivation",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "credential",
+            "description": "ceredential",
+            "schema": {
+              "$ref": "#/definitions/ActivationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User activation status",
+            "schema": {
+              "$ref": "#/definitions/CreateUserResponse"
+            }
+          },
+          "404": {
+            "description": "Activation code or user not found"
+          }
+        }
+      }
+    },
+    "/management/user/{userRecId}": {
+      "get": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Get a speciffic user data identified by it's record id",
+        "description": "Get user detail.",
+        "operationId": "GetUser",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success fetching user detail",
+            "schema": {
+              "$ref": "#/definitions/UserDetailResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Update speciffic user data",
+        "description": "Update user detail.",
+        "operationId": "UpdateUser",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "required": true,
+            "name": "New user detail",
+            "description": "Create new user information",
+            "schema": {
+              "$ref": "#/definitions/UpdateUserRequest"
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success updating user detail",
+            "schema": {
+              "$ref": "#/definitions/UserDetailResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Delete a speciffic user by it's record id",
+        "description": "Delete a speciffic user. The relevant user-group and user-role data will also be removed.",
+        "operationId": "DeleteUser",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly remove",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/user/{userRecId}/roles": {
+      "get": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "List roles directly owned by a speciffic user.",
+        "description": "List all roles directly owned by a speciffic user. Paginated",
+        "operationId": "GetUserRole",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_no",
+            "type": "number",
+            "description": "Page number to fetch. 1st page is 1"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_size",
+            "type": "number",
+            "description": "Number of items per page"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "order_by",
+            "type": "string",
+            "description": "Field name for sorting"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "sort",
+            "type": "string",
+            "description": "Sort ordering",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success populating user roles",
+            "schema": {
+              "$ref": "#/definitions/ListRoleResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/user/{userRecId}/all-roles": {
+      "get": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "List roles directly or indirectly (by user's group role) owned by user",
+        "description": "List all roles direct or indirectly owned by user. Paginated",
+        "operationId": "GetAllUserRole",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_no",
+            "type": "number",
+            "description": "Page number to fetch. 1st page is 1"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_size",
+            "type": "number",
+            "description": "Number of items per page"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "order_by",
+            "type": "string",
+            "description": "Field name for sorting"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "sort",
+            "type": "string",
+            "description": "Sort ordering",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Populate successful",
+            "schema": {
+              "$ref": "#/definitions/ListRoleResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/user/{userRecId}/role/{roleRecId}": {
+      "put": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Create new user-role",
+        "description": "Create new user-role. If the role specified is not exist, it will be created.",
+        "operationId": "CreateUserRole",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success adding role onto user",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Delete a speciffic user-role",
+        "description": "Remove a user-role. The user and role it self would be left untouched",
+        "operationId": "DeleteUserRole",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly remove",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/user/{userRecId}/groups": {
+      "get": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "List all groups of a user",
+        "description": "List all groups that this user is belong to. Paginated",
+        "operationId": "GetUserGroup",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_no",
+            "type": "number",
+            "description": "Page number to fetch. 1st page is 1"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_size",
+            "type": "number",
+            "description": "Number of items per page"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "order_by",
+            "type": "string",
+            "description": "Field name for sorting"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "sort",
+            "type": "string",
+            "description": "Sort ordering",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Populate successful",
+            "schema": {
+              "$ref": "#/definitions/ListGroupResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/user/{userRecId}/group/{groupRecId}": {
+      "put": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Add a user to be member of a group",
+        "description": "Create new releation between user and group.",
+        "operationId": "CreateUserGroup",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success add user as member of group",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Remove a user from a group's membership",
+        "description": "Remove user's membership. The user and group is left untouched",
+        "operationId": "DeleteUserGroup",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success deleting user",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/groups": {
+      "get": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "List all existing groups",
+        "description": "List all existing groups. Paginated",
+        "operationId": "ListAllGroup",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_no",
+            "type": "number",
+            "description": "Page number to fetch. 1st page is 1"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_size",
+            "type": "number",
+            "description": "Number of items per page"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "order_by",
+            "type": "string",
+            "description": "Field name for sorting"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "sort",
+            "type": "string",
+            "description": "Sort ordering",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly populating user group",
+            "schema": {
+              "$ref": "#/definitions/ListGroupResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      }
+    },
+    "/management/group": {
+      "post": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "Create a new Group",
+        "description": "Creates new group, the group name is used for dulication check",
+        "operationId": "CreateNewGroup",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "credential",
+            "description": "ceredential",
+            "schema": {
+              "$ref": "#/definitions/CreateGroupRequest"
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success creating new Group",
+            "schema": {
+              "$ref": "#/definitions/GroupDetailResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      }
+    },
+    "/management/group/{groupRecId}": {
+      "get": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "Get the speciffic group detail",
+        "description": "Get a speciffic group information.",
+        "operationId": "GetGroup",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly fetch group data",
+            "schema": {
+              "$ref": "#/definitions/GroupDetailResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "Delete a speciffic group",
+        "description": "Delete one speciffic group. All users membership and role relation will be removed. The user and role it self left untouched",
+        "operationId": "DeleteGroup",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly remove",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/group/{groupRecId}/users": {
+      "get": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "List all user member to this group",
+        "description": "List all user member to this group, paginated.",
+        "operationId": "GetGroupUsers",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_no",
+            "type": "number",
+            "description": "Page number to fetch. 1st page is 1"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_size",
+            "type": "number",
+            "description": "Number of items per page"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "order_by",
+            "type": "string",
+            "description": "Field name for sorting"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "sort",
+            "type": "string",
+            "description": "Sort ordering",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly populating group members",
+            "schema": {
+              "$ref": "#/definitions/ListAllUserResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/group/{groupRecId}/user/{userRecId}": {
+      "put": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "Add user as member of a group",
+        "description": "Add user as member of a group. You can not add same user twice into same group",
+        "operationId": "CreateGroupUser",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly added",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "Remove user from a group's membership",
+        "description": "Remove user's membership. User and group will be left untouched",
+        "operationId": "DeleteGroupUser",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly remove",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/group/{groupRecId}/roles": {
+      "get": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "List all roles assigned to this group",
+        "description": "List all roles belong to this group, paginated.",
+        "operationId": "GetGroupRoles",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_no",
+            "type": "number",
+            "description": "Page number to fetch. 1st page is 1"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_size",
+            "type": "number",
+            "description": "Number of items per page"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "order_by",
+            "type": "string",
+            "description": "Field name for sorting"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "sort",
+            "type": "string",
+            "description": "Sort ordering",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly populating group roles",
+            "schema": {
+              "$ref": "#/definitions/ListRoleResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/group/{groupRecId}/role/{roleRecId}": {
+      "put": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "Assign a role into a group",
+        "description": "Create role group relation.",
+        "operationId": "CreateGroupRole",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly assigned",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "Remove role assignment to a group",
+        "description": "Remove group-role relation. The group and role it self left untouched",
+        "operationId": "DeleteGroupRole",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly remove",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/roles": {
+      "get": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "List all existing roles in the database",
+        "description": "List all existing roles, paginated.",
+        "operationId": "ListAllRoles",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_no",
+            "type": "number",
+            "description": "Page number to fetch. 1st page is 1"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_size",
+            "type": "number",
+            "description": "Number of items per page"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "order_by",
+            "type": "string",
+            "description": "Field name for sorting"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "sort",
+            "type": "string",
+            "description": "Sort ordering",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly populating roles",
+            "schema": {
+              "$ref": "#/definitions/ListRoleResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      }
+    },
+    "/management/role": {
+      "post": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "Create a new role",
+        "description": "Create a new role, role name is used for duplication check.",
+        "operationId": "NewRole",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "credential",
+            "description": "ceredential",
+            "schema": {
+              "$ref": "#/definitions/CreateRoleRequest"
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly create a role",
+            "schema": {
+              "$ref": "#/definitions/RoleDetailResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      }
+    },
+    "/management/role/{roleRecId}": {
+      "get": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "Get a speciffic role detail",
+        "description": "Get role detail.",
+        "operationId": "GetRole",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly fetch role detail",
+            "schema": {
+              "$ref": "#/definitions/RoleDetailResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "Remove a speciffic role",
+        "description": "Remove a speciffic role. All Role-User and Role-Group relation to the deleted role will also be removed",
+        "operationId": "DeleteRole",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly remove",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/role/{roleRecId}/users": {
+      "get": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "List all user directly owns a role",
+        "description": "List all users directly owned a role, paginated",
+        "operationId": "GetRoleUsers",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_no",
+            "type": "number",
+            "description": "Page number to fetch. 1st page is 1"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_size",
+            "type": "number",
+            "description": "Number of items per page"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "order_by",
+            "type": "string",
+            "description": "Field name for sorting"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "sort",
+            "type": "string",
+            "description": "Sort ordering",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly populate role users",
+            "schema": {
+              "$ref": "#/definitions/ListAllUserResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/role/{roleRecId}/user/{userRecId}": {
+      "put": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "Add a user owner of this role",
+        "description": "Create new relation between role and user.",
+        "operationId": "CreateRoleUser",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully added",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "Remove a user's ownership of a role",
+        "description": "Remove relation ship between user and role. User and role it self left untouched",
+        "operationId": "DeleteRoleUser",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly remove",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/role/{roleRecId}/group": {
+      "get": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "Get all groups that owns this role",
+        "description": "List all groups that owns this role. Paginated",
+        "operationId": "GetRoleGroups",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_no",
+            "type": "number",
+            "description": "Page number to fetch. 1st page is 1"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_size",
+            "type": "number",
+            "description": "Number of items per page"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "order_by",
+            "type": "string",
+            "description": "Field name for sorting"
+          },
+          {
+            "in": "query",
+            "required": false,
+            "name": "sort",
+            "type": "string",
+            "description": "Sort ordering",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly populate role groups",
+            "schema": {
+              "$ref": "#/definitions/ListGroupResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/management/role/{roleRecId}/group/{groupRecId}": {
+      "put": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "Add a group as owner of a role",
+        "description": "Create relation between group and role",
+        "operationId": "CreateRoleGroup",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly added",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "Remove group ownership of a role",
+        "description": "Remove group-role relationship. Group and role it self left untouched",
+        "operationId": "DeleteRoleGroup",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly remove",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "BaseResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "SUCCESS",
+            "FAIL"
+          ]
+        }
+      }
+    },
+    "UserSummary": {
+      "type": "object",
+      "properties": {
+        "rec_id": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "suspended": {
+          "type": "boolean"
+        }
+      }
+    },
+    "UpdateUserRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "suspended": {
+          "type": "boolean"
+        },
+        "2fa_enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "User": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/UserSummary"
+        }
+      ],
+      "properties": {
+        "last_seen": {
+          "type": "string"
+        },
+        "last_login": {
+          "type": "string"
+        },
+        "2fa_enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RoleSummary": {
+      "type": "object",
+      "properties": {
+        "rec_id": {
+          "type": "string"
+        },
+        "role_name": {
+          "type": "string"
+        }
+      }
+    },
+    "Role": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/RoleSummary"
+        }
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "GroupSummary": {
+      "type": "object",
+      "properties": {
+        "rec_id": {
+          "type": "string"
+        },
+        "group_name": {
+          "type": "string"
+        }
+      }
+    },
+    "Group": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/GroupSummary"
+        }
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "Page": {
+      "type": "object",
+      "properties": {
+        "page_no": {
+          "type": "number"
+        },
+        "total_page": {
+          "type": "number"
+        },
+        "page_size": {
+          "type": "number"
+        },
+        "items": {
+          "type": "number"
+        },
+        "total_items": {
+          "type": "number"
+        },
+        "has_next": {
+          "type": "number"
+        },
+        "has_prev": {
+          "type": "number"
+        },
+        "is_first": {
+          "type": "number"
+        },
+        "is_last": {
+          "type": "number"
+        },
+        "first_page": {
+          "type": "number"
+        },
+        "last_page": {
+          "type": "number"
+        },
+        "prev_page": {
+          "type": "number"
+        },
+        "next_page": {
+          "type": "number"
+        },
+        "order_by": {
+          "type": "string"
+        },
+        "sort": {
+          "type": "string",
+          "enum": [
+            "ASC",
+            "DESC"
+          ]
+        }
+      }
+    },
+    "AuthRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "passphrase": {
+          "type": "string"
+        }
+      }
+    },
+    "AuthResponse": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "access_token": {
+              "type": "string"
+            },
+            "refresh_token": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "2FANeededResponse": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "2FA_token": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "2FARequest": {
+      "type": "object",
+      "required": [
+        "2FA_token",
+        "2FA_otp"
+      ],
+      "properties": {
+        "2FA_token": {
+          "type": "string"
+        },
+        "2FA_otp": {
+          "type": "string"
+        }
+      }
+    },
+    "ChangeUserPassword": {
+      "type": "object",
+      "required": [
+        "old_passphrase",
+        "new_passphrase"
+      ],
+      "properties": {
+        "old_passphrase": {
+          "type": "string"
+        },
+        "new_passphrase": {
+          "type": "string"
+        }
+      }
+    },
+    "RefreshResponse": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
+      "properties": {
+        "data": {
+          "type": "object",
+          "required": [
+            "access_token"
+          ],
+          "properties": {
+            "access_token": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "RequestPassphraseRecover": {
+      "type": "object",
+      "required": [
+        "email"
+      ],
+      "properties": {
+        "email": {
+          "type": "string"
+        }
+      }
+    },
+    "PassphraseResetRequest": {
+      "type": "object",
+      "required": [
+        "passphraseResetToken",
+        "newPassphrase"
+      ],
+      "properties": {
+        "passphraseResetToken": {
+          "type": "string"
+        },
+        "newPassphrase": {
+          "type": "string"
+        }
+      }
+    },
+    "ListAllUserResponse": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "users": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserSummary"
+              }
+            },
+            "page": {
+              "$ref": "#/definitions/Page"
+            }
+          }
+        }
+      }
+    },
+    "CreateUserRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "passphrase": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateUserResponse": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/User"
+        }
+      }
+    },
+    "UserDetailResponse": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/User"
+        }
+      }
+    },
+    "ActivationRequest": {
+      "type": "object",
+      "required": [
+        "email",
+        "activation_token"
+      ],
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "activation_token": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateRoleRequest": {
+      "type": "object",
+      "required": [
+        "role_name",
+        "description"
+      ],
+      "properties": {
+        "role_name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "ListRoleResponse": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "roles": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/RoleSummary"
+              }
+            },
+            "page": {
+              "$ref": "#/definitions/Page"
+            }
+          }
+        }
+      }
+    },
+    "RoleDetailResponse": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Role"
+        }
+      }
+    },
+    "CreateGroupRequest": {
+      "type": "object",
+      "required": [
+        "group_name"
+      ],
+      "properties": {
+        "group_name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "ListGroupResponse": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "users": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GroupSummary"
+              }
+            },
+            "page": {
+              "$ref": "#/definitions/Page"
+            }
+          }
+        }
+      }
+    },
+    "GroupDetailResponse": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Group"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "JWT": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  }
+}
