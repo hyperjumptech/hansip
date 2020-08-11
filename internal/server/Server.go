@@ -66,7 +66,29 @@ func InitializeRouter() {
 	address := fmt.Sprintf("%s:%s", config.Get("server.host"), config.Get("server.port"))
 	log.Infof("Swagger-UI now alive at http://%s/docs/", address)
 
-	// This is the middleware we use.
+	if config.GetBoolean("server.http.cors.enable") {
+		log.Info("CORS handling is enabled")
+		options := cors.Options{
+			AllowedOrigins:     strings.Split(config.Get("server.http.cors.allow.origins"), ","),
+			AllowedHeaders:     strings.Split(config.Get("server.http.cors.allow.headers"), ","),
+			AllowCredentials:   config.GetBoolean("server.http.cors.allow.credential"),
+			AllowedMethods:     strings.Split(config.Get("server.http.cors.allow.method"), ","),
+			ExposedHeaders:     strings.Split(config.Get("server.http.cors.exposed.headers"), ","),
+			OptionsPassthrough: config.GetBoolean("server.http.cors.optionpassthrough"),
+			MaxAge:             config.GetInt("server.http.cors.maxage"),
+		}
+		log.Infof("    AllowedOrigins     : %s", strings.Join(options.AllowedOrigins, ","))
+		log.Infof("    AllowedHeaders     : %s", strings.Join(options.AllowedHeaders, ","))
+		log.Infof("    AllowedMethods     : %s", strings.Join(options.AllowedMethods, ","))
+		log.Infof("    ExposedHeaders     : %s", strings.Join(options.ExposedHeaders, ","))
+		log.Infof("    AllowCredentials   : %v", options.AllowCredentials)
+		log.Infof("    OptionsPassthrough : %v", options.OptionsPassthrough)
+		log.Infof("    MaxAge : %d", options.MaxAge)
+		c := cors.New(options)
+		Router.Use(c.Handler)
+		Router.Use(middlewares.CorsMiddleware)
+	}
+
 	Router.Use(middlewares.ClientIPResolverMiddleware, middlewares.TransactionIDMiddleware, middlewares.JwtMiddleware)
 	Router.HandleFunc("/health", health).Methods("GET")
 
@@ -167,39 +189,13 @@ func Start() {
 	address := fmt.Sprintf("%s:%s", config.Get("server.host"), config.Get("server.port"))
 	log.Info("Server binding to ", address)
 
-	var handler http.Handler
-
-	if config.GetBoolean("server.http.cors.enable") {
-		log.Info("CORS handling is enabled")
-		options := cors.Options{
-			AllowedOrigins:     strings.Split(config.Get("server.http.cors.allow.origins"), ","),
-			AllowedHeaders:     strings.Split(config.Get("server.http.cors.allow.headers"), ","),
-			AllowCredentials:   config.GetBoolean("server.http.cors.allow.credential"),
-			AllowedMethods:     strings.Split(config.Get("server.http.cors.allow.method"), ","),
-			ExposedHeaders:     strings.Split(config.Get("server.http.cors.exposed.headers"), ","),
-			OptionsPassthrough: config.GetBoolean("server.http.cors.optionpassthrough"),
-			MaxAge:             config.GetInt("server.http.cors.maxage"),
-		}
-		log.Infof("    AllowedOrigins     : %s", strings.Join(options.AllowedOrigins, ","))
-		log.Infof("    AllowedHeaders     : %s", strings.Join(options.AllowedHeaders, ","))
-		log.Infof("    AllowedMethods     : %s", strings.Join(options.AllowedMethods, ","))
-		log.Infof("    ExposedHeaders     : %s", strings.Join(options.ExposedHeaders, ","))
-		log.Infof("    AllowCredentials   : %v", options.AllowCredentials)
-		log.Infof("    OptionsPassthrough : %v", options.OptionsPassthrough)
-		log.Infof("    MaxAge : %d", options.MaxAge)
-		c := cors.New(options)
-		handler = c.Handler(Router)
-	} else {
-		handler = Router
-	}
-
 	srv := &http.Server{
 		Addr: address,
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: WriteTimeout,
 		ReadTimeout:  ReadTimeout,
 		IdleTimeout:  IdleTimeout,
-		Handler:      handler, // Pass our instance of gorilla/mux in.
+		Handler:      Router, // Pass our instance of gorilla/mux in.
 	}
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {

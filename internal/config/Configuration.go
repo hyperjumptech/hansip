@@ -29,7 +29,7 @@ func initialize() {
 	defCfg["server.http.cors.allow.origins"] = "*"
 	defCfg["server.http.cors.allow.credential"] = "true"
 	defCfg["server.http.cors.allow.method"] = "GET,PUT,DELETE,POST,OPTIONS"
-	defCfg["server.http.cors.allow.headers"] = "Accept,Authorization,Content-Type,X-CSRF-TOKEN,Accept-Encoding"
+	defCfg["server.http.cors.allow.headers"] = "Accept,Authorization,Content-Type,X-CSRF-TOKEN,Accept-Encoding,X-Forwarded-For,X-Real-IP,X-Request-ID"
 	defCfg["server.http.cors.exposed.headers"] = "*"
 	defCfg["server.http.cors.optionpassthrough"] = "true"
 	defCfg["server.http.cors.maxage"] = "300"

@@ -97,6 +97,14 @@ image.
 | mailer.templates.emailveri.body| AAA_MAILER_TEMPLATES_EMAILVERI_BODY | `<html><body>Dear New Hansip User<br><br>Your new account is ready!<br>please click this <a href=\"http://hansip.io/activate?code={{.ActivationCode}}\">link to activate</a> your account.<br><br>Cordially,<br>HANSIP team</body></html>` | Email verification body template |
 | mailer.templates.passrecover.subject| AAA_MAILER_TEMPLATES_PASSRECOVER_SUBJECT | Passphrase recovery instruction | Password recovery email subject template |
 | mailer.templates.passrecover.body| AAA_MAILER_TEMPLATES_PASSRECOVER_BODY | `<html><body>Dear Hansip User<br><br>To recover your passphrase<br>please click this <a href=\"http://hansip.io/activate?code={{.RecoveryCode}}\">link to change your passphrase</a>.<br><br>Cordially,<br>HANSIP team</body></html>` | Password recovery email body template |
+| server.http.cors.enable | AAA_SERVER_HTTP_CORS_ENABLE | true | To enable or disable CORS handling | 
+| server.http.cors.allow.origins | AAA_SERVER_HTTP_CORS_ALLOW_ORIGINS | * |  Indicates whether the response can be shared with requesting code from the given origin. | 
+| server.http.cors.allow.credential | AAA_SERVER_HTTP_CORS_ALLOW_CREDENTIAL | true | response header tells browsers whether to expose the response to frontend JavaScript code when the request's credentials mode (`Request.credentials`) is `include` | 
+| server.http.cors.allow.method | AAA_SERVER_HTTP_CORS_ALLOW_METHOD | GET,PUT,DELETE,POST,OPTIONS | response header specifies the method or methods allowed when accessing the resource in response to a preflight request. | 
+| server.http.cors.allow.headers | AAA_SERVER_HTTP_CORS_ALLOW_HEADERS | Accept,Authorization,Content-Type,X-CSRF-TOKEN,Accept-Encoding,X-Forwarded-For,X-Real-IP,X-Request-ID |  response header is used in response to a preflight request which includes the `Access-Control-Request-Headers` to indicate which HTTP headers can be used during the actual request. | 
+| server.http.cors.exposed.headers | AAA_SERVER_HTTP_CORS_EXPOSED_HEADERS | * |  response header indicates which headers can be exposed as part of the response by listing their names. | 
+| server.http.cors.optionpassthrough | AAA_SERVER_HTTP_CORS_OPTIONPASSTHROUGH | true | Indicates that the OPTIONS method should be handled by server | 
+| server.http.cors.maxage | AAA_SERVER_HTTP_CORS_MAXAGE | 300 | response header indicates how long the results of a preflight request (that is the information contained in the `Access-Control-Allow-Methods` and `Access-Control-Allow-Headers` headers) can be cached | 
 
 ## API Doc
 

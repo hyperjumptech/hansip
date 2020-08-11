@@ -53,9 +53,9 @@ func InitializeAuthRouter(router *mux.Router) {
 	groupRepo = connector.GetInMemoryDbInstance()
 	groupRoleRepo = connector.GetInMemoryDbInstance()
 
-	router.HandleFunc("/api/v1/auth/authenticate", Authentication).Methods("POST")
-	router.HandleFunc("/api/v1/auth/refresh", Refresh).Methods("POST")
-	router.HandleFunc("/api/v1/auth/2fa", Auth2FA).Methods("POST")
+	router.HandleFunc("/api/v1/auth/authenticate", Authentication).Methods("OPTIONS", "POST")
+	router.HandleFunc("/api/v1/auth/refresh", Refresh).Methods("OPTIONS", "POST")
+	router.HandleFunc("/api/v1/auth/2fa", Auth2FA).Methods("OPTIONS", "POST")
 
 	initialized = true
 }
