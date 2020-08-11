@@ -170,6 +170,7 @@ func Start() {
 	var handler http.Handler
 
 	if config.GetBoolean("server.http.cors.enable") {
+		log.Info("CORS handling is enabled")
 		options := cors.Options{
 			AllowedOrigins:     strings.Split(config.Get("server.http.cors.allow.origins"), ","),
 			AllowedHeaders:     strings.Split(config.Get("server.http.cors.allow.headers"), ","),
@@ -177,7 +178,15 @@ func Start() {
 			AllowedMethods:     strings.Split(config.Get("server.http.cors.allow.method"), ","),
 			ExposedHeaders:     strings.Split(config.Get("server.http.cors.exposed.headers"), ","),
 			OptionsPassthrough: config.GetBoolean("server.http.cors.optionpassthrough"),
+			MaxAge:             config.GetInt("server.http.cors.maxage"),
 		}
+		log.Infof("    AllowedOrigins     : %s", strings.Join(options.AllowedOrigins, ","))
+		log.Infof("    AllowedHeaders     : %s", strings.Join(options.AllowedHeaders, ","))
+		log.Infof("    AllowedMethods     : %s", strings.Join(options.AllowedMethods, ","))
+		log.Infof("    ExposedHeaders     : %s", strings.Join(options.ExposedHeaders, ","))
+		log.Infof("    AllowCredentials   : %v", options.AllowCredentials)
+		log.Infof("    OptionsPassthrough : %v", options.OptionsPassthrough)
+		log.Infof("    MaxAge : %d", options.MaxAge)
 		c := cors.New(options)
 		handler = c.Handler(Router)
 	} else {
