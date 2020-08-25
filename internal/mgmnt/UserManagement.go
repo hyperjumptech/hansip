@@ -133,6 +133,7 @@ func CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	fLog.Warnf("Sending email")
 	mailer.Send(r.Context(), &mailer.Email{
 		From:     config.Get("mailer.from"),
+		FromName: config.Get("mailer.from.name"),
 		To:       []string{user.Email},
 		Cc:       nil,
 		Bcc:      nil,
@@ -330,6 +331,7 @@ func UpdateUserDetail(w http.ResponseWriter, r *http.Request) {
 		fLog.Warnf("Sending email")
 		mailer.Send(r.Context(), &mailer.Email{
 			From:     config.Get("mailer.from"),
+			FromName: config.Get("mailer.from.name"),
 			To:       []string{user.Email},
 			Cc:       nil,
 			Bcc:      nil,

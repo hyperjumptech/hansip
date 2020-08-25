@@ -19,7 +19,7 @@ RUN go build -o go-resource.app *.go
 WORKDIR $GOPATH/src/github.com/hyperjumptech/hansip
 RUN $GOPATH/src/github.com/newm4n/go-resource/go-resource.app  -base "$GOPATH/src/github.com/hyperjumptech/hansip/api/swagger-ui" -path "/docs" -filter "/**/*" -go "$GOPATH/src/github.com/hyperjumptech/hansip/api/StaticApi.go" -package api
 # Compile the proje ct
-RUN CGO_ENABLED=0 go build -a -ldflags '-extldflags "-static"' -o hansip.app cmd/Main.go
+RUN CGO_ENABLED=0 go build -a -ldflags '-extldflags "-static"' -o hansip.app cmd/main/Main.go
 
 # Now use the deployment image.
 FROM alpine:latest

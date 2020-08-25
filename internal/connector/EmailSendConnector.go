@@ -4,8 +4,15 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
+	"github.com/sirupsen/logrus"
 	"net/smtp"
 	"strings"
+)
+
+var (
+	mailerLog = logrus.WithField("system", "mailer")
 )
 
 const (
@@ -13,7 +20,7 @@ const (
 )
 
 type EmailSender interface {
-	SendEmail(ctx context.Context, to, cc, bcc []string, from, subject, body string) error
+	SendEmail(ctx context.Context, to, cc, bcc []string, from, fromName, subject, body string) error
 }
 
 type Recipients struct {
@@ -47,7 +54,7 @@ type DummyMail struct {
 	Body    string
 }
 
-func (sender *DummyMailSender) SendEmail(ctx context.Context, to, cc, bcc []string, from, subject, body string) error {
+func (sender *DummyMailSender) SendEmail(ctx context.Context, to, cc, bcc []string, from, fromName, subject, body string) error {
 	sender.LastSentMail = &DummyMail{
 		From:    from,
 		Subject: subject,
@@ -72,7 +79,7 @@ type SendMailSender struct {
 	Password string
 }
 
-func (sender *SendMailSender) SendEmail(ctx context.Context, to, cc, bcc []string, from, subject, body string) error {
+func (sender *SendMailSender) SendEmail(ctx context.Context, to, cc, bcc []string, from, fromName, subject, body string) error {
 
 	auth := smtp.PlainAuth("", sender.User, sender.Password, sender.Host)
 	rec := &Recipients{
@@ -103,9 +110,66 @@ func (sender *SendMailSender) SendEmail(ctx context.Context, to, cc, bcc []strin
 	bodyBuffer.WriteString("\r\n")
 	bodyBuffer.WriteString(body)
 
+	sendmailLog := mailerLog.WithField("mailer", "sendmail").WithField("mailto", strings.Join(to, ","))
+
 	err := smtp.SendMail(fmt.Sprintf("%s:%d", sender.Host, sender.Port), auth, from, rec.Recipients(), bodyBuffer.Bytes())
 	if err != nil {
+		sendmailLog.Error(err)
 		return err
 	}
+	sendmailLog.Debug("send mail success")
+	return nil
+}
+
+type SendGridSender struct {
+	Token string
+}
+
+func getMailBoxName(email string) string {
+	if strings.Index(email, "@") > 0 {
+		return email[:strings.Index(email, "@")]
+	}
+	return email
+}
+
+func (sender *SendGridSender) SendEmail(ctx context.Context, to, cc, bcc []string, from, fromName, subject, body string) error {
+	sendGridMail := mail.NewV3Mail()
+
+	persona := mail.NewPersonalization()
+	if to != nil {
+		for _, t := range to {
+			persona.AddTos(mail.NewEmail(getMailBoxName(t), t))
+		}
+	}
+	if cc != nil {
+		for _, t := range cc {
+			persona.AddCCs(mail.NewEmail(getMailBoxName(t), t))
+		}
+	}
+	if bcc != nil {
+		for _, t := range bcc {
+			persona.AddBCCs(mail.NewEmail(getMailBoxName(t), t))
+		}
+	}
+	persona.Subject = subject
+	sendGridMail.AddPersonalizations(persona)
+
+	content := mail.NewContent("text/html", body)
+	sendGridMail.AddContent(content)
+
+	sendGridMail.SetFrom(mail.NewEmail(fromName, from))
+
+	if len(sender.Token) == 0 {
+		panic("sendgrid mailer with no token configured")
+	}
+
+	sendGridClient := sendgrid.NewSendClient(sender.Token)
+	resp, err := sendGridClient.Send(sendGridMail)
+	sendgridLog := mailerLog.WithField("mailer", "sendgrid").WithField("mailto", strings.Join(to, ","))
+	if err != nil {
+		sendgridLog.Errorf("error while sending email. got %s", err.Error())
+		return err
+	}
+	sendgridLog.Debugf("response status %d, body %s", resp.StatusCode, resp.Body)
 	return nil
 }

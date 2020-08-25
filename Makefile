@@ -30,6 +30,7 @@ run: build
 	export AAA_SERVER_PORT=8088; \
 	export AAA_SETUP_ADMIN_ENABLE=true; \
 	export AAA_SERVER_LOG_LEVEL=TRACE; \
+	export AAA_DB_TYPE=MYSQL; \
 	./$(IMAGE_NAME).app
 	rm -f $(IMAGE_NAME).app
 

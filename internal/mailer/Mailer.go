@@ -21,6 +21,7 @@ var (
 type Email struct {
 	context  context.Context
 	From     string
+	FromName string
 	To       []string
 	Cc       []string
 	Bcc      []string
@@ -77,7 +78,7 @@ func Start() {
 					if err != nil {
 						fLog.Errorf("templates.BodyTemplate.Execute got %s", err.Error())
 					}
-					err = Sender.SendEmail(mail.context, mail.To, mail.Cc, mail.Bcc, mail.From, subjectWriter.String(), bodyWriter.String())
+					err = Sender.SendEmail(mail.context, mail.To, mail.Cc, mail.Bcc, mail.From, mail.FromName, subjectWriter.String(), bodyWriter.String())
 					if err != nil {
 						fLog.Errorf("Sender.SendEmail got %s", err.Error())
 					}
