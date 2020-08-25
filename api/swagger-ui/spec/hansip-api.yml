@@ -397,7 +397,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -566,7 +566,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -731,7 +731,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly populating user group"
+          description: "Successfully populating user group"
           schema:
             $ref: '#/definitions/ListGroupResponse'
         401:
@@ -787,7 +787,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly fetch group data"
+          description: "Successfully fetch group data"
           schema:
             $ref: '#/definitions/GroupDetailResponse'
         404:
@@ -815,7 +815,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -867,7 +867,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly populating group members"
+          description: "Successfully populating group members"
           schema:
             $ref: '#/definitions/ListAllUserResponse'
         404:
@@ -900,7 +900,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly added"
+          description: "Successfully added"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -932,7 +932,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -984,7 +984,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly populating group roles"
+          description: "Successfully populating group roles"
           schema:
             $ref: '#/definitions/ListRoleResponse'
         404:
@@ -1017,7 +1017,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly assigned"
+          description: "Successfully assigned"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -1049,7 +1049,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -1097,7 +1097,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly populating roles"
+          description: "Successfully populating roles"
           schema:
             $ref: '#/definitions/ListRoleResponse'
         401:
@@ -1126,7 +1126,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly create a role"
+          description: "Successfully create a role"
           schema:
             $ref: '#/definitions/RoleDetailResponse'
         401:
@@ -1153,7 +1153,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly fetch role detail"
+          description: "Successfully fetch role detail"
           schema:
             $ref: '#/definitions/RoleDetailResponse'
         404:
@@ -1181,7 +1181,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -1233,7 +1233,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly populate role users"
+          description: "Successfully populate role users"
           schema:
             $ref: '#/definitions/ListAllUserResponse'
         404:
@@ -1298,7 +1298,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -1350,7 +1350,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly populate role groups"
+          description: "Successfully populate role groups"
           schema:
             $ref: '#/definitions/ListGroupResponse'
         404:
@@ -1383,7 +1383,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly added"
+          description: "Successfully added"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -1415,7 +1415,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:

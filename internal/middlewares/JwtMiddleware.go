@@ -3,13 +3,14 @@ package middlewares
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/internal/hansipcontext"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	log "github.com/sirupsen/logrus"
-	"net/http"
-	"strings"
 )
 
 var (
@@ -78,6 +79,7 @@ var (
 	}
 )
 
+// ACL is access control list struct
 type ACL struct {
 	PathPattern      string
 	Method           string

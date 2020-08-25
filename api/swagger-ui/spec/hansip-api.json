@@ -614,7 +614,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly remove",
+            "description": "Successfully remove",
             "schema": {
               "$ref": "#/definitions/BaseResponse"
             }
@@ -872,7 +872,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly remove",
+            "description": "Successfully remove",
             "schema": {
               "$ref": "#/definitions/BaseResponse"
             }
@@ -1124,7 +1124,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly populating user group",
+            "description": "Successfully populating user group",
             "schema": {
               "$ref": "#/definitions/ListGroupResponse"
             }
@@ -1213,7 +1213,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly fetch group data",
+            "description": "Successfully fetch group data",
             "schema": {
               "$ref": "#/definitions/GroupDetailResponse"
             }
@@ -1257,7 +1257,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly remove",
+            "description": "Successfully remove",
             "schema": {
               "$ref": "#/definitions/BaseResponse"
             }
@@ -1335,7 +1335,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly populating group members",
+            "description": "Successfully populating group members",
             "schema": {
               "$ref": "#/definitions/ListAllUserResponse"
             }
@@ -1387,7 +1387,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly added",
+            "description": "Successfully added",
             "schema": {
               "$ref": "#/definitions/BaseResponse"
             }
@@ -1437,7 +1437,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly remove",
+            "description": "Successfully remove",
             "schema": {
               "$ref": "#/definitions/BaseResponse"
             }
@@ -1515,7 +1515,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly populating group roles",
+            "description": "Successfully populating group roles",
             "schema": {
               "$ref": "#/definitions/ListRoleResponse"
             }
@@ -1567,7 +1567,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly assigned",
+            "description": "Successfully assigned",
             "schema": {
               "$ref": "#/definitions/BaseResponse"
             }
@@ -1617,7 +1617,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly remove",
+            "description": "Successfully remove",
             "schema": {
               "$ref": "#/definitions/BaseResponse"
             }
@@ -1689,7 +1689,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly populating roles",
+            "description": "Successfully populating roles",
             "schema": {
               "$ref": "#/definitions/ListRoleResponse"
             }
@@ -1735,7 +1735,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly create a role",
+            "description": "Successfully create a role",
             "schema": {
               "$ref": "#/definitions/RoleDetailResponse"
             }
@@ -1778,7 +1778,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly fetch role detail",
+            "description": "Successfully fetch role detail",
             "schema": {
               "$ref": "#/definitions/RoleDetailResponse"
             }
@@ -1822,7 +1822,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly remove",
+            "description": "Successfully remove",
             "schema": {
               "$ref": "#/definitions/BaseResponse"
             }
@@ -1900,7 +1900,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly populate role users",
+            "description": "Successfully populate role users",
             "schema": {
               "$ref": "#/definitions/ListAllUserResponse"
             }
@@ -2002,7 +2002,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly remove",
+            "description": "Successfully remove",
             "schema": {
               "$ref": "#/definitions/BaseResponse"
             }
@@ -2080,7 +2080,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly populate role groups",
+            "description": "Successfully populate role groups",
             "schema": {
               "$ref": "#/definitions/ListGroupResponse"
             }
@@ -2132,7 +2132,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly added",
+            "description": "Successfully added",
             "schema": {
               "$ref": "#/definitions/BaseResponse"
             }
@@ -2182,7 +2182,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfuly remove",
+            "description": "Successfully remove",
             "schema": {
               "$ref": "#/definitions/BaseResponse"
             }

@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
+	"time"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/constants"
@@ -11,8 +14,6 @@ import (
 	"github.com/hyperjumptech/hansip/pkg/totp"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
-	"sort"
-	"time"
 )
 
 const (
@@ -717,7 +718,7 @@ func (db *MySqlDB) DeleteGroup(ctx context.Context, group *Group) error {
 	return err
 }
 
-// SaveOrUpdateGroup delete one specific group
+// SaveOrUpdateGroup update or save one specific group
 func (db *MySqlDB) SaveOrUpdateGroup(ctx context.Context, group *Group) error {
 	fLog := mysqlLog.WithField("func", "SaveOrUpdateGroup").WithField("RequestId", ctx.Value(constants.RequestId))
 	creating := true

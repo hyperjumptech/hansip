@@ -1,4 +1,6 @@
-# Hansip 
+# Hansip  
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/hyperjumptech/hansip)](https://goreportcard.com/report/github.com/hyperjumptech/hansip)  
 
 An AAA (Access Authentication & Authorization) Service by Hyperjump 
 
