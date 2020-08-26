@@ -3,6 +3,12 @@ package server
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"strings"
+	"time"
+
 	"github.com/gorilla/mux"
 	"github.com/hyperjumptech/hansip/api"
 	"github.com/hyperjumptech/hansip/internal/auth"
@@ -15,16 +21,14 @@ import (
 	"github.com/hyperjumptech/jiffy"
 	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
-	"net/http"
-	"os"
-	"os/signal"
-	"strings"
-	"time"
 )
 
 var (
-	Router       *mux.Router
+	// Router instance
+	Router *mux.Router
+	// StaticFilter handler for static files
 	StaticFilter *api.StaticFilter
+	// TokenFactory instance used for generating and validating token
 	TokenFactory helper.TokenFactory
 )
 

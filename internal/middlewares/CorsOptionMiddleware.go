@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// CorsMiddleware CORS middleware
 func CorsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.ToUpper(r.Method) == http.MethodOptions {

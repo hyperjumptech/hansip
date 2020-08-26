@@ -3,6 +3,10 @@ package mgmnt
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
+
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/internal/mailer"
@@ -10,9 +14,6 @@ import (
 	"github.com/hyperjumptech/hansip/pkg/totp"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
-	"io/ioutil"
-	"net/http"
-	"time"
 )
 
 var (
@@ -47,13 +48,15 @@ func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
 	w.Write(png)
 }
 
+// SimpleUser struct
 type SimpleUser struct {
-	RecId     string `json:"rec_id"`
+	RecID     string `json:"rec_id"`
 	Email     string `json:"email"`
 	Enabled   bool   `json:"enabled"`
 	Suspended bool   `json:"suspended"`
 }
 
+// ListAllUsers handler
 func ListAllUsers(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "ListAllUsers").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	fLog.Trace("Listing Users")
@@ -72,7 +75,7 @@ func ListAllUsers(w http.ResponseWriter, r *http.Request) {
 	susers := make([]*SimpleUser, len(users))
 	for i, v := range users {
 		susers[i] = &SimpleUser{
-			RecId:     v.RecId,
+			RecID:     v.RecId,
 			Email:     v.Email,
 			Enabled:   v.Enabled,
 			Suspended: v.Suspended,
@@ -84,13 +87,15 @@ func ListAllUsers(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "List of all user paginated", nil, ret)
 }
 
+// CreateNewUserRequest email / passphrase struct
 type CreateNewUserRequest struct {
 	Email      string `json:"email"`
 	Passphrase string `json:"passphrase"`
 }
 
+// CreateNewUserResponse struct
 type CreateNewUserResponse struct {
-	RecordId    string    `json:"rec_id"`
+	RecordID    string    `json:"rec_id"`
 	Email       string    `json:"email"`
 	Enabled     bool      `json:"enabled"`
 	Suspended   bool      `json:"suspended"`
@@ -99,6 +104,7 @@ type CreateNewUserResponse struct {
 	TotpEnabled bool      `json:"2fa_enabled"`
 }
 
+// CreateNewUser create new user handler
 func CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "CreateNewUser").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	fLog.Trace("Creating new user")
@@ -122,7 +128,7 @@ func CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp := &CreateNewUserResponse{
-		RecordId:    user.RecId,
+		RecordID:    user.RecId,
 		Email:       user.Email,
 		Enabled:     user.Enabled,
 		Suspended:   user.Suspended,
@@ -145,11 +151,13 @@ func CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// ChangePassphraseRequest old to new passphrase struct
 type ChangePassphraseRequest struct {
 	OldPassphrase string `json:"old_passphrase"`
 	NewPassphrase string `json:"new_passphrase"`
 }
 
+// ChangePassphrase handles passphrase change
 func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "ChangePassphrase").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/passwd", r.URL.Path)
@@ -197,6 +205,7 @@ func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Password changed", nil, nil)
 }
 
+// ActivateUserRequest user activation request struct
 type ActivateUserRequest struct {
 	Email           string
 	ActivationToken string
@@ -270,6 +279,7 @@ func GetUserDetail(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User retrieved", nil, ret)
 }
 
+// UpdateUserRequest user update request struct
 type UpdateUserRequest struct {
 	Email     string `json:"email"`
 	Enabled   bool   `json:"enabled"`
@@ -371,7 +381,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 // SimpleRole define structure or request body used to list role
 type SimpleRole struct {
-	RecId    string `json:"rec_id"`
+	RecID    string `json:"rec_id"`
 	RoleName string `json:"role_name"`
 }
 
@@ -401,7 +411,7 @@ func ListUserRole(w http.ResponseWriter, r *http.Request) {
 	sroles := make([]*SimpleRole, len(roles))
 	for k, v := range roles {
 		sroles[k] = &SimpleRole{
-			RecId:    v.RecId,
+			RecID:    v.RecId,
 			RoleName: v.RoleName,
 		}
 	}
@@ -437,7 +447,7 @@ func ListAllUserRole(w http.ResponseWriter, r *http.Request) {
 	sroles := make([]*SimpleRole, len(roles))
 	for k, v := range roles {
 		sroles[k] = &SimpleRole{
-			RecId:    v.RecId,
+			RecID:    v.RecId,
 			RoleName: v.RoleName,
 		}
 	}
@@ -535,7 +545,7 @@ func ListUserGroup(w http.ResponseWriter, r *http.Request) {
 	sgroups := make([]*SimpleGroup, len(groups))
 	for k, v := range groups {
 		sgroups[k] = &SimpleGroup{
-			RecId:     v.RecId,
+			RecID:     v.RecId,
 			GroupName: v.GroupName,
 		}
 	}

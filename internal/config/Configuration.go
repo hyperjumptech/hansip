@@ -1,10 +1,11 @@
 package config
 
 import (
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -67,7 +68,7 @@ func initialize() {
 	defCfg["mailer.templates.passrecover.body"] = "<html><body>Dear Hansip User<br><br>To recover your passphrase<br>please click this <a href=\"http://hansip.io/activate?code={{.RecoveryCode}}\">link to change your passphrase</a>.<br><br>Cordially,<br>HANSIP team</body></html>"
 	defCfg["mailer.sendgrid.token"] = "SENDGRIDTOKEN"
 
-	for k, _ := range defCfg {
+	for k := range defCfg {
 		err := viper.BindEnv(k)
 		if err != nil {
 			log.Errorf("Failed to bind env \"%s\" into configuration. Got %s", k, err)
@@ -77,10 +78,12 @@ func initialize() {
 	initialized = true
 }
 
+// SetConfig set a key value config pair
 func SetConfig(key, value string) {
 	viper.Set(key, value)
 }
 
+// Get the value of a key
 func Get(key string) string {
 	if !initialized {
 		initialize()
@@ -95,6 +98,7 @@ func Get(key string) string {
 	return ret
 }
 
+// GetBoolean gets the boolean of a key
 func GetBoolean(key string) bool {
 	if len(Get(key)) == 0 {
 		return false
@@ -106,6 +110,7 @@ func GetBoolean(key string) bool {
 	return b
 }
 
+// GetInt get the int of a key
 func GetInt(key string) int {
 	if len(Get(key)) == 0 {
 		return 0
@@ -117,6 +122,7 @@ func GetInt(key string) int {
 	return int(i)
 }
 
+// GetFloat returns the float64 of a config key
 func GetFloat(key string) float64 {
 	if len(Get(key)) == 0 {
 		return 0
@@ -128,6 +134,7 @@ func GetFloat(key string) float64 {
 	return f
 }
 
+// Set the key string value pair
 func Set(key, value string) {
 	defCfg[key] = value
 }

@@ -2,24 +2,27 @@ package mgmnt
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/internal/mailer"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
-	"io/ioutil"
-	"net/http"
 )
 
 var (
 	recoveryLogger = log.WithField("go", "Recovery")
 )
 
+// RecoverPassphraseRequest passphrase
 type RecoverPassphraseRequest struct {
 	Email string `json:"email"`
 }
 
+// RecoverPassphrase handler
 func RecoverPassphrase(w http.ResponseWriter, r *http.Request) {
 	fLog := recoveryLogger.WithField("func", "RecoverPassphrase").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	req := &RecoverPassphraseRequest{}
@@ -59,11 +62,13 @@ func RecoverPassphrase(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Check your email", nil, nil)
 }
 
+// ResetPassphraseRequest reset passphrase struct
 type ResetPassphraseRequest struct {
 	ResetToken    string `json:"passphraseResetToken"`
 	NewPassphrase string `json:"newPassphrase"`
 }
 
+// ResetPassphrase handler
 func ResetPassphrase(w http.ResponseWriter, r *http.Request) {
 	fLog := recoveryLogger.WithField("func", "ResetPassphrase").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	req := &ResetPassphraseRequest{}

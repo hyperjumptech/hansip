@@ -2,16 +2,17 @@ package auth
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/gorilla/mux"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/connector"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	"github.com/hyperjumptech/hansip/pkg/totp"
 	"golang.org/x/crypto/bcrypt"
-	"io/ioutil"
-	"net/http"
-	"strings"
-	"time"
 )
 
 var (
@@ -28,20 +29,24 @@ var (
 	initialized = false
 )
 
+// AuthRequest email / passphrase to authenticate
 type AuthRequest struct {
 	Email      string `json:"email"`
 	Passphrase string `json:"passphrase"`
 }
 
+// AuthResponse are access/refresh after authentication
 type AuthResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
 
+// RefreshResponse access token after refresh
 type RefreshResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
+// InitializeAuthRouter initializes mux router
 func InitializeAuthRouter(router *mux.Router) {
 	if initialized {
 		return
@@ -60,11 +65,13 @@ func InitializeAuthRouter(router *mux.Router) {
 	initialized = true
 }
 
+// Auth2FARequest are 2 factore authentication requests tokens
 type Auth2FARequest struct {
 	Token string `json:"2FA_token"`
 	Otp   string `json:"2FA_otp"`
 }
 
+// Auth2FA handles 2 factor authentication
 func Auth2FA(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -142,6 +149,7 @@ func Auth2FA(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Successful", nil, resp)
 }
 
+// Authentication handler
 func Authentication(w http.ResponseWriter, r *http.Request) {
 	// Check content-type, make sure its application/json
 	cType := r.Header.Get("Content-Type")
@@ -196,7 +204,7 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 		}
 		user.LastLogin = time.Now()
 
-		// Make sure chages to this user are saved.
+		// Make sure chnages to this user are saved.
 		defer userRepo.SaveOrUpdate(r.Context(), user)
 	}
 
@@ -274,6 +282,7 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Successful", nil, resp)
 }
 
+// Refresh handler
 func Refresh(w http.ResponseWriter, r *http.Request) {
 	auth := r.Header.Get("Authorization")
 	if len(auth) == 0 {

@@ -3,10 +3,11 @@ package gzip
 import (
 	"bytes"
 	"compress/gzip"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -16,6 +17,7 @@ var (
 	})
 )
 
+// NewGzipEncoderFilter returns zip encoder instance
 func NewGzipEncoderFilter(enable bool, minSizeToCompress int) *GzipEncoderFilter {
 	if !enable {
 		gzipFilterLog.Warnf("GZIP Compression response body is DISABLED. Should be enabled for best performance.")
