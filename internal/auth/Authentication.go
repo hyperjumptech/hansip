@@ -126,7 +126,7 @@ func Auth2FA(w http.ResponseWriter, r *http.Request) {
 		// Add user's role into Token audiences info.
 		roles = make([]string, len(userRoles))
 		for k, v := range userRoles {
-			r, err := roleRepo.GetRoleByRecId(r.Context(), v.RecId)
+			r, err := roleRepo.GetRoleByRecID(r.Context(), v.RecID)
 			if err == nil {
 				roles[k] = r.RoleName
 			}
@@ -179,7 +179,7 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 		if authReq.Email == config.Get("setup.admin.email") && authReq.Passphrase == config.Get("setup.admin.passphrase") {
 			bytes, _ := bcrypt.GenerateFromPassword([]byte(authReq.Passphrase), 14)
 			user = &connector.User{
-				RecId:             helper.MakeRandomString(10, true, true, true, false),
+				RecID:             helper.MakeRandomString(10, true, true, true, false),
 				Email:             config.Get("setup.admin.email"),
 				HashedPassphrase:  string(bytes),
 				Enabled:           true,
@@ -259,7 +259,7 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 		// Add user's role into Token audiences info.
 		roles = make([]string, len(userRoles))
 		for k, v := range userRoles {
-			r, err := roleRepo.GetRoleByRecId(r.Context(), v.RecId)
+			r, err := roleRepo.GetRoleByRecID(r.Context(), v.RecID)
 			if err == nil {
 				roles[k] = r.RoleName
 			}

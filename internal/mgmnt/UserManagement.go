@@ -30,9 +30,9 @@ func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecID"])
 	if err != nil || user == nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User not found"), nil, nil)
 		return
 	}
@@ -75,7 +75,7 @@ func ListAllUsers(w http.ResponseWriter, r *http.Request) {
 	susers := make([]*SimpleUser, len(users))
 	for i, v := range users {
 		susers[i] = &SimpleUser{
-			RecID:     v.RecId,
+			RecID:     v.RecID,
 			Email:     v.Email,
 			Enabled:   v.Enabled,
 			Suspended: v.Suspended,
@@ -128,7 +128,7 @@ func CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp := &CreateNewUserResponse{
-		RecordID:    user.RecId,
+		RecordID:    user.RecID,
 		Email:       user.Email,
 		Enabled:     user.Enabled,
 		Suspended:   user.Suspended,
@@ -177,9 +177,9 @@ func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "Malformed json body", nil, nil)
 		return
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecID"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -242,7 +242,7 @@ func ActivateUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ret := make(map[string]interface{})
-		ret["rec_id"] = user.RecId
+		ret["rec_id"] = user.RecID
 		ret["email"] = user.Email
 		ret["enabled"] = user.Enabled
 		ret["suspended"] = user.Suspended
@@ -262,14 +262,14 @@ func GetUserDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecID"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
 	ret := make(map[string]interface{})
-	ret["rec_id"] = user.RecId
+	ret["rec_id"] = user.RecID
 	ret["email"] = user.Email
 	ret["enabled"] = user.Enabled
 	ret["suspended"] = user.Suspended
@@ -294,9 +294,9 @@ func UpdateUserDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecID"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -351,7 +351,7 @@ func UpdateUserDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ret := make(map[string]interface{})
-	ret["rec_id"] = user.RecId
+	ret["rec_id"] = user.RecID
 	ret["email"] = user.Email
 	ret["enabled"] = user.Enabled
 	ret["suspended"] = user.Suspended
@@ -369,9 +369,9 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecID"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -392,9 +392,9 @@ func ListUserRole(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecID"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -411,7 +411,7 @@ func ListUserRole(w http.ResponseWriter, r *http.Request) {
 	sroles := make([]*SimpleRole, len(roles))
 	for k, v := range roles {
 		sroles[k] = &SimpleRole{
-			RecID:    v.RecId,
+			RecID:    v.RecID,
 			RoleName: v.RoleName,
 		}
 	}
@@ -428,9 +428,9 @@ func ListAllUserRole(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecID"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -447,7 +447,7 @@ func ListAllUserRole(w http.ResponseWriter, r *http.Request) {
 	sroles := make([]*SimpleRole, len(roles))
 	for k, v := range roles {
 		sroles[k] = &SimpleRole{
-			RecID:    v.RecId,
+			RecID:    v.RecID,
 			RoleName: v.RoleName,
 		}
 	}
@@ -464,15 +464,15 @@ func CreateUserRole(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecID"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecID"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -492,15 +492,15 @@ func DeleteUserRole(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecID"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecID"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -526,9 +526,9 @@ func ListUserGroup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecID"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -545,7 +545,7 @@ func ListUserGroup(w http.ResponseWriter, r *http.Request) {
 	sgroups := make([]*SimpleGroup, len(groups))
 	for k, v := range groups {
 		sgroups[k] = &SimpleGroup{
-			RecID:     v.RecId,
+			RecID:     v.RecID,
 			GroupName: v.GroupName,
 		}
 	}
@@ -562,15 +562,15 @@ func CreateUserGroup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecID"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecID"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -590,15 +590,15 @@ func DeleteUserGroup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecID"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecID"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}

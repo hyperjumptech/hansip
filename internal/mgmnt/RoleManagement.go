@@ -32,7 +32,7 @@ func ListAllRole(w http.ResponseWriter, r *http.Request) {
 	sroles := make([]*SimpleRole, len(roles))
 	for k, v := range roles {
 		sroles[k] = &SimpleRole{
-			RecID:    v.RecId,
+			RecID:    v.RecID,
 			RoleName: v.RoleName,
 		}
 	}
@@ -77,13 +77,13 @@ func CreateRole(w http.ResponseWriter, r *http.Request) {
 // GetRoleDetail handler
 func GetRoleDetail(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "GetRoleDetail").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
-	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}", r.URL.Path)
+	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecID}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -97,9 +97,9 @@ func DeleteRole(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -114,9 +114,9 @@ func ListRoleUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -133,7 +133,7 @@ func ListRoleUser(w http.ResponseWriter, r *http.Request) {
 	susers := make([]*SimpleUser, len(users))
 	for k, v := range users {
 		susers[k] = &SimpleUser{
-			RecID:     v.RecId,
+			RecID:     v.RecID,
 			Email:     v.Email,
 			Enabled:   v.Enabled,
 			Suspended: v.Suspended,
@@ -152,15 +152,15 @@ func CreateRoleUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -180,15 +180,15 @@ func DeleteRoleUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -214,15 +214,15 @@ func ListRoleGroup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
 	pageRequest, err := helper.NewPageRequestFromRequest(r)
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 		return
 	}
@@ -230,7 +230,7 @@ func ListRoleGroup(w http.ResponseWriter, r *http.Request) {
 	sgroups := make([]*SimpleGroup, len(groups))
 	for k, v := range groups {
 		sgroups[k] = &SimpleGroup{
-			RecID:     v.RecId,
+			RecID:     v.RecID,
 			GroupName: v.GroupName,
 		}
 	}
@@ -247,15 +247,15 @@ func CreateRoleGroup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -275,15 +275,15 @@ func DeleteRoleGroup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}

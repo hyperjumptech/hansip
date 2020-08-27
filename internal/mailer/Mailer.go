@@ -2,22 +2,28 @@ package mailer
 
 import (
 	"context"
+	"strings"
+	"text/template"
+
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/connector"
 	"github.com/hyperjumptech/hansip/internal/constants"
 	log "github.com/sirupsen/logrus"
-	"strings"
-	"text/template"
 )
 
 var (
-	mailerLogger  = log.WithField("go", "Mailer")
+	mailerLogger = log.WithField("go", "Mailer")
+	// MailerChannel channel
 	MailerChannel chan *Email
-	KillChannel   chan bool
-	Sender        connector.EmailSender
-	Templates     map[string]*EmailTemplates
+	// KillChannel channel
+	KillChannel chan bool
+	// Sender function to send through the channel
+	Sender connector.EmailSender
+	// Templates map of email templates
+	Templates map[string]*EmailTemplates
 )
 
+// Email struct
 type Email struct {
 	context  context.Context
 	From     string
@@ -29,6 +35,7 @@ type Email struct {
 	Data     interface{}
 }
 
+// EmailTemplates email template
 type EmailTemplates struct {
 	SubjectTemplate *template.Template
 	BodyTemplate    *template.Template
@@ -57,6 +64,7 @@ func init() {
 
 }
 
+// Start the mailer go routine (called from Server.go)
 func Start() {
 	mailerLogger.Info("Mailer starting")
 	running := true
@@ -97,11 +105,13 @@ func Start() {
 	mailerLogger.Info("Mailer stopped")
 }
 
+// Send sends mail through the mailer channel
 func Send(context context.Context, mail *Email) {
 	mail.context = context
 	MailerChannel <- mail
 }
 
+// Stop stops the mailer go routine
 func Stop() {
 	KillChannel <- true
 }

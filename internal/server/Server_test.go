@@ -58,7 +58,7 @@ func TestAll(t *testing.T) {
 	if config.Get("db.type") == "INMEMORY" {
 		dbUtil = connector.GetInMemoryDbInstance()
 	} else {
-		dbUtil = connector.GetMySqlDBInstance()
+		dbUtil = connector.GetMySQLDBInstance()
 	}
 
 	err := dbUtil.DropAllTables(context.Background())
@@ -127,45 +127,45 @@ func TestAll(t *testing.T) {
 		CreateUserTesting(t, accessToken, fmt.Sprintf("user-%d@email.com", i), fmt.Sprintf("this is all number %d", i))
 	}
 	group1 := CreateNewGroupTesting(t, accessToken, "GroupOne")
-	if group1.RecId == "" {
+	if group1.RecID == "" {
 		t.Logf("group1 RecID empty")
 		t.Fail()
 	}
 	role1 := CreateNewRoleTesting(t, accessToken, "RoleOne")
-	if role1.RecId == "" {
+	if role1.RecID == "" {
 		t.Logf("role1 RecID empty")
 		t.Fail()
 	}
 	group2 := CreateNewGroupTesting(t, accessToken, "GroupTwo")
-	if group2.RecId == "" {
+	if group2.RecID == "" {
 		t.Logf("group2 RecID empty")
 		t.Fail()
 	}
 	role2 := CreateNewRoleTesting(t, accessToken, "RoleTwo")
-	if role2.RecId == "" {
+	if role2.RecID == "" {
 		t.Logf("role2 RecID empty")
 		t.Fail()
 	}
 
-	CreateUserGroupTesting(t, accessToken, simpleUsers[1].RecID, group1.RecId)
-	CreateGroupUserTesting(t, accessToken, group2.RecId, simpleUsers[1].RecID)
+	CreateUserGroupTesting(t, accessToken, simpleUsers[1].RecID, group1.RecID)
+	CreateGroupUserTesting(t, accessToken, group2.RecID, simpleUsers[1].RecID)
 
-	t.Logf("--- SipleUser[1].RecID = %s --- role1.RecID = %s", simpleUsers[1].RecID, role1.RecId)
+	t.Logf("--- SipleUser[1].RecID = %s --- role1.RecID = %s", simpleUsers[1].RecID, role1.RecID)
 
-	CreateUserRoleTesting(t, accessToken, simpleUsers[1].RecID, role1.RecId)
-	CreateRoleUserTesting(t, accessToken, role2.RecId, simpleUsers[1].RecID)
+	CreateUserRoleTesting(t, accessToken, simpleUsers[1].RecID, role1.RecID)
+	CreateRoleUserTesting(t, accessToken, role2.RecID, simpleUsers[1].RecID)
 
-	CreateGroupRoleTesting(t, accessToken, group1.RecId, role1.RecId)
-	CreateRoleGroupTesting(t, accessToken, role2.RecId, group2.RecId)
+	CreateGroupRoleTesting(t, accessToken, group1.RecID, role1.RecID)
+	CreateRoleGroupTesting(t, accessToken, role2.RecID, group2.RecID)
 
 	ListUserGroupByUser(t, accessToken, simpleUsers[1].RecID)
-	ListUserGroupByGroup(t, accessToken, group2.RecId)
+	ListUserGroupByGroup(t, accessToken, group2.RecID)
 
 	ListUserRoleByUser(t, accessToken, simpleUsers[1].RecID)
-	ListUserRoleByRole(t, accessToken, role1.RecId)
+	ListUserRoleByRole(t, accessToken, role1.RecID)
 
-	ListGroupRoleByRole(t, accessToken, role1.RecId)
-	ListGroupRoleByGroup(t, accessToken, group1.RecId)
+	ListGroupRoleByRole(t, accessToken, role1.RecID)
+	ListGroupRoleByGroup(t, accessToken, group1.RecID)
 
 	simpleUsers = ListUsersTesting(t, accessToken)
 	if len(simpleUsers) != 10 {
@@ -363,7 +363,7 @@ func CreateNewGroupTesting(t *testing.T, accessToken, groupName string) *connect
 	_ = json.Unmarshal(recorder.Body.Bytes(), &jObj)
 	data := jObj["data"].(map[string]interface{})
 	ret := &connector.Group{
-		RecId:       data["rec_id"].(string),
+		RecID:       data["rec_id"].(string),
 		GroupName:   data["group_name"].(string),
 		Description: data["description"].(string),
 	}
@@ -392,7 +392,7 @@ func CreateNewRoleTesting(t *testing.T, accessToken, roleName string) *connector
 	_ = json.Unmarshal(recorder.Body.Bytes(), &jObj)
 	data := jObj["data"].(map[string]interface{})
 	ret := &connector.Role{
-		RecId:       data["rec_id"].(string),
+		RecID:       data["rec_id"].(string),
 		RoleName:    data["role_name"].(string),
 		Description: data["description"].(string),
 	}
