@@ -204,7 +204,7 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 		}
 		user.LastLogin = time.Now()
 
-		// Make sure chnages to this user are saved.
+		// Make sure changes to this user are saved.
 		defer userRepo.SaveOrUpdate(r.Context(), user)
 	}
 

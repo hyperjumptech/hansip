@@ -46,7 +46,7 @@ func (r *Recipients) Recipients() []string {
 	return ret
 }
 
-// DummyMailSender str
+// DummyMailSender struct
 type DummyMailSender struct {
 	LastSentMail *DummyMail
 }
@@ -144,7 +144,6 @@ func getMailBoxName(email string) string {
 }
 
 // SendEmail from Token
-// @return
 func (sender *SendGridSender) SendEmail(ctx context.Context, to, cc, bcc []string, from, fromName, subject, body string) error {
 	sendGridMail := mail.NewV3Mail()
 
