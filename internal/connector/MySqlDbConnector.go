@@ -283,7 +283,7 @@ func (db *MySqlDB) DeleteUser(ctx context.Context, user *User) error {
 // SaveOrUpdate save or update a user data
 func (db *MySqlDB) SaveOrUpdate(ctx context.Context, user *User) error {
 	fLog := mysqlLog.WithField("func", "SaveOrUpdate").WithField("RequestId", ctx.Value(constants.RequestId))
-	creating := true
+	creating := false
 	user, err := db.GetUserByRecId(ctx, user.RecId)
 	if err != nil {
 		fLog.Errorf("db.GetUserByRecId got %s", err.Error())
@@ -301,7 +301,7 @@ func (db *MySqlDB) SaveOrUpdate(ctx context.Context, user *User) error {
 		enable2fa = 1
 	}
 	if err != nil {
-		creating = false
+		creating = true
 	}
 	if creating {
 		_, err = db.instance.ExecContext(ctx, "INSERT INTO HANSIP_USER(REC_ID,EMAIL,HASHED_PASSPHRASE,ENABLED, SUSPENDED,LAST_SEEN,LAST_LOGIN,FAIL_COUNT,ACTIVATION_CODE,ACTIVATION_DATE,TOTP_KEY,ENABLE_2FE,TOKEN_2FE,RECOVERY_CODE) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -625,13 +625,13 @@ func (db *MySqlDB) DeleteRole(ctx context.Context, role *Role) error {
 // SaveOrUpdateRole save or update a role record
 func (db *MySqlDB) SaveOrUpdateRole(ctx context.Context, role *Role) error {
 	fLog := mysqlLog.WithField("func", "SaveOrUpdateRole").WithField("RequestId", ctx.Value(constants.RequestId))
-	creating := true
+	creating := false
 	if len(role.RecId) == 0 {
 		role.RecId = helper.MakeRandomString(10, true, true, true, false)
 	} else {
 		_, err := db.GetRoleByRecId(ctx, role.RecId)
 		if err != nil {
-			creating = false
+			creating = true
 		}
 	}
 	if creating {
@@ -720,13 +720,13 @@ func (db *MySqlDB) DeleteGroup(ctx context.Context, group *Group) error {
 // SaveOrUpdateGroup delete one specific group
 func (db *MySqlDB) SaveOrUpdateGroup(ctx context.Context, group *Group) error {
 	fLog := mysqlLog.WithField("func", "SaveOrUpdateGroup").WithField("RequestId", ctx.Value(constants.RequestId))
-	creating := true
+	creating := false
 	if len(group.RecId) == 0 {
 		group.RecId = helper.MakeRandomString(10, true, true, true, false)
 	} else {
 		_, err := db.GetGroupByRecId(ctx, group.RecId)
 		if err != nil {
-			creating = false
+			creating = true
 		}
 	}
 	if creating {

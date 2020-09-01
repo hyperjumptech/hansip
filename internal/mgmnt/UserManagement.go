@@ -198,8 +198,8 @@ func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
 }
 
 type ActivateUserRequest struct {
-	Email           string
-	ActivationToken string
+	Email           string `json:"email"`
+	ActivationToken string `json:"activation_token"`
 }
 
 // ActivateUser serve user activation process
