@@ -283,13 +283,28 @@ func (db *MySQLDB) DeleteUser(ctx context.Context, user *User) error {
 	return err
 }
 
+// IsUserRecIdExist check if a specific user recId is exist in database
+func (db *MySQLDB) IsUserRecIdExist(ctx context.Context, recId string) (bool, error) {
+	fLog := mysqlLog.WithField("func", "IsUserRecIdExist").WithField("RequestId", ctx.Value(constants.RequestId))
+	rows, err := db.instance.QueryContext(ctx, "SELECT COUNT(*) AS CNT FROM HANSIP_USER WHERE REC_ID=?", recId)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+	}
+	if rows.Next() {
+		count := 0
+		rows.Scan(&count)
+		return count > 0, nil
+	}
+	fLog.Errorf("db.instance.IsUserRecIdExist cant scan")
+	return false, fmt.Errorf("db.instance.IsUserRecIdExist cant scan")
+}
+
 // SaveOrUpdate save or update a user data
 func (db *MySQLDB) SaveOrUpdate(ctx context.Context, user *User) error {
 	fLog := mysqlLog.WithField("func", "SaveOrUpdate").WithField("RequestId", ctx.Value(constants.RequestId))
-	creating := true
-	user, err := db.GetUserByRecID(ctx, user.RecID)
+	creating, err := db.IsUserRecIdExist(ctx, user.RecID)
 	if err != nil {
-		fLog.Errorf("db.GetUserByRecID got %s", err.Error())
+		return err
 	}
 	enabled := 0
 	suspended := 0
@@ -302,9 +317,6 @@ func (db *MySQLDB) SaveOrUpdate(ctx context.Context, user *User) error {
 	}
 	if user.Enable2FactorAuth {
 		enable2fa = 1
-	}
-	if err != nil {
-		creating = false
 	}
 	if creating {
 		_, err = db.instance.ExecContext(ctx, "INSERT INTO HANSIP_USER(REC_ID,EMAIL,HASHED_PASSPHRASE,ENABLED, SUSPENDED,LAST_SEEN,LAST_LOGIN,FAIL_COUNT,ACTIVATION_CODE,ACTIVATION_DATE,TOTP_KEY,ENABLE_2FE,TOKEN_2FE,RECOVERY_CODE) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -625,17 +637,35 @@ func (db *MySQLDB) DeleteRole(ctx context.Context, role *Role) error {
 	return err
 }
 
+// IsRoleRecIdExist check if a speciffic role recId is exist in database
+func (db *MySQLDB) IsRoleRecIdExist(ctx context.Context, recId string) (bool, error) {
+	fLog := mysqlLog.WithField("func", "IsUserRecIdExist").WithField("RequestId", ctx.Value(constants.RequestId))
+	rows, err := db.instance.QueryContext(ctx, "SELECT COUNT(*) AS CNT FROM HANSIP_ROLE WHERE REC_ID=?", recId)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+	}
+	if rows.Next() {
+		count := 0
+		rows.Scan(&count)
+		return count > 0, nil
+	}
+	fLog.Errorf("db.instance.IsRoleRecIdExist cant scan")
+	return false, fmt.Errorf("db.instance.IsRoleRecIdExist cant scan")
+}
+
 // SaveOrUpdateRole save or update a role record
 func (db *MySQLDB) SaveOrUpdateRole(ctx context.Context, role *Role) error {
 	fLog := mysqlLog.WithField("func", "SaveOrUpdateRole").WithField("RequestId", ctx.Value(constants.RequestId))
-	creating := true
+	creating := false
 	if len(role.RecID) == 0 {
 		role.RecID = helper.MakeRandomString(10, true, true, true, false)
+		creating = true
 	} else {
-		_, err := db.GetRoleByRecID(ctx, role.RecID)
+		create, err := db.IsRoleRecIdExist(ctx, role.RecID)
 		if err != nil {
-			creating = false
+			return err
 		}
+		creating = create
 	}
 	if creating {
 		_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_ROLE(REC_ID,ROLE_NAME,DESCRIPTION) VALUES(?,?,?)",
@@ -720,17 +750,35 @@ func (db *MySQLDB) DeleteGroup(ctx context.Context, group *Group) error {
 	return err
 }
 
-// SaveOrUpdateGroup update or save one specific group
+// IsGroupRecIdExist check if a speciffic group recId is exist in database
+func (db *MySQLDB) IsGroupRecIdExist(ctx context.Context, recId string) (bool, error) {
+	fLog := mysqlLog.WithField("func", "IsGroupRecIdExist").WithField("RequestId", ctx.Value(constants.RequestId))
+	rows, err := db.instance.QueryContext(ctx, "SELECT COUNT(*) AS CNT FROM HANSIP_GROUP WHERE REC_ID=?", recId)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+	}
+	if rows.Next() {
+		count := 0
+		rows.Scan(&count)
+		return count > 0, nil
+	}
+	fLog.Errorf("db.instance.IsGroupRecIdExist cant scan")
+	return false, fmt.Errorf("db.instance.IsGroupRecIdExist cant scan")
+}
+
+// SaveOrUpdateGroup delete one specific group
 func (db *MySQLDB) SaveOrUpdateGroup(ctx context.Context, group *Group) error {
 	fLog := mysqlLog.WithField("func", "SaveOrUpdateGroup").WithField("RequestId", ctx.Value(constants.RequestId))
-	creating := true
+	creating := false
 	if len(group.RecID) == 0 {
 		group.RecID = helper.MakeRandomString(10, true, true, true, false)
+		creating = true
 	} else {
-		_, err := db.GetGroupByRecID(ctx, group.RecID)
+		create, err := db.IsGroupRecIdExist(ctx, group.RecID)
 		if err != nil {
-			creating = false
+			return err
 		}
+		creating = create
 	}
 	if creating {
 		_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_GROUP(REC_ID,GROUP_NAME,DESCRIPTION) VALUES(?,?,?)",
