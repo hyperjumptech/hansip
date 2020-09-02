@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/connector"
+	"github.com/hyperjumptech/hansip/internal/mgmnt"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	"github.com/hyperjumptech/hansip/pkg/totp"
 	"golang.org/x/crypto/bcrypt"
@@ -46,12 +47,12 @@ func InitializeAuthRouter(router *mux.Router) {
 	if initialized {
 		return
 	}
-	userRepo = connector.GetInMemoryDbInstance()
-	userRoleRepo = connector.GetInMemoryDbInstance()
-	roleRepo = connector.GetInMemoryDbInstance()
-	userGroupRepo = connector.GetInMemoryDbInstance()
-	groupRepo = connector.GetInMemoryDbInstance()
-	groupRoleRepo = connector.GetInMemoryDbInstance()
+	userRepo = mgmnt.UserRepo
+	userRoleRepo = mgmnt.UserRoleRepo
+	roleRepo = mgmnt.RoleRepo
+	userGroupRepo = mgmnt.UserGroupRepo
+	groupRepo = mgmnt.GroupRepo
+	groupRoleRepo = mgmnt.GroupRoleRepo
 
 	router.HandleFunc("/api/v1/auth/authenticate", Authentication).Methods("OPTIONS", "POST")
 	router.HandleFunc("/api/v1/auth/refresh", Refresh).Methods("OPTIONS", "POST")
