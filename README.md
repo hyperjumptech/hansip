@@ -40,7 +40,7 @@ $ make run
 
 ```bash
 $ make test
-``` 
+```  
 
 ## Configuring Hansip
 
@@ -61,7 +61,7 @@ You can change the import env variable.
 If you're running from docker, you should modify the environment variable for the running
 image.
 
-### Environment Variable Values 
+### Environment Variable Values  
 
 | Variable | Environment Variable | Default | Description |
 | -------- | -------------------- | ------- | ----------- |
