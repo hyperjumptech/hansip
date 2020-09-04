@@ -37,6 +37,7 @@ var (
 
 		&ACL{PathPattern: "/api/v1/recovery/**/*", AllowedAudiences: []string{}, Method: "POST"},
 
+		&ACL{PathPattern: "/api/v1/management/user/whoami", AllowedAudiences: []string{"user@aaa", "admin@aaa"}, Method: "GET"},
 		&ACL{PathPattern: "/api/v1/management/user/activate", AllowedAudiences: []string{}, Method: "POST"},
 		&ACL{PathPattern: "/api/v1/management/users", AllowedAudiences: []string{"admin@aaa"}, Method: "GET"},
 		&ACL{PathPattern: "/api/v1/management/user", AllowedAudiences: []string{"admin@aaa"}, Method: "POST"},

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/constants"
+	"github.com/hyperjumptech/hansip/internal/hansipcontext"
 	"github.com/hyperjumptech/hansip/internal/mailer"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	"github.com/hyperjumptech/hansip/pkg/totp"
@@ -200,6 +201,101 @@ func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
 type ActivateUserRequest struct {
 	Email           string `json:"email"`
 	ActivationToken string `json:"activation_token"`
+}
+
+type WhoAmIResponse struct {
+	RecordId  string          `json:"rec_id"`
+	Email     string          `json:"email"`
+	Enabled   bool            `json:"enabled"`
+	Suspended bool            `json:"suspended"`
+	Roles     []*RoleSummary  `json:"roles"`
+	Groups    []*GroupSummary `json:"groups"`
+}
+
+type RoleSummary struct {
+	RecordId string `json:"rec_id"`
+	RoleName string `json:"role_name"`
+}
+
+type GroupSummary struct {
+	RecordId  string         `json:"rec_id"`
+	GroupName string         `json:"group_name"`
+	Roles     []*RoleSummary `json:"roles"`
+}
+
+func WhoAmI(w http.ResponseWriter, r *http.Request) {
+	fLog := userMgmtLogger.WithField("func", "WhoAmI").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	authCtx := r.Context().Value(constants.HansipAuthentication).(*hansipcontext.AuthenticationContext)
+	user, err := UserRepo.GetUserByEmail(r.Context(), authCtx.Subject)
+	if err != nil {
+		fLog.Errorf("UserRepo.GetUserByEmail got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		return
+	}
+	whoami := &WhoAmIResponse{
+		RecordId:  user.RecId,
+		Email:     user.Email,
+		Enabled:   user.Enabled,
+		Suspended: user.Suspended,
+		Roles:     make([]*RoleSummary, 0),
+		Groups:    make([]*GroupSummary, 0),
+	}
+	roles, _, err := UserRoleRepo.ListUserRoleByUser(r.Context(), user, &helper.PageRequest{
+		No:       1,
+		PageSize: 100,
+		OrderBy:  "ROLE_NAME",
+		Sort:     "ASC",
+	})
+	if err != nil {
+		fLog.Errorf("UserRoleRepo.ListUserRoleByUser got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		return
+	}
+	for _, r := range roles {
+		whoami.Roles = append(whoami.Roles, &RoleSummary{
+			RecordId: r.RecId,
+			RoleName: r.RoleName,
+		})
+	}
+
+	groups, _, err := UserGroupRepo.ListUserGroupByUser(r.Context(), user, &helper.PageRequest{
+		No:       1,
+		PageSize: 100,
+		OrderBy:  "GROUP_NAME",
+		Sort:     "ASC",
+	})
+	if err != nil {
+		fLog.Errorf("UserGroupRepo.ListUserGroupByUser got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		return
+	}
+	for _, g := range groups {
+		groupSummary := &GroupSummary{
+			RecordId:  g.RecId,
+			GroupName: g.GroupName,
+			Roles:     make([]*RoleSummary, 0),
+		}
+		groupRole, _, err := GroupRoleRepo.ListGroupRoleByGroup(r.Context(), g, &helper.PageRequest{
+			No:       1,
+			PageSize: 100,
+			OrderBy:  "ROLE_NAME",
+			Sort:     "ASC",
+		})
+		if err != nil {
+			fLog.Errorf("GroupRoleRepo.ListGroupRoleByGroup got %s", err.Error())
+			helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+			return
+		}
+		for _, gr := range groupRole {
+			groupSummary.Roles = append(groupSummary.Roles, &RoleSummary{
+				RecordId: gr.RecId,
+				RoleName: gr.RoleName,
+			})
+		}
+		whoami.Groups = append(whoami.Groups, groupSummary)
+	}
+
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User information populated", nil, whoami)
 }
 
 // ActivateUser serve user activation process

@@ -21,6 +21,7 @@ func InitializeRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/management/user", CreateNewUser).Methods("OPTIONS", "POST")
 	router.HandleFunc("/api/v1/management/user/{userRecId}/passwd", ChangePassphrase).Methods("OPTIONS", "POST")
 	router.HandleFunc("/api/v1/management/user/activate", ActivateUser).Methods("OPTIONS", "POST")
+	router.HandleFunc("/api/v1/management/user/whoami", WhoAmI).Methods("OPTIONS", "GET")
 	router.HandleFunc("/api/v1/management/user/{userRecId}", GetUserDetail).Methods("OPTIONS", "GET")
 	router.HandleFunc("/api/v1/management/user/{userRecId}", UpdateUserDetail).Methods("PUT")
 	router.HandleFunc("/api/v1/management/user/{userRecId}", DeleteUser).Methods("DELETE")

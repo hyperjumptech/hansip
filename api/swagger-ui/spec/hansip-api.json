@@ -494,6 +494,41 @@
         }
       }
     },
+    "/management/user/whoami": {
+      "get": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Get self account information",
+        "description": "Get information about the user of the current authenticated bearer",
+        "operationId": "WhoAmI",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User detail",
+            "schema": {
+              "$ref": "#/definitions/WhoAmI"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      }
+    },
     "/management/user/{userRecId}": {
       "get": {
         "tags": [
@@ -2213,6 +2248,40 @@
             "SUCCESS",
             "FAIL"
           ]
+        }
+      }
+    },
+    "WhoAmI": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/UserSummary"
+        }
+      ],
+      "properties": {
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RoleSummary"
+          }
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/GroupSummary"
+              }
+            ],
+            "properties": {
+              "roles": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/RoleSummary"
+                }
+              }
+            }
+          }
         }
       }
     },
