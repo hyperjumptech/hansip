@@ -19,18 +19,19 @@ build: build-static
 #	GO_ENABLED=0 go build -a -ldflags '-extldflags "-static"' -o $(IMAGE_NAME).app cmd/main/Main.go
 
 lint: build-static
-	golint -set_exit_status ./internal/... ./pkg/...
+	golint -set_exit_status ./internal/... ./pkg/... ./cmd/...
 
 test: build-static
+	go install github.com/newm4n/goornogo
 	export GO111MODULE on; \
-	go test ./... -cover -vet -all -v -short
+	go test ./... -cover -vet -all -v -short -covermode=count -coverprofile=coverage.out
+	goornogo -i coverage.out -c 30
 
 run: build
 	export AAA_SERVER_HOST=0.0.0.0; \
 	export AAA_SERVER_PORT=8088; \
 	export AAA_SETUP_ADMIN_ENABLE=true; \
 	export AAA_SERVER_LOG_LEVEL=TRACE; \
-	export AAA_DB_TYPE=MYSQL; \
 	./$(IMAGE_NAME).app
 	rm -f $(IMAGE_NAME).app
 

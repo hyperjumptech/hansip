@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/constants"
+	"github.com/hyperjumptech/hansip/internal/hansipcontext"
 	"github.com/hyperjumptech/hansip/internal/mailer"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	"github.com/hyperjumptech/hansip/pkg/totp"
@@ -22,17 +23,11 @@ var (
 // Show2FAQrCode shows 2FA QR code. It returns a PNG image bytes.
 func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "Show2FAQrCode").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
-	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/2FAQR", r.URL.Path)
+	authCtx := r.Context().Value(constants.HansipAuthentication).(*hansipcontext.AuthenticationContext)
+	user, err := UserRepo.GetUserByEmail(r.Context(), authCtx.Subject)
 	if err != nil {
-		fLog.Errorf("helper.ParsePathParams got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
-		return
-	}
-
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
-	if err != nil || user == nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User not found"), nil, nil)
+		fLog.Errorf("UserRepo.GetUserByEmail got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
 		return
 	}
 
@@ -200,6 +195,155 @@ func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
 type ActivateUserRequest struct {
 	Email           string `json:"email"`
 	ActivationToken string `json:"activation_token"`
+}
+
+type WhoAmIResponse struct {
+	RecordId  string          `json:"rec_id"`
+	Email     string          `json:"email"`
+	Enabled   bool            `json:"enabled"`
+	Suspended bool            `json:"suspended"`
+	Roles     []*RoleSummary  `json:"roles"`
+	Groups    []*GroupSummary `json:"groups"`
+}
+
+type RoleSummary struct {
+	RecordId string `json:"rec_id"`
+	RoleName string `json:"role_name"`
+}
+
+type GroupSummary struct {
+	RecordId  string         `json:"rec_id"`
+	GroupName string         `json:"group_name"`
+	Roles     []*RoleSummary `json:"roles"`
+}
+
+type Activate2FARequest struct {
+	Token string `json:"2FA_token"`
+}
+
+type Activate2FAResponse struct {
+	Secret string `json:"2FA_secret_key"`
+}
+
+func Activate2FA(w http.ResponseWriter, r *http.Request) {
+	fLog := userMgmtLogger.WithField("func", "Activate2FA").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	authCtx := r.Context().Value(constants.HansipAuthentication).(*hansipcontext.AuthenticationContext)
+	user, err := UserRepo.GetUserByEmail(r.Context(), authCtx.Subject)
+	if err != nil {
+		fLog.Errorf("UserRepo.GetUserByEmail got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		return
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	c := &Activate2FARequest{}
+	err = json.Unmarshal(body, c)
+	if err != nil {
+		fLog.Errorf("json.Unmarshal got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "Malformed json body", nil, nil)
+		return
+	}
+	otp, err := totp.GenerateTotpWithDrift(user.UserTotpSecretKey, time.Now(), 30, 6)
+	if err != nil {
+		fLog.Errorf("totp.GenerateTotpWithDrift got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if c.Token != otp {
+		fLog.Errorf("Invalid OTP token for %s", user.Email)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, "Invalid OTP")
+		return
+	}
+	resp := Activate2FAResponse{
+		Secret: user.UserTotpSecretKey,
+	}
+	user.Enable2FactorAuth = true
+	err = UserRepo.SaveOrUpdate(r.Context(), user)
+	if err != nil {
+		fLog.Errorf("UserRepo.SaveOrUpdate got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "2FA Activated", nil, resp)
+}
+
+func WhoAmI(w http.ResponseWriter, r *http.Request) {
+	fLog := userMgmtLogger.WithField("func", "WhoAmI").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	authCtx := r.Context().Value(constants.HansipAuthentication).(*hansipcontext.AuthenticationContext)
+	user, err := UserRepo.GetUserByEmail(r.Context(), authCtx.Subject)
+	if err != nil {
+		fLog.Errorf("UserRepo.GetUserByEmail got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		return
+	}
+	whoami := &WhoAmIResponse{
+		RecordId:  user.RecId,
+		Email:     user.Email,
+		Enabled:   user.Enabled,
+		Suspended: user.Suspended,
+		Roles:     make([]*RoleSummary, 0),
+		Groups:    make([]*GroupSummary, 0),
+	}
+	roles, _, err := UserRoleRepo.ListUserRoleByUser(r.Context(), user, &helper.PageRequest{
+		No:       1,
+		PageSize: 100,
+		OrderBy:  "ROLE_NAME",
+		Sort:     "ASC",
+	})
+	if err != nil {
+		fLog.Errorf("UserRoleRepo.ListUserRoleByUser got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		return
+	}
+	for _, r := range roles {
+		whoami.Roles = append(whoami.Roles, &RoleSummary{
+			RecordId: r.RecId,
+			RoleName: r.RoleName,
+		})
+	}
+
+	groups, _, err := UserGroupRepo.ListUserGroupByUser(r.Context(), user, &helper.PageRequest{
+		No:       1,
+		PageSize: 100,
+		OrderBy:  "GROUP_NAME",
+		Sort:     "ASC",
+	})
+	if err != nil {
+		fLog.Errorf("UserGroupRepo.ListUserGroupByUser got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		return
+	}
+	for _, g := range groups {
+		groupSummary := &GroupSummary{
+			RecordId:  g.RecId,
+			GroupName: g.GroupName,
+			Roles:     make([]*RoleSummary, 0),
+		}
+		groupRole, _, err := GroupRoleRepo.ListGroupRoleByGroup(r.Context(), g, &helper.PageRequest{
+			No:       1,
+			PageSize: 100,
+			OrderBy:  "ROLE_NAME",
+			Sort:     "ASC",
+		})
+		if err != nil {
+			fLog.Errorf("GroupRoleRepo.ListGroupRoleByGroup got %s", err.Error())
+			helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+			return
+		}
+		for _, gr := range groupRole {
+			groupSummary.Roles = append(groupSummary.Roles, &RoleSummary{
+				RecordId: gr.RecId,
+				RoleName: gr.RoleName,
+			})
+		}
+		whoami.Groups = append(whoami.Groups, groupSummary)
+	}
+
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User information populated", nil, whoami)
 }
 
 // ActivateUser serve user activation process

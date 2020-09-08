@@ -90,12 +90,124 @@ func GetMySqlDBInstance() *MySqlDB {
 		mySqlDbInstance = &MySqlDB{
 			instance: db,
 		}
+		err = mySqlDbInstance.InitDB(context.Background())
+		if err != nil {
+			mysqlLog.WithField("func", "GetMySqlDBInstance").Fatalf("mySqlDbInstance.InitDB got %s", err.Error())
+		}
 	}
 	return mySqlDbInstance
 }
 
 type MySqlDB struct {
 	instance *sql.DB
+}
+
+func (db *MySqlDB) InitDB(ctx context.Context) error {
+	fLog := mysqlLog.WithField("func", "InitDB")
+
+	fLog.Infof("Checking table HANSIP_USER")
+	exist, err := db.isTableExist(ctx, "HANSIP_USER")
+	if err != nil {
+		return err
+	}
+	if !exist {
+		fLog.Infof("Create table HANSIP_USER")
+		_, err := db.instance.ExecContext(ctx, CREATE_USER)
+		if err != nil {
+			fLog.Errorf("db.instance.ExecContext HANSIP_USER Got %s", err.Error())
+		}
+	}
+
+	fLog.Infof("Checking table HANSIP_GROUP")
+	exist, err = db.isTableExist(ctx, "HANSIP_GROUP")
+	if err != nil {
+		return err
+	}
+	if !exist {
+		fLog.Infof("Create table HANSIP_GROUP")
+		_, err := db.instance.ExecContext(ctx, CREATE_GROUP)
+		if err != nil {
+			fLog.Errorf("db.instance.ExecContext HANSIP_GROUP Got %s", err.Error())
+		}
+	}
+
+	fLog.Infof("Checking table HANSIP_ROLE")
+	exist, err = db.isTableExist(ctx, "HANSIP_ROLE")
+	if err != nil {
+		return err
+	}
+	if !exist {
+		fLog.Infof("Create table HANSIP_ROLE")
+		_, err := db.instance.ExecContext(ctx, CREATE_ROLE)
+		if err != nil {
+			fLog.Errorf("db.instance.ExecContext HANSIP_ROLE Got %s", err.Error())
+		} else {
+			fLog.Infof("Create Roles")
+			_, err = db.CreateRole(ctx, "admin@aaa", "Administrator role")
+			if err != nil {
+				fLog.Errorf("db.CreateRole Got %s", err.Error())
+			}
+			_, err = db.CreateRole(ctx, "user@aaa", "Administrator role")
+			if err != nil {
+				fLog.Errorf("db.CreateRole Got %s", err.Error())
+			}
+		}
+	}
+
+	fLog.Infof("Checking table HANSIP_USER_ROLE")
+	exist, err = db.isTableExist(ctx, "HANSIP_USER_ROLE")
+	if err != nil {
+		return err
+	}
+	if !exist {
+		fLog.Infof("Create table HANSIP_USER_ROLE")
+		_, err := db.instance.ExecContext(ctx, CREATE_USER_ROLE)
+		if err != nil {
+			fLog.Errorf("db.instance.ExecContext HANSIP_USER_ROLE Got %s", err.Error())
+		}
+	}
+
+	fLog.Infof("Checking table HANSIP_USER_GROUP")
+	exist, err = db.isTableExist(ctx, "HANSIP_USER_GROUP")
+	if err != nil {
+		return err
+	}
+	if !exist {
+		fLog.Infof("Create table HANSIP_USER_GROUP")
+		_, err := db.instance.ExecContext(ctx, CREATE_USER_GROUP)
+		if err != nil {
+			fLog.Errorf("db.instance.ExecContext HANSIP_USER_GROUP Got %s", err.Error())
+		}
+	}
+
+	fLog.Infof("Checking table HANSIP_GROUP_ROLE")
+	exist, err = db.isTableExist(ctx, "HANSIP_GROUP_ROLE")
+	if err != nil {
+		return err
+	}
+	if !exist {
+		fLog.Infof("Create table HANSIP_GROUP_ROLE")
+		_, err := db.instance.ExecContext(ctx, CREATE_GROUP_ROLE)
+		if err != nil {
+			fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s", err.Error())
+		}
+	}
+	return nil
+}
+
+func (db *MySqlDB) isTableExist(ctx context.Context, tableName string) (bool, error) {
+	fLog := mysqlLog.WithField("func", "isTableExist")
+	rows, err := db.instance.QueryContext(ctx, "select COUNT(*) AS CNT from INFORMATION_SCHEMA.TABLES where TABLE_NAME=?", tableName)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+	}
+	if rows.Next() {
+		count := 0
+		rows.Scan(&count)
+		return count > 0, nil
+	}
+	fLog.Errorf("db.instance.IsUserRecIdExist cant scan")
+	return false, fmt.Errorf("db.instance.IsUserRecIdExist cant scan")
 }
 
 // DropAllTables will drop all tables used by Hansip
@@ -131,6 +243,14 @@ func (db *MySqlDB) CreateAllTable(ctx context.Context) error {
 		fLog.Errorf("db.instance.ExecContext HANSIP_USER_GROUP Got %s", err.Error())
 	}
 	_, err = db.instance.ExecContext(ctx, CREATE_GROUP_ROLE)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s", err.Error())
+	}
+	_, err = db.CreateRole(ctx, "admin@aaa", "Administrator role")
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s", err.Error())
+	}
+	_, err = db.CreateRole(ctx, "user@aaa", "Administrator role")
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s", err.Error())
 	}
