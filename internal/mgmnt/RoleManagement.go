@@ -16,7 +16,7 @@ var (
 
 // ListAllRole handler
 func ListAllRole(w http.ResponseWriter, r *http.Request) {
-	fLog := roleMgmtLogger.WithField("func", "ListAllRole").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := roleMgmtLogger.WithField("func", "ListAllRole").WithField("RequestId", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	pageRequest, err := helper.NewPageRequestFromRequest(r)
 	if err != nil {
 		fLog.Errorf("helper.NewPageRequestFromRequest got %s", err.Error())
@@ -50,7 +50,7 @@ type CreateRoleRequest struct {
 
 // CreateRole handler
 func CreateRole(w http.ResponseWriter, r *http.Request) {
-	fLog := roleMgmtLogger.WithField("func", "CreateRole").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := roleMgmtLogger.WithField("func", "CreateRole").WithField("RequestId", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	req := &CreateRoleRequest{}
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -76,7 +76,7 @@ func CreateRole(w http.ResponseWriter, r *http.Request) {
 
 // GetRoleDetail handler
 func GetRoleDetail(w http.ResponseWriter, r *http.Request) {
-	fLog := roleMgmtLogger.WithField("func", "GetRoleDetail").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := roleMgmtLogger.WithField("func", "GetRoleDetail").WithField("RequestId", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecID}", r.URL.Path)
 	if err != nil {
 		panic(err)
@@ -92,7 +92,7 @@ func GetRoleDetail(w http.ResponseWriter, r *http.Request) {
 
 // DeleteRole delete role handler
 func DeleteRole(w http.ResponseWriter, r *http.Request) {
-	fLog := roleMgmtLogger.WithField("func", "DeleteRole").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := roleMgmtLogger.WithField("func", "DeleteRole").WithField("RequestId", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
@@ -109,7 +109,7 @@ func DeleteRole(w http.ResponseWriter, r *http.Request) {
 
 // ListRoleUser handler
 func ListRoleUser(w http.ResponseWriter, r *http.Request) {
-	fLog := roleMgmtLogger.WithField("func", "ListRoleUser").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := roleMgmtLogger.WithField("func", "ListRoleUser").WithField("RequestId", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/users", r.URL.Path)
 	if err != nil {
 		panic(err)
@@ -147,7 +147,7 @@ func ListRoleUser(w http.ResponseWriter, r *http.Request) {
 
 // CreateRoleUser handler
 func CreateRoleUser(w http.ResponseWriter, r *http.Request) {
-	fLog := roleMgmtLogger.WithField("func", "CreateRoleUser").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := roleMgmtLogger.WithField("func", "CreateRoleUser").WithField("RequestId", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/user/{userRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
@@ -175,7 +175,7 @@ func CreateRoleUser(w http.ResponseWriter, r *http.Request) {
 
 // DeleteRoleUser handler
 func DeleteRoleUser(w http.ResponseWriter, r *http.Request) {
-	fLog := roleMgmtLogger.WithField("func", "DeleteRoleUser").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := roleMgmtLogger.WithField("func", "DeleteRoleUser").WithField("RequestId", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/user/{userRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
@@ -209,7 +209,7 @@ func DeleteRoleUser(w http.ResponseWriter, r *http.Request) {
 
 // ListRoleGroup handler
 func ListRoleGroup(w http.ResponseWriter, r *http.Request) {
-	fLog := roleMgmtLogger.WithField("func", "ListRoleGroup").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := roleMgmtLogger.WithField("func", "ListRoleGroup").WithField("RequestId", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/groups", r.URL.Path)
 	if err != nil {
 		panic(err)
@@ -242,7 +242,7 @@ func ListRoleGroup(w http.ResponseWriter, r *http.Request) {
 
 // CreateRoleGroup handler
 func CreateRoleGroup(w http.ResponseWriter, r *http.Request) {
-	fLog := roleMgmtLogger.WithField("func", "CreateRoleGroup").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := roleMgmtLogger.WithField("func", "CreateRoleGroup").WithField("RequestId", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/group/{groupRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
@@ -270,7 +270,7 @@ func CreateRoleGroup(w http.ResponseWriter, r *http.Request) {
 
 // DeleteRoleGroup handler
 func DeleteRoleGroup(w http.ResponseWriter, r *http.Request) {
-	fLog := roleMgmtLogger.WithField("func", "DeleteRoleGroup").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := roleMgmtLogger.WithField("func", "DeleteRoleGroup").WithField("RequestId", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/group/{groupRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)

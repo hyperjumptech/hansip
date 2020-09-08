@@ -35,9 +35,11 @@ var (
 		&ACL{PathPattern: "/api/v1/auth/authenticate", AllowedAudiences: []string{}, Method: "POST"},
 		&ACL{PathPattern: "/api/v1/auth/refresh", AllowedAudiences: []string{"user@aaa", "admin@aaa"}, Method: "POST"},
 		&ACL{PathPattern: "/api/v1/auth/2fa", AllowedAudiences: []string{}, Method: "POST"},
+		&ACL{PathPattern: "/api/v1/auth/authenticate2fa", AllowedAudiences: []string{}, Method: "POST"},
 
 		&ACL{PathPattern: "/api/v1/recovery/**/*", AllowedAudiences: []string{}, Method: "POST"},
 
+		&ACL{PathPattern: "/api/v1/management/user/whoami", AllowedAudiences: []string{"user@aaa", "admin@aaa"}, Method: "GET"},
 		&ACL{PathPattern: "/api/v1/management/user/activate", AllowedAudiences: []string{}, Method: "POST"},
 		&ACL{PathPattern: "/api/v1/management/users", AllowedAudiences: []string{"admin@aaa"}, Method: "GET"},
 		&ACL{PathPattern: "/api/v1/management/user", AllowedAudiences: []string{"admin@aaa"}, Method: "POST"},
@@ -53,7 +55,8 @@ var (
 		&ACL{PathPattern: "/api/v1/management/user/*/groups", AllowedAudiences: []string{"admin@aaa"}, Method: "GET"},
 		&ACL{PathPattern: "/api/v1/management/user/*/group/*", AllowedAudiences: []string{"admin@aaa"}, Method: "PUT"},
 		&ACL{PathPattern: "/api/v1/management/user/*/group/*", AllowedAudiences: []string{"admin@aaa"}, Method: "DELETE"},
-		&ACL{PathPattern: "/management/user/*/2FAQR", AllowedAudiences: []string{"admin@aaa", "user@aaa"}, Method: "GET"},
+		&ACL{PathPattern: "/api/v1/management/user/2FAQR", AllowedAudiences: []string{"admin@aaa", "user@aaa"}, Method: "GET"},
+		&ACL{PathPattern: "/api/v1/management/user/activate2FA", AllowedAudiences: []string{"admin@aaa", "user@aaa"}, Method: "POST"},
 
 		&ACL{PathPattern: "/api/v1/management/groups", AllowedAudiences: []string{"admin@aaa"}, Method: "GET"},
 		&ACL{PathPattern: "/api/v1/management/group", AllowedAudiences: []string{"admin@aaa"}, Method: "POST"},
@@ -89,7 +92,7 @@ type ACL struct {
 // JwtMiddleware handle authorization check for accessed endpoint by inspecting the Authorization header and look for JWT token.
 func JwtMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fLog := jwtMiddLog.WithField("path", r.URL.Path).WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("func", "jwtMiddLog").WithField("method", r.Method)
+		fLog := jwtMiddLog.WithField("path", r.URL.Path).WithField("RequestId", r.Context().Value(constants.RequestID)).WithField("func", "jwtMiddLog").WithField("method", r.Method)
 		fLog.Tracef("Checking JWT")
 		for _, acl := range ACLs {
 			match, err := helper.Match(acl.PathPattern, r.URL.Path)

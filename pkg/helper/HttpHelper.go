@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hyperjumptech/hansip/internal/constants"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
+
+	"github.com/hyperjumptech/hansip/internal/constants"
+	log "github.com/sirupsen/logrus"
 )
 
 // ResponseJSON define the structure of all response
@@ -55,8 +56,8 @@ func WriteHTTPResponse(ctx context.Context, w http.ResponseWriter, httpRespCode 
 			w.Header().Add(k, v)
 		}
 	}
-	if ctx.Value(constants.RequestId) != nil {
-		w.Header().Add("X-Request-ID", ctx.Value(constants.RequestId).(string))
+	if ctx.Value(constants.RequestID) != nil {
+		w.Header().Add("X-Request-ID", ctx.Value(constants.RequestID).(string))
 	}
 	w.WriteHeader(httpRespCode)
 	rJSON := &ResponseJSON{

@@ -1,10 +1,14 @@
 package constants
 
+// ContextKey is key definition
 type ContextKey int
 
 const (
-	RequestId            ContextKey = 1
+	// RequestID context key constant
+	RequestID ContextKey = 1
+	// HansipAuthentication contenxt key constant
 	HansipAuthentication ContextKey = 2
 
-	RequestIdHeader = "X-Request-ID"
+	// RequestIDHeader header constant
+	RequestIDHeader = "X-Request-ID"
 )

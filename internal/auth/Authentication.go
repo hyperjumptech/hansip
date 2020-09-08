@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/connector"
+	"github.com/hyperjumptech/hansip/internal/mgmnt"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	"github.com/hyperjumptech/hansip/pkg/totp"
 	"golang.org/x/crypto/bcrypt"
@@ -29,14 +30,21 @@ var (
 	initialized = false
 )
 
-// AuthRequest email / passphrase to authenticate
-type AuthRequest struct {
+// Request is struct for Auth request via email/passphrase
+type Request struct {
 	Email      string `json:"email"`
 	Passphrase string `json:"passphrase"`
 }
 
-// AuthResponse are access/refresh after authentication
-type AuthResponse struct {
+// With2FARequest is auth struct for 2FA
+type With2FARequest struct {
+	Email      string `json:"email"`
+	Passphrase string `json:"passphrase"`
+	SecretKey  string `json:"2FA_secret_key"`
+}
+
+// Response is Auth response struct access and refresh tokens
+type Response struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
@@ -51,16 +59,17 @@ func InitializeAuthRouter(router *mux.Router) {
 	if initialized {
 		return
 	}
-	userRepo = connector.GetInMemoryDbInstance()
-	userRoleRepo = connector.GetInMemoryDbInstance()
-	roleRepo = connector.GetInMemoryDbInstance()
-	userGroupRepo = connector.GetInMemoryDbInstance()
-	groupRepo = connector.GetInMemoryDbInstance()
-	groupRoleRepo = connector.GetInMemoryDbInstance()
+	userRepo = mgmnt.UserRepo
+	userRoleRepo = mgmnt.UserRoleRepo
+	roleRepo = mgmnt.RoleRepo
+	userGroupRepo = mgmnt.UserGroupRepo
+	groupRepo = mgmnt.GroupRepo
+	groupRoleRepo = mgmnt.GroupRoleRepo
 
 	router.HandleFunc("/api/v1/auth/authenticate", Authentication).Methods("OPTIONS", "POST")
 	router.HandleFunc("/api/v1/auth/refresh", Refresh).Methods("OPTIONS", "POST")
 	router.HandleFunc("/api/v1/auth/2fa", Auth2FA).Methods("OPTIONS", "POST")
+	router.HandleFunc("/api/v1/auth/authenticate2fa", Authentication2FA).Methods("OPTIONS", "POST")
 
 	initialized = true
 }
@@ -141,7 +150,109 @@ func Auth2FA(w http.ResponseWriter, r *http.Request) {
 
 	access, refresh, err := TokenFactory.CreateTokenPair(subject, audience, nil)
 
-	resp := &AuthResponse{
+	resp := &Response{
+		AccessToken:  access,
+		RefreshToken: refresh,
+	}
+
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Successful", nil, resp)
+}
+
+// Authentication2FA 2 factor authentication handler
+func Authentication2FA(w http.ResponseWriter, r *http.Request) {
+	// Check content-type, make sure its application/json
+	cType := r.Header.Get("Content-Type")
+	if cType != "application/json" {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "Unserviceable content type", nil, nil)
+		return
+	}
+
+	// Read the body into byte array
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+
+	// Parse the body into AuthRequest
+	authReq := &With2FARequest{}
+	err = json.Unmarshal(body, authReq)
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+
+	// Get user by said email
+	user, err := userRepo.GetUserByEmail(r.Context(), authReq.Email)
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized), nil, nil)
+		return
+	}
+	user.LastLogin = time.Now()
+
+	// Make sure chages to this user are saved.
+	defer userRepo.SaveOrUpdate(r.Context(), user)
+
+	// Make sure the user is enabled
+	if !user.Enabled {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "account disabled", nil, nil)
+		return
+	}
+
+	// Make sure the user is not suspended
+	if user.Suspended {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "account suspended", nil, nil)
+		return
+	}
+
+	// Validate the user's password
+	err = bcrypt.CompareHashAndPassword([]byte(user.HashedPassphrase), []byte(authReq.Passphrase))
+	if err != nil {
+		user.FailCount++
+		if user.FailCount > 3 {
+			user.Suspended = true
+		}
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "email or passphrase not match", nil, nil)
+		return
+	}
+
+	if user.UserTotpSecretKey != authReq.SecretKey {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "invalid secret key", nil, nil)
+		return
+	}
+
+	// If the password is valid, reset the user's FailCount
+	user.FailCount = 0
+
+	var roles []string
+
+	// Add user's role from direct UserRole relation.
+	userRoles, _, err := userRoleRepo.ListUserRoleByUser(r.Context(), user, &helper.PageRequest{
+		No:       1,
+		PageSize: 1000,
+	})
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+	// Add user's role into Token audiences info.
+	roles = make([]string, len(userRoles))
+	for k, v := range userRoles {
+		r, err := roleRepo.GetRoleByRecID(r.Context(), v.RecID)
+		if err == nil {
+			roles[k] = r.RoleName
+		}
+	}
+
+	// Set the account email into Token subject.
+	subject := user.Email
+
+	// Set the audience
+	audience := roles
+
+	access, refresh, err := TokenFactory.CreateTokenPair(subject, audience, nil)
+
+	resp := &Response{
 		AccessToken:  access,
 		RefreshToken: refresh,
 	}
@@ -166,7 +277,7 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse the body into AuthRequest
-	authReq := &AuthRequest{}
+	authReq := &Request{}
 	err = json.Unmarshal(body, authReq)
 	if err != nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
@@ -274,7 +385,7 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 
 	access, refresh, err := TokenFactory.CreateTokenPair(subject, audience, nil)
 
-	resp := &AuthResponse{
+	resp := &Response{
 		AccessToken:  access,
 		RefreshToken: refresh,
 	}
