@@ -84,6 +84,38 @@ paths:
           description: "2FA Token not found"
         503:
           description: "Backend server response invalid"
+  /auth/authenticate2fa:
+    post:
+      tags:
+        - "auth"
+      summary: "Authentication using passphrase and 2fa secret key"
+      description: "Call this API for requesting passphrase reset"
+      operationId: "recover2FA"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          required: true
+          name: "credential"
+          description: "Request contains email"
+          schema:
+            type: object
+            properties:
+              email:
+                type: "string"
+              passphrase:
+                type: "string"
+              2FA_secret_key:
+                type: "string"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/AuthResponse'
+        401:
+          description: "Unauthorized, invalid email, passphrase or 2fa_secret_key"
   /auth/refresh:
     post:
       tags:
@@ -266,7 +298,7 @@ paths:
           description: "You are not authorized"
         403:
           description: "Forbidden, your Authorization is not valid or sufficient"
-  /management/user/{userRecId}/2FAQR:
+  /management/user/2FAQR:
     get:
       tags:
         - "management-user"
@@ -277,11 +309,6 @@ paths:
         - "application/json"
       produces:
         - "image/png"
-      parameters:
-        - in: path
-          required: true
-          name: "userRecId"
-          type: "string"
       security:
         - JWT: []
       responses:
@@ -294,6 +321,47 @@ paths:
           description: "You are not authorized"
         403:
           description: "Forbidden, your Authorization is not valid or sufficient"
+  /management/user/activate2FA:
+    post:
+      tags:
+        - "management-user"
+      summary: "Activate the 2FA for the calling user"
+      description: "Activating 2FA for the user, user should call /management/user/2FAQR prior calling this to get the QR code for his 2FA. After scanning it, he should produce 2FA token to activate. If successfuly activated, this endpoint will return the user's 2FA secret key for him to save."
+      operationId: "Activate2FA"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: body
+          required: true
+          name: "2faActivation"
+          schema:
+            type: "object"
+            properties:
+              2FA_token:
+                type: "string"
+      security:
+        - JWT: []
+      responses:
+        200:
+          description: "OK"
+          schema:
+            type: "object"
+            allOf:
+              - $ref: "#/definitions/BaseResponse"
+            properties:
+              data:
+                type: object
+                properties:
+                  2FA_secret_key:
+                    type: "string"
+        401:
+          description: "You are not authorized"
+        403:
+          description: "Forbidden, your Authorization is not valid or sufficient"
+        404:
+          description: "2fa_token invalid"
   /management/user/activate:
     post:
       tags:
@@ -1460,22 +1528,27 @@ definitions:
   WhoAmI:
     type: object
     allOf:
-      - $ref: '#/definitions/UserSummary'
+      - $ref: '#/definitions/BaseResponse'
     properties:
-      roles:
-        type: array
-        items:
-          $ref: '#/definitions/RoleSummary'
-      groups:
-        type: array
-        items:
-          allOf:
-            - $ref: '#/definitions/GroupSummary'
-          properties:
-            roles:
-              type: array
-              items:
-                $ref: '#/definitions/RoleSummary'
+      data:
+        type: object
+        allOf:
+          - $ref: '#/definitions/UserSummary'
+        properties:
+          roles:
+            type: array
+            items:
+              $ref: '#/definitions/RoleSummary'
+          groups:
+            type: array
+            items:
+              allOf:
+                - $ref: '#/definitions/GroupSummary'
+              properties:
+                roles:
+                  type: array
+                  items:
+                    $ref: '#/definitions/RoleSummary'
   UserSummary:
     type: object
     properties:

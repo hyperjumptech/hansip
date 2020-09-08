@@ -23,17 +23,11 @@ var (
 // Show2FAQrCode shows 2FA QR code. It returns a PNG image bytes.
 func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "Show2FAQrCode").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
-	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/2FAQR", r.URL.Path)
+	authCtx := r.Context().Value(constants.HansipAuthentication).(*hansipcontext.AuthenticationContext)
+	user, err := UserRepo.GetUserByEmail(r.Context(), authCtx.Subject)
 	if err != nil {
-		fLog.Errorf("helper.ParsePathParams got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
-		return
-	}
-
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
-	if err != nil || user == nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User not found"), nil, nil)
+		fLog.Errorf("UserRepo.GetUserByEmail got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
 		return
 	}
 
@@ -221,6 +215,60 @@ type GroupSummary struct {
 	RecordId  string         `json:"rec_id"`
 	GroupName string         `json:"group_name"`
 	Roles     []*RoleSummary `json:"roles"`
+}
+
+type Activate2FARequest struct {
+	Token string `json:"2FA_token"`
+}
+
+type Activate2FAResponse struct {
+	Secret string `json:"2FA_secret_key"`
+}
+
+func Activate2FA(w http.ResponseWriter, r *http.Request) {
+	fLog := userMgmtLogger.WithField("func", "Activate2FA").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	authCtx := r.Context().Value(constants.HansipAuthentication).(*hansipcontext.AuthenticationContext)
+	user, err := UserRepo.GetUserByEmail(r.Context(), authCtx.Subject)
+	if err != nil {
+		fLog.Errorf("UserRepo.GetUserByEmail got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		return
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	c := &Activate2FARequest{}
+	err = json.Unmarshal(body, c)
+	if err != nil {
+		fLog.Errorf("json.Unmarshal got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "Malformed json body", nil, nil)
+		return
+	}
+	otp, err := totp.GenerateTotpWithDrift(user.UserTotpSecretKey, time.Now(), 30, 6)
+	if err != nil {
+		fLog.Errorf("totp.GenerateTotpWithDrift got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if c.Token != otp {
+		fLog.Errorf("Invalid OTP token for %s", user.Email)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, "Invalid OTP")
+		return
+	}
+	resp := Activate2FAResponse{
+		Secret: user.UserTotpSecretKey,
+	}
+	user.Enable2FactorAuth = true
+	err = UserRepo.SaveOrUpdate(r.Context(), user)
+	if err != nil {
+		fLog.Errorf("UserRepo.SaveOrUpdate got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "2FA Activated", nil, resp)
 }
 
 func WhoAmI(w http.ResponseWriter, r *http.Request) {

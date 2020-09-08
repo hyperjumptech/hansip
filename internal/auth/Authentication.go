@@ -34,6 +34,12 @@ type AuthRequest struct {
 	Passphrase string `json:"passphrase"`
 }
 
+type AuthWith2FARequest struct {
+	Email      string `json:"email"`
+	Passphrase string `json:"passphrase"`
+	SecretKey  string `json:"2FA_secret_key"`
+}
+
 type AuthResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
@@ -57,6 +63,7 @@ func InitializeAuthRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/auth/authenticate", Authentication).Methods("OPTIONS", "POST")
 	router.HandleFunc("/api/v1/auth/refresh", Refresh).Methods("OPTIONS", "POST")
 	router.HandleFunc("/api/v1/auth/2fa", Auth2FA).Methods("OPTIONS", "POST")
+	router.HandleFunc("/api/v1/auth/authenticate2fa", Authentication2FA).Methods("OPTIONS", "POST")
 
 	initialized = true
 }
@@ -124,6 +131,107 @@ func Auth2FA(w http.ResponseWriter, r *http.Request) {
 			if err == nil {
 				roles[k] = r.RoleName
 			}
+		}
+	}
+
+	// Set the account email into Token subject.
+	subject := user.Email
+
+	// Set the audience
+	audience := roles
+
+	access, refresh, err := TokenFactory.CreateTokenPair(subject, audience, nil)
+
+	resp := &AuthResponse{
+		AccessToken:  access,
+		RefreshToken: refresh,
+	}
+
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Successful", nil, resp)
+}
+
+func Authentication2FA(w http.ResponseWriter, r *http.Request) {
+	// Check content-type, make sure its application/json
+	cType := r.Header.Get("Content-Type")
+	if cType != "application/json" {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "Unserviceable content type", nil, nil)
+		return
+	}
+
+	// Read the body into byte array
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+
+	// Parse the body into AuthRequest
+	authReq := &AuthWith2FARequest{}
+	err = json.Unmarshal(body, authReq)
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+
+	// Get user by said email
+	user, err := userRepo.GetUserByEmail(r.Context(), authReq.Email)
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized), nil, nil)
+		return
+	}
+	user.LastLogin = time.Now()
+
+	// Make sure chages to this user are saved.
+	defer userRepo.SaveOrUpdate(r.Context(), user)
+
+	// Make sure the user is enabled
+	if !user.Enabled {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "account disabled", nil, nil)
+		return
+	}
+
+	// Make sure the user is not suspended
+	if user.Suspended {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "account suspended", nil, nil)
+		return
+	}
+
+	// Validate the user's password
+	err = bcrypt.CompareHashAndPassword([]byte(user.HashedPassphrase), []byte(authReq.Passphrase))
+	if err != nil {
+		user.FailCount++
+		if user.FailCount > 3 {
+			user.Suspended = true
+		}
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "email or passphrase not match", nil, nil)
+		return
+	}
+
+	if user.UserTotpSecretKey != authReq.SecretKey {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "invalid secret key", nil, nil)
+		return
+	}
+
+	// If the password is valid, reset the user's FailCount
+	user.FailCount = 0
+
+	var roles []string
+
+	// Add user's role from direct UserRole relation.
+	userRoles, _, err := userRoleRepo.ListUserRoleByUser(r.Context(), user, &helper.PageRequest{
+		No:       1,
+		PageSize: 1000,
+	})
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+	// Add user's role into Token audiences info.
+	roles = make([]string, len(userRoles))
+	for k, v := range userRoles {
+		r, err := roleRepo.GetRoleByRecId(r.Context(), v.RecId)
+		if err == nil {
+			roles[k] = r.RoleName
 		}
 	}
 
