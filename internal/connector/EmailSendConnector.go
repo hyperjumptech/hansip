@@ -19,20 +19,24 @@ const (
 	mime = "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 )
 
+// EmailSender an email sender interface
 type EmailSender interface {
 	SendEmail(ctx context.Context, to, cc, bcc []string, from, fromName, subject, body string) error
 }
 
+// Recipients contains recipient map
 type Recipients struct {
 	To map[string]bool
 }
 
+// AddAll adds multiple recipient in array
 func (r *Recipients) AddAll(re []string) {
 	for _, ri := range re {
 		r.To[ri] = true
 	}
 }
 
+// Recipients returns all recipients
 func (r *Recipients) Recipients() []string {
 	ret := make([]string, 0)
 	for k := range r.To {
@@ -41,10 +45,12 @@ func (r *Recipients) Recipients() []string {
 	return ret
 }
 
+// DummyMailSender a dummy email sender. It does not send any email.
 type DummyMailSender struct {
 	LastSentMail *DummyMail
 }
 
+// DummyMail dummy email data structure
 type DummyMail struct {
 	From    string
 	To      string
@@ -54,6 +60,7 @@ type DummyMail struct {
 	Body    string
 }
 
+// SendEmail a dummy implementation, it just log out the email information.
 func (sender *DummyMailSender) SendEmail(ctx context.Context, to, cc, bcc []string, from, fromName, subject, body string) error {
 	sender.LastSentMail = &DummyMail{
 		From:    from,
@@ -72,6 +79,7 @@ func (sender *DummyMailSender) SendEmail(ctx context.Context, to, cc, bcc []stri
 	return nil
 }
 
+// SendMailSender send mail implementation using sendmail
 type SendMailSender struct {
 	Host     string
 	Port     int
@@ -79,6 +87,7 @@ type SendMailSender struct {
 	Password string
 }
 
+// SendEmail implementation to send email using sendmail
 func (sender *SendMailSender) SendEmail(ctx context.Context, to, cc, bcc []string, from, fromName, subject, body string) error {
 
 	auth := smtp.PlainAuth("", sender.User, sender.Password, sender.Host)
@@ -121,10 +130,12 @@ func (sender *SendMailSender) SendEmail(ctx context.Context, to, cc, bcc []strin
 	return nil
 }
 
+// SendGridSender implementation using sendgrid. contains sendgrid token.
 type SendGridSender struct {
 	Token string
 }
 
+// getMailBoxName get the mailbox portion of an email. abc@domain.com will return "abc"
 func getMailBoxName(email string) string {
 	if strings.Index(email, "@") > 0 {
 		return email[:strings.Index(email, "@")]
@@ -132,6 +143,7 @@ func getMailBoxName(email string) string {
 	return email
 }
 
+// SendEmail email sending implementation using SendGrid
 func (sender *SendGridSender) SendEmail(ctx context.Context, to, cc, bcc []string, from, fromName, subject, body string) error {
 	sendGridMail := mail.NewV3Mail()
 

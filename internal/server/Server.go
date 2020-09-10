@@ -23,11 +23,17 @@ import (
 )
 
 var (
-	Router       *mux.Router
+	// Router instance of gorilla mux.Router
+	Router *mux.Router
+
+	// StaticFilter intercept static content page and return them.
 	StaticFilter *api.StaticFilter
+
+	// TokenFactory will handle token creation and validation
 	TokenFactory helper.TokenFactory
 )
 
+// health serve health check request
 func health(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("cache-control", "no-cache")
 	w.Header().Add("Content-Type", "application/json")

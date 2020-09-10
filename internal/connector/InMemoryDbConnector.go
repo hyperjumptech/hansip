@@ -14,6 +14,8 @@ var (
 	inMemoryInstance *InMemoryDb
 )
 
+// GetInMemoryDbInstance get InMemoryDatabase implementation.
+// backed by map
 func GetInMemoryDbInstance() *InMemoryDb {
 	if inMemoryInstance == nil {
 		inMemoryInstance = &InMemoryDb{
@@ -28,6 +30,7 @@ func GetInMemoryDbInstance() *InMemoryDb {
 	return inMemoryInstance
 }
 
+// InMemoryDb structure that stores inmemory data.
 type InMemoryDb struct {
 	UserTable      map[string]*User
 	UserRoleTable  map[string]*UserRole
@@ -56,10 +59,13 @@ func (mem *InMemoryDb) cloneUser(u *User) *User {
 	}
 }
 
+// DropAllTables will do nothing in this inmemory implementation
 func (mem *InMemoryDb) DropAllTables(ctx context.Context) error {
 	// do nothing
 	return nil
 }
+
+// CreateAllTable clears up all data in the memory. As if database is freshly created all tables.
 func (mem *InMemoryDb) CreateAllTable(ctx context.Context) error {
 	for k := range mem.UserTable {
 		delete(mem.UserTable, k)
@@ -82,6 +88,7 @@ func (mem *InMemoryDb) CreateAllTable(ctx context.Context) error {
 	return nil
 }
 
+// GetUserByRecID returns user with specified recID
 func (mem *InMemoryDb) GetUserByRecID(ctx context.Context, recID string) (*User, error) {
 	if u, ok := mem.UserTable[recID]; ok {
 		return u, nil
@@ -89,6 +96,7 @@ func (mem *InMemoryDb) GetUserByRecID(ctx context.Context, recID string) (*User,
 	return nil, fmt.Errorf("not found")
 }
 
+// CreateUserRecord creates new user
 func (mem *InMemoryDb) CreateUserRecord(ctx context.Context, email, passphrase string) (*User, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(passphrase), 14)
 	if err != nil {
@@ -114,6 +122,8 @@ func (mem *InMemoryDb) CreateUserRecord(ctx context.Context, email, passphrase s
 	}
 	return nil, fmt.Errorf("duplicate user email")
 }
+
+// GetUserByEmail return user with specified Email
 func (mem *InMemoryDb) GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	for _, u := range mem.UserTable {
 		if u.Email == email {

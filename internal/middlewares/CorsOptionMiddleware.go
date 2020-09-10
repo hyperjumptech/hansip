@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// CorsMiddleware intercept request and allow OPTION methods
 func CorsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.ToUpper(r.Method) == http.MethodOptions {

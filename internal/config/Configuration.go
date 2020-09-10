@@ -12,6 +12,7 @@ var (
 	initialized = false
 )
 
+// initialize this configuration
 func initialize() {
 	viper.SetEnvPrefix("aaa")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -77,10 +78,12 @@ func initialize() {
 	initialized = true
 }
 
+// SetConfig put configuration key value
 func SetConfig(key, value string) {
 	viper.Set(key, value)
 }
 
+// Get fetch configuration as string value
 func Get(key string) string {
 	if !initialized {
 		initialize()
@@ -95,6 +98,7 @@ func Get(key string) string {
 	return ret
 }
 
+// GetBoolean fetch configuration as boolean value
 func GetBoolean(key string) bool {
 	if len(Get(key)) == 0 {
 		return false
@@ -106,6 +110,7 @@ func GetBoolean(key string) bool {
 	return b
 }
 
+// GetInt fetch configuration as integer value
 func GetInt(key string) int {
 	if len(Get(key)) == 0 {
 		return 0
@@ -117,6 +122,7 @@ func GetInt(key string) int {
 	return int(i)
 }
 
+// GetFloat fetch configuration as float value
 func GetFloat(key string) float64 {
 	if len(Get(key)) == 0 {
 		return 0
@@ -128,6 +134,7 @@ func GetFloat(key string) float64 {
 	return f
 }
 
+// Set configuration key value
 func Set(key, value string) {
 	defCfg[key] = value
 }

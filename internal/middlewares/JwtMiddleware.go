@@ -81,6 +81,7 @@ var (
 	}
 )
 
+// ACL represent an access control record
 type ACL struct {
 	PathPattern      string
 	Method           string

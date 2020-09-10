@@ -6,13 +6,20 @@ import (
 )
 
 var (
-	UserRepo      connector.UserRepository
-	GroupRepo     connector.GroupRepository
-	RoleRepo      connector.RoleRepository
+	// UserRepo is a user Repository instance
+	UserRepo connector.UserRepository
+	// GroupRepo is a group repository instance
+	GroupRepo connector.GroupRepository
+	// RoleRepo is a role repository instance
+	RoleRepo connector.RoleRepository
+	// UserGroupRepo is a user group repository instance
 	UserGroupRepo connector.UserGroupRepository
-	UserRoleRepo  connector.UserRoleRepository
+	// UserRoleRepo is a user role repository instance
+	UserRoleRepo connector.UserRoleRepository
+	// GroupRoleRepo is a group role repository instance
 	GroupRoleRepo connector.GroupRoleRepository
-	EmailSender   connector.EmailSender
+	// EmailSender is email sender instance
+	EmailSender connector.EmailSender
 )
 
 // InitializeRouter will initialize router to execute management endpoints

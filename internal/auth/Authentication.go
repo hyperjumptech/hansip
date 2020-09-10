@@ -29,26 +29,31 @@ var (
 	initialized = false
 )
 
+// Request a model for authentication request.
 type Request struct {
 	Email      string `json:"email"`
 	Passphrase string `json:"passphrase"`
 }
 
+// RequestWith2FA a model for authentication using 2fa secret key
 type RequestWith2FA struct {
 	Email      string `json:"email"`
 	Passphrase string `json:"passphrase"`
 	SecretKey  string `json:"2FA_secret_key"`
 }
 
+// Response a model for responding successful authentication
 type Response struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
 
+// RefreshResponse a model for responding successful refresh
 type RefreshResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
+// InitializeAuthRouter initializes the module's repository and routing
 func InitializeAuthRouter(router *mux.Router) {
 	if initialized {
 		return
@@ -68,11 +73,13 @@ func InitializeAuthRouter(router *mux.Router) {
 	initialized = true
 }
 
+// TwoFARequest model for sending 2FA authentication
 type TwoFARequest struct {
 	Token string `json:"2FA_token"`
 	Otp   string `json:"2FA_otp"`
 }
 
+// TwoFA validate 2FA token and authenticate the user
 func TwoFA(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -150,6 +157,7 @@ func TwoFA(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Successful", nil, resp)
 }
 
+// Authentication2FA serve authentication with 2fa secret key
 func Authentication2FA(w http.ResponseWriter, r *http.Request) {
 	// Check content-type, make sure its application/json
 	cType := r.Header.Get("Content-Type")
@@ -251,6 +259,7 @@ func Authentication2FA(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Successful", nil, resp)
 }
 
+// Authentication serve normal authentication
 func Authentication(w http.ResponseWriter, r *http.Request) {
 	// Check content-type, make sure its application/json
 	cType := r.Header.Get("Content-Type")
@@ -383,6 +392,7 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Successful", nil, resp)
 }
 
+// Refresh serves token refresh
 func Refresh(w http.ResponseWriter, r *http.Request) {
 	auth := r.Header.Get("Authorization")
 	if len(auth) == 0 {
