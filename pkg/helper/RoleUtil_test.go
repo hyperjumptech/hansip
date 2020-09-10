@@ -99,11 +99,11 @@ func TestIsRoleValid(t *testing.T) {
 			Required: []string{"*@*"},
 			Supplied: []string{"basic@app.idntimes.com", "admin@app.idntimes.com", "abc@popmama.com"},
 		}, {
-			Success:  true,
+			Success:  false,
 			Required: []string{"*"},
 			Supplied: []string{"basic@app.idntimes.com", "admin@app.idntimes.com", "abc@popmama.com"},
 		}, {
-			Success:  true,
+			Success:  false,
 			Required: []string{"basic@app.idntimes.com", "admin@app.idntimes.com", "abc@popmama.com"},
 			Supplied: []string{"*"},
 		}, {

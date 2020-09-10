@@ -1,11 +1,13 @@
 package helper
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
 
 // IsRoleValid Validates if the required roles matches the supplied roles
+// Your target web resource should have some requirement in one way or another.
 func IsRoleValid(requires, supplied []string) bool {
 	if len(requires) == 0 {
 		return true
@@ -37,14 +39,14 @@ func matchesTwoRole(a, b string) bool {
 		return a == b
 	}
 	if aw {
-		rx, err := regexp.Compile(strings.ReplaceAll(a, "*", `[a-zA-Z0-9_\-\.]+`))
+		rx, err := regexp.Compile(fmt.Sprintf("^%s$", strings.ReplaceAll(a, "*", `[a-zA-Z0-9_\-\.]+`)))
 		if err != nil {
 			return false
 		}
 		return rx.Match([]byte(b))
 	}
 	if bw {
-		rx, err := regexp.Compile(strings.ReplaceAll(b, "*", `[a-zA-Z0-9_\-\.]+`))
+		rx, err := regexp.Compile(fmt.Sprintf("^%s$", strings.ReplaceAll(b, "*", `[a-zA-Z0-9_\-\.]+`)))
 		if err != nil {
 			return false
 		}
