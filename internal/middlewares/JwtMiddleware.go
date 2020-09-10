@@ -90,7 +90,7 @@ type ACL struct {
 // JwtMiddleware handle authorization check for accessed endpoint by inspecting the Authorization header and look for JWT token.
 func JwtMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fLog := jwtMiddLog.WithField("path", r.URL.Path).WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("func", "jwtMiddLog").WithField("method", r.Method)
+		fLog := jwtMiddLog.WithField("path", r.URL.Path).WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("func", "jwtMiddLog").WithField("method", r.Method)
 		fLog.Tracef("Checking JWT")
 		for _, acl := range ACLs {
 			match, err := helper.Match(acl.PathPattern, r.URL.Path)

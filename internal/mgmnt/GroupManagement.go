@@ -10,7 +10,7 @@ import (
 )
 
 type SimpleGroup struct {
-	RecId     string `json:"rec_id"`
+	RecID     string `json:"rec_id"`
 	GroupName string `json:"group_name"`
 }
 
@@ -19,7 +19,7 @@ var (
 )
 
 func ListAllGroup(w http.ResponseWriter, r *http.Request) {
-	fLog := groupMgmtLog.WithField("func", "ListAllGroup").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := groupMgmtLog.WithField("func", "ListAllGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	pageRequest, err := helper.NewPageRequestFromRequest(r)
 	if err != nil {
 		fLog.Errorf("helper.NewPageRequestFromRequest got %s", err.Error())
@@ -35,7 +35,7 @@ func ListAllGroup(w http.ResponseWriter, r *http.Request) {
 	sgroups := make([]*SimpleGroup, len(groups))
 	for k, v := range groups {
 		sgroups[k] = &SimpleGroup{
-			RecId:     v.RecId,
+			RecID:     v.RecID,
 			GroupName: v.GroupName,
 		}
 	}
@@ -51,7 +51,7 @@ type CreateGroupRequest struct {
 }
 
 func CreateNewGroup(w http.ResponseWriter, r *http.Request) {
-	fLog := groupMgmtLog.WithField("func", "CreateNewGroup").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := groupMgmtLog.WithField("func", "CreateNewGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	req := &CreateGroupRequest{}
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -75,28 +75,28 @@ func CreateNewGroup(w http.ResponseWriter, r *http.Request) {
 	return
 }
 func GetGroupDetail(w http.ResponseWriter, r *http.Request) {
-	fLog := groupMgmtLog.WithField("func", "GetGroupDetail").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := groupMgmtLog.WithField("func", "GetGroupDetail").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Group fetched", nil, group)
 }
 func DeleteGroup(w http.ResponseWriter, r *http.Request) {
-	fLog := groupMgmtLog.WithField("func", "DeleteGroup").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := groupMgmtLog.WithField("func", "DeleteGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -104,14 +104,14 @@ func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Group deleted", nil, nil)
 }
 func ListGroupUser(w http.ResponseWriter, r *http.Request) {
-	fLog := groupMgmtLog.WithField("func", "ListGroupUser").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := groupMgmtLog.WithField("func", "ListGroupUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/users", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -128,7 +128,7 @@ func ListGroupUser(w http.ResponseWriter, r *http.Request) {
 	susers := make([]*SimpleUser, len(users))
 	for k, v := range users {
 		susers[k] = &SimpleUser{
-			RecId:     v.RecId,
+			RecID:     v.RecID,
 			Email:     v.Email,
 			Enabled:   v.Enabled,
 			Suspended: v.Suspended,
@@ -140,20 +140,20 @@ func ListGroupUser(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "List of users paginated", nil, ret)
 }
 func CreateGroupUser(w http.ResponseWriter, r *http.Request) {
-	fLog := groupMgmtLog.WithField("func", "CreateGroupUser").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := groupMgmtLog.WithField("func", "CreateGroupUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/user/{userRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -166,20 +166,20 @@ func CreateGroupUser(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Group created", nil, nil)
 }
 func DeleteGroupUser(w http.ResponseWriter, r *http.Request) {
-	fLog := groupMgmtLog.WithField("func", "DeleteGroupUser").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := groupMgmtLog.WithField("func", "DeleteGroupUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/user/{userRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -198,14 +198,14 @@ func DeleteGroupUser(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Group deleted", nil, nil)
 }
 func ListGroupRole(w http.ResponseWriter, r *http.Request) {
-	fLog := groupMgmtLog.WithField("func", "ListGroupRole").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := groupMgmtLog.WithField("func", "ListGroupRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/roles", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -222,7 +222,7 @@ func ListGroupRole(w http.ResponseWriter, r *http.Request) {
 	sroles := make([]*SimpleRole, len(roles))
 	for k, v := range roles {
 		sroles[k] = &SimpleRole{
-			RecId:    v.RecId,
+			RecID:    v.RecID,
 			RoleName: v.RoleName,
 		}
 	}
@@ -232,20 +232,20 @@ func ListGroupRole(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "List of roles paginated", nil, ret)
 }
 func CreateGroupRole(w http.ResponseWriter, r *http.Request) {
-	fLog := groupMgmtLog.WithField("func", "CreateGroupRole").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := groupMgmtLog.WithField("func", "CreateGroupRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/role/{roleRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -259,20 +259,20 @@ func CreateGroupRole(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteGroupRole(w http.ResponseWriter, r *http.Request) {
-	fLog := groupMgmtLog.WithField("func", "DeleteGroupRole").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := groupMgmtLog.WithField("func", "DeleteGroupRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/role/{roleRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}

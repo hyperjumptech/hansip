@@ -63,7 +63,7 @@ func Start() {
 	for running {
 		select {
 		case mail := <-MailerChannel:
-			fLog := mailerLogger.WithField("RequestId", mail.context.Value(constants.RequestId))
+			fLog := mailerLogger.WithField("RequestID", mail.context.Value(constants.RequestID))
 			if Sender == nil {
 				fLog.Errorf("not sent because mail Sender is nil")
 			} else {

@@ -20,7 +20,7 @@ var (
 	dbUtil connector.DBUtil
 )
 
-func pretifyJson(sjson string) string {
+func pretifyJSON(sjson string) string {
 	m := make(map[string]interface{})
 	err := json.Unmarshal([]byte(sjson), &m)
 	if err != nil {
@@ -126,45 +126,45 @@ func TestAll(t *testing.T) {
 		CreateUserTesting(t, accessToken, fmt.Sprintf("user-%d@email.com", i), fmt.Sprintf("this is all number %d", i))
 	}
 	group1 := CreateNewGroupTesting(t, accessToken, "GroupOne")
-	if group1.RecId == "" {
+	if group1.RecID == "" {
 		t.Logf("group1 RecID empty")
 		t.Fail()
 	}
 	role1 := CreateNewRoleTesting(t, accessToken, "RoleOne")
-	if role1.RecId == "" {
+	if role1.RecID == "" {
 		t.Logf("role1 RecID empty")
 		t.Fail()
 	}
 	group2 := CreateNewGroupTesting(t, accessToken, "GroupTwo")
-	if group2.RecId == "" {
+	if group2.RecID == "" {
 		t.Logf("group2 RecID empty")
 		t.Fail()
 	}
 	role2 := CreateNewRoleTesting(t, accessToken, "RoleTwo")
-	if role2.RecId == "" {
+	if role2.RecID == "" {
 		t.Logf("role2 RecID empty")
 		t.Fail()
 	}
 
-	CreateUserGroupTesting(t, accessToken, simpleUsers[1].RecID, group1.RecId)
-	CreateGroupUserTesting(t, accessToken, group2.RecId, simpleUsers[1].RecID)
+	CreateUserGroupTesting(t, accessToken, simpleUsers[1].RecID, group1.RecID)
+	CreateGroupUserTesting(t, accessToken, group2.RecID, simpleUsers[1].RecID)
 
-	t.Logf("--- SipleUser[1].RecID = %s --- role1.RecID = %s", simpleUsers[1].RecID, role1.RecId)
+	t.Logf("--- SipleUser[1].RecID = %s --- role1.RecID = %s", simpleUsers[1].RecID, role1.RecID)
 
-	CreateUserRoleTesting(t, accessToken, simpleUsers[1].RecID, role1.RecId)
-	CreateRoleUserTesting(t, accessToken, role2.RecId, simpleUsers[1].RecID)
+	CreateUserRoleTesting(t, accessToken, simpleUsers[1].RecID, role1.RecID)
+	CreateRoleUserTesting(t, accessToken, role2.RecID, simpleUsers[1].RecID)
 
-	CreateGroupRoleTesting(t, accessToken, group1.RecId, role1.RecId)
-	CreateRoleGroupTesting(t, accessToken, role2.RecId, group2.RecId)
+	CreateGroupRoleTesting(t, accessToken, group1.RecID, role1.RecID)
+	CreateRoleGroupTesting(t, accessToken, role2.RecID, group2.RecID)
 
 	ListUserGroupByUser(t, accessToken, simpleUsers[1].RecID)
-	ListUserGroupByGroup(t, accessToken, group2.RecId)
+	ListUserGroupByGroup(t, accessToken, group2.RecID)
 
 	ListUserRoleByUser(t, accessToken, simpleUsers[1].RecID)
-	ListUserRoleByRole(t, accessToken, role1.RecId)
+	ListUserRoleByRole(t, accessToken, role1.RecID)
 
-	ListGroupRoleByRole(t, accessToken, role1.RecId)
-	ListGroupRoleByGroup(t, accessToken, group1.RecId)
+	ListGroupRoleByRole(t, accessToken, role1.RecID)
+	ListGroupRoleByGroup(t, accessToken, group1.RecID)
 
 	simpleUsers = ListUsersTesting(t, accessToken)
 	if len(simpleUsers) != 10 {
@@ -183,7 +183,7 @@ func ListUserGroupByUser(t *testing.T, accessToken, userRecID string) {
 		t.Errorf("expecting ListUserGroup By User status 200 but %d. Body %s", recorder.Code, recorder.Body.String())
 		t.FailNow()
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 
 }
 
@@ -197,7 +197,7 @@ func ListUserGroupByGroup(t *testing.T, accessToken, groupRecID string) {
 		t.Errorf("expecting List UserGroup by Group status 200 but %d. Body %s", recorder.Code, recorder.Body.String())
 		t.FailNow()
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 
 }
 
@@ -211,7 +211,7 @@ func ListUserRoleByUser(t *testing.T, accessToken, userRecID string) {
 		t.Errorf("expecting List UserRole by User status 200 but %d. Body %s", recorder.Code, recorder.Body.String())
 		t.FailNow()
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 
 }
 
@@ -225,7 +225,7 @@ func ListUserRoleByRole(t *testing.T, accessToken, roleRecID string) {
 		t.Errorf("expecting List UserRole by Role status 200 but %d. Body %s", recorder.Code, recorder.Body.String())
 		t.FailNow()
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 
 }
 
@@ -239,7 +239,7 @@ func ListGroupRoleByGroup(t *testing.T, accessToken, groupRecID string) {
 		t.Errorf("expecting List GroupRole by Group status 200 but %d. Body %s", recorder.Code, recorder.Body.String())
 		t.FailNow()
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 
 }
 
@@ -253,7 +253,7 @@ func ListGroupRoleByRole(t *testing.T, accessToken, roleRecID string) {
 		t.Errorf("expecting List Group Role By Role status 200 but %d. Body %s", recorder.Code, recorder.Body.String())
 		t.FailNow()
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 
 }
 
@@ -267,7 +267,7 @@ func CreateUserRoleTesting(t *testing.T, accessToken, userRecID, roleRecID strin
 		t.Errorf("expecting create UserRole status 200 but %d. Body %s", recorder.Code, recorder.Body.String())
 		t.FailNow()
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 }
 
 func CreateRoleUserTesting(t *testing.T, accessToken, roleRecID, userRecID string) {
@@ -280,7 +280,7 @@ func CreateRoleUserTesting(t *testing.T, accessToken, roleRecID, userRecID strin
 		t.Errorf("expecting create RoleUser status 200 but %d. Body %s", recorder.Code, recorder.Body.String())
 		t.FailNow()
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 
 }
 
@@ -294,7 +294,7 @@ func CreateGroupRoleTesting(t *testing.T, accessToken, groupRecID, roleRecID str
 		t.Errorf("expecting create GroupRole status 200 but %d. Body %s", recorder.Code, recorder.Body.String())
 		t.FailNow()
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 
 }
 
@@ -308,7 +308,7 @@ func CreateRoleGroupTesting(t *testing.T, accessToken, roleRecID, groupRecID str
 		t.Errorf("expecting create RoleGroup status 200 but %d. Body %s", recorder.Code, recorder.Body.String())
 		t.FailNow()
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 }
 
 func CreateUserGroupTesting(t *testing.T, accessToken, userRecID, groupRecID string) {
@@ -321,7 +321,7 @@ func CreateUserGroupTesting(t *testing.T, accessToken, userRecID, groupRecID str
 		t.Errorf("expecting create UserGroup status 200 but %d. Body %s", recorder.Code, recorder.Body.String())
 		t.FailNow()
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 
 }
 
@@ -336,7 +336,7 @@ func CreateGroupUserTesting(t *testing.T, accessToken, groupRecID, userRecID str
 		t.Errorf("expecting create GroupUser status 200 but %d. Body %s", recorder.Code, recorder.Body.String())
 		t.FailNow()
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 
 }
 
@@ -357,12 +357,12 @@ func CreateNewGroupTesting(t *testing.T, accessToken, groupName string) *connect
 		t.FailNow()
 		return nil
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 	jObj := make(map[string]interface{})
 	_ = json.Unmarshal(recorder.Body.Bytes(), &jObj)
 	data := jObj["data"].(map[string]interface{})
 	ret := &connector.Group{
-		RecId:       data["rec_id"].(string),
+		RecID:       data["rec_id"].(string),
 		GroupName:   data["group_name"].(string),
 		Description: data["description"].(string),
 	}
@@ -386,12 +386,12 @@ func CreateNewRoleTesting(t *testing.T, accessToken, roleName string) *connector
 		t.FailNow()
 		return nil
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 	jObj := make(map[string]interface{})
 	_ = json.Unmarshal(recorder.Body.Bytes(), &jObj)
 	data := jObj["data"].(map[string]interface{})
 	ret := &connector.Role{
-		RecId:       data["rec_id"].(string),
+		RecID:       data["rec_id"].(string),
 		RoleName:    data["role_name"].(string),
 		Description: data["description"].(string),
 	}
@@ -421,7 +421,7 @@ func GetUserByRecIDTesting(t *testing.T, accessToken, recID string) *SimpleUser 
 		t.FailNow()
 		return nil
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 	jObj := make(map[string]interface{})
 	_ = json.Unmarshal(recorder.Body.Bytes(), &jObj)
 	data := jObj["data"].(map[string]interface{})
@@ -450,7 +450,7 @@ func CreateUserTesting(t *testing.T, accessToken, email, passphrase string) {
 		t.Errorf("expecting user create status 200 but %d. Body %s", recorder.Code, recorder.Body.String())
 		t.FailNow()
 	} else {
-		t.Log(pretifyJson(recorder.Body.String()))
+		t.Log(pretifyJSON(recorder.Body.String()))
 		time.Sleep(200 * time.Millisecond)
 		mailer := mgmnt.EmailSender.(*connector.DummyMailSender)
 		if mailer.LastSentMail == nil || mailer.LastSentMail.To != email {
@@ -489,7 +489,7 @@ func ListGroupsTesting(t *testing.T, accessToken string) []*SimpleGroup {
 		t.FailNow()
 		return nil
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 	jObj := make(map[string]interface{})
 	_ = json.Unmarshal(recorder.Body.Bytes(), &jObj)
 	ret := make([]*SimpleGroup, 0)
@@ -517,7 +517,7 @@ func ListRolesTesting(t *testing.T, accessToken string) []*SimpleRole {
 		t.FailNow()
 		return nil
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 	jObj := make(map[string]interface{})
 	_ = json.Unmarshal(recorder.Body.Bytes(), &jObj)
 	ret := make([]*SimpleRole, 0)
@@ -545,7 +545,7 @@ func ListUsersTesting(t *testing.T, accessToken string) []*SimpleUser {
 		t.FailNow()
 		return nil
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 	jObj := make(map[string]interface{})
 	_ = json.Unmarshal(recorder.Body.Bytes(), &jObj)
 	ret := make([]*SimpleUser, 0)
@@ -575,7 +575,7 @@ func HealthCheckTesting(t *testing.T) {
 		t.Errorf("expecting healthcheck status 200 but %d", recorder.Code)
 		t.FailNow()
 	} else {
-		t.Log(pretifyJson(recorder.Body.String()))
+		t.Log(pretifyJSON(recorder.Body.String()))
 	}
 }
 
@@ -595,7 +595,7 @@ func DummyAdminLoginTesting(t *testing.T) (string, string) {
 		t.FailNow()
 		return "", ""
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 	ret := make(map[string]interface{})
 	err := json.Unmarshal(recorder.Body.Bytes(), &ret)
 	if err != nil {
@@ -630,7 +630,7 @@ func DummyAdminRefreshTokenTesting(t *testing.T, refreshToken string) string {
 		t.FailNow()
 		return ""
 	}
-	t.Log(pretifyJson(recorder.Body.String()))
+	t.Log(pretifyJSON(recorder.Body.String()))
 	ret := make(map[string]interface{})
 	json.Unmarshal(recorder.Body.Bytes(), &ret)
 	if ret["status"].(string) != "SUCCESS" {

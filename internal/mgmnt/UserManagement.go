@@ -22,7 +22,7 @@ var (
 
 // Show2FAQrCode shows 2FA QR code. It returns a PNG image bytes.
 func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "Show2FAQrCode").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "Show2FAQrCode").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	authCtx := r.Context().Value(constants.HansipAuthentication).(*hansipcontext.AuthenticationContext)
 	user, err := UserRepo.GetUserByEmail(r.Context(), authCtx.Subject)
 	if err != nil {
@@ -43,7 +43,7 @@ func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
 }
 
 type SimpleUser struct {
-	RecId     string `json:"rec_id"`
+	RecID     string `json:"rec_id"`
 	Email     string `json:"email"`
 	Enabled   bool   `json:"enabled"`
 	Suspended bool   `json:"suspended"`
@@ -56,7 +56,7 @@ func ListAllUsers(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	fLog := userMgmtLogger.WithField("func", "ListAllUsers").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "ListAllUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	fLog.Trace("Listing Users")
 	pageRequest, err := helper.NewPageRequestFromRequest(r)
 	if err != nil {
@@ -73,7 +73,7 @@ func ListAllUsers(w http.ResponseWriter, r *http.Request) {
 	susers := make([]*SimpleUser, len(users))
 	for i, v := range users {
 		susers[i] = &SimpleUser{
-			RecId:     v.RecId,
+			RecID:     v.RecID,
 			Email:     v.Email,
 			Enabled:   v.Enabled,
 			Suspended: v.Suspended,
@@ -91,7 +91,7 @@ type CreateNewUserRequest struct {
 }
 
 type CreateNewUserResponse struct {
-	RecordId    string    `json:"rec_id"`
+	RecordID    string    `json:"rec_id"`
 	Email       string    `json:"email"`
 	Enabled     bool      `json:"enabled"`
 	Suspended   bool      `json:"suspended"`
@@ -101,7 +101,7 @@ type CreateNewUserResponse struct {
 }
 
 func CreateNewUser(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "CreateNewUser").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "CreateNewUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	fLog.Trace("Creating new user")
 	req := &CreateNewUserRequest{}
 	body, err := ioutil.ReadAll(r.Body)
@@ -123,7 +123,7 @@ func CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp := &CreateNewUserResponse{
-		RecordId:    user.RecId,
+		RecordID:    user.RecID,
 		Email:       user.Email,
 		Enabled:     user.Enabled,
 		Suspended:   user.Suspended,
@@ -152,7 +152,7 @@ type ChangePassphraseRequest struct {
 }
 
 func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "ChangePassphrase").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "ChangePassphrase").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/passwd", r.URL.Path)
 	if err != nil {
 		panic(err)
@@ -170,9 +170,9 @@ func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "Malformed json body", nil, nil)
 		return
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -204,7 +204,7 @@ type ActivateUserRequest struct {
 }
 
 type WhoAmIResponse struct {
-	RecordId  string          `json:"rec_id"`
+	RecordID  string          `json:"rec_id"`
 	Email     string          `json:"email"`
 	Enabled   bool            `json:"enabled"`
 	Suspended bool            `json:"suspended"`
@@ -213,12 +213,12 @@ type WhoAmIResponse struct {
 }
 
 type RoleSummary struct {
-	RecordId string `json:"rec_id"`
+	RecordID string `json:"rec_id"`
 	RoleName string `json:"role_name"`
 }
 
 type GroupSummary struct {
-	RecordId  string         `json:"rec_id"`
+	RecordID  string         `json:"rec_id"`
 	GroupName string         `json:"group_name"`
 	Roles     []*RoleSummary `json:"roles"`
 }
@@ -232,7 +232,7 @@ type Activate2FAResponse struct {
 }
 
 func Activate2FA(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "Activate2FA").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "Activate2FA").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	authCtx := r.Context().Value(constants.HansipAuthentication).(*hansipcontext.AuthenticationContext)
 	user, err := UserRepo.GetUserByEmail(r.Context(), authCtx.Subject)
 	if err != nil {
@@ -278,7 +278,7 @@ func Activate2FA(w http.ResponseWriter, r *http.Request) {
 }
 
 func WhoAmI(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "WhoAmI").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "WhoAmI").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	authCtx := r.Context().Value(constants.HansipAuthentication).(*hansipcontext.AuthenticationContext)
 	user, err := UserRepo.GetUserByEmail(r.Context(), authCtx.Subject)
 	if err != nil {
@@ -287,7 +287,7 @@ func WhoAmI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	whoami := &WhoAmIResponse{
-		RecordId:  user.RecId,
+		RecordID:  user.RecID,
 		Email:     user.Email,
 		Enabled:   user.Enabled,
 		Suspended: user.Suspended,
@@ -307,7 +307,7 @@ func WhoAmI(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, r := range roles {
 		whoami.Roles = append(whoami.Roles, &RoleSummary{
-			RecordId: r.RecId,
+			RecordID: r.RecID,
 			RoleName: r.RoleName,
 		})
 	}
@@ -325,7 +325,7 @@ func WhoAmI(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, g := range groups {
 		groupSummary := &GroupSummary{
-			RecordId:  g.RecId,
+			RecordID:  g.RecID,
 			GroupName: g.GroupName,
 			Roles:     make([]*RoleSummary, 0),
 		}
@@ -342,7 +342,7 @@ func WhoAmI(w http.ResponseWriter, r *http.Request) {
 		}
 		for _, gr := range groupRole {
 			groupSummary.Roles = append(groupSummary.Roles, &RoleSummary{
-				RecordId: gr.RecId,
+				RecordID: gr.RecID,
 				RoleName: gr.RoleName,
 			})
 		}
@@ -354,7 +354,7 @@ func WhoAmI(w http.ResponseWriter, r *http.Request) {
 
 // ActivateUser serve user activation process
 func ActivateUser(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "ActivateUser").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "ActivateUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
@@ -383,7 +383,7 @@ func ActivateUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ret := make(map[string]interface{})
-		ret["rec_id"] = user.RecId
+		ret["rec_id"] = user.RecID
 		ret["email"] = user.Email
 		ret["enabled"] = user.Enabled
 		ret["suspended"] = user.Suspended
@@ -398,19 +398,19 @@ func ActivateUser(w http.ResponseWriter, r *http.Request) {
 
 // GetUserDetail serve fetch user detail
 func GetUserDetail(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "GetUserDetail").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "GetUserDetail").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
 	ret := make(map[string]interface{})
-	ret["rec_id"] = user.RecId
+	ret["rec_id"] = user.RecID
 	ret["email"] = user.Email
 	ret["enabled"] = user.Enabled
 	ret["suspended"] = user.Suspended
@@ -429,14 +429,14 @@ type UpdateUserRequest struct {
 
 // UpdateUserDetail rest endpoint to update user detail
 func UpdateUserDetail(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "GetUserDetail").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "GetUserDetail").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -491,7 +491,7 @@ func UpdateUserDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ret := make(map[string]interface{})
-	ret["rec_id"] = user.RecId
+	ret["rec_id"] = user.RecID
 	ret["email"] = user.Email
 	ret["enabled"] = user.Enabled
 	ret["suspended"] = user.Suspended
@@ -504,14 +504,14 @@ func UpdateUserDetail(w http.ResponseWriter, r *http.Request) {
 
 // DeleteUser serve user deletion
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "DeleteUser").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "DeleteUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -521,20 +521,20 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 // SimpleRole define structure or request body used to list role
 type SimpleRole struct {
-	RecId    string `json:"rec_id"`
+	RecID    string `json:"rec_id"`
 	RoleName string `json:"role_name"`
 }
 
 // ListUserRole serve listing all role that directly owned by user
 func ListUserRole(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "ListUserRole").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "ListUserRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/roles", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -551,7 +551,7 @@ func ListUserRole(w http.ResponseWriter, r *http.Request) {
 	sroles := make([]*SimpleRole, len(roles))
 	for k, v := range roles {
 		sroles[k] = &SimpleRole{
-			RecId:    v.RecId,
+			RecID:    v.RecID,
 			RoleName: v.RoleName,
 		}
 	}
@@ -563,14 +563,14 @@ func ListUserRole(w http.ResponseWriter, r *http.Request) {
 
 // ListAllUserRole serve listing of all roles belong to user, both direct or indirect
 func ListAllUserRole(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "ListAllUserRole").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "ListAllUserRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/all-roles", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -587,7 +587,7 @@ func ListAllUserRole(w http.ResponseWriter, r *http.Request) {
 	sroles := make([]*SimpleRole, len(roles))
 	for k, v := range roles {
 		sroles[k] = &SimpleRole{
-			RecId:    v.RecId,
+			RecID:    v.RecID,
 			RoleName: v.RoleName,
 		}
 	}
@@ -599,20 +599,20 @@ func ListAllUserRole(w http.ResponseWriter, r *http.Request) {
 
 // CreateUserRole serve a user-role relation
 func CreateUserRole(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "CreateUserRole").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "CreateUserRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/role/{roleRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -627,20 +627,20 @@ func CreateUserRole(w http.ResponseWriter, r *http.Request) {
 
 // DeleteUserRole serve the user deletion
 func DeleteUserRole(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "DeleteUserRole").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "DeleteUserRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/role/{roleRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	role, err := RoleRepo.GetRoleByRecId(r.Context(), params["roleRecId"])
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
-		fLog.Errorf("RoleRepo.GetRoleByRecId got %s", err.Error())
+		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -661,14 +661,14 @@ func DeleteUserRole(w http.ResponseWriter, r *http.Request) {
 
 // ListUserGroup serve a user-group listing
 func ListUserGroup(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "ListUserGroup").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "ListUserGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/groups", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -685,7 +685,7 @@ func ListUserGroup(w http.ResponseWriter, r *http.Request) {
 	sgroups := make([]*SimpleGroup, len(groups))
 	for k, v := range groups {
 		sgroups[k] = &SimpleGroup{
-			RecId:     v.RecId,
+			RecID:     v.RecID,
 			GroupName: v.GroupName,
 		}
 	}
@@ -697,20 +697,20 @@ func ListUserGroup(w http.ResponseWriter, r *http.Request) {
 
 // CreateUserGroup serve creation of user-group relation
 func CreateUserGroup(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "CreateUserGroup").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "CreateUserGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/group/{groupRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -725,20 +725,20 @@ func CreateUserGroup(w http.ResponseWriter, r *http.Request) {
 
 // DeleteUserGroup serve deleting a user-group relation
 func DeleteUserGroup(w http.ResponseWriter, r *http.Request) {
-	fLog := userMgmtLogger.WithField("func", "DeleteUserGroup").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := userMgmtLogger.WithField("func", "DeleteUserGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/group/{groupRecId}", r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecId(r.Context(), params["userRecId"])
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecId got %s", err.Error())
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	group, err := GroupRepo.GetGroupByRecId(r.Context(), params["groupRecId"])
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecId got %s", err.Error())
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}

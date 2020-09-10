@@ -55,8 +55,8 @@ func WriteHTTPResponse(ctx context.Context, w http.ResponseWriter, httpRespCode 
 			w.Header().Add(k, v)
 		}
 	}
-	if ctx.Value(constants.RequestId) != nil {
-		w.Header().Add("X-Request-ID", ctx.Value(constants.RequestId).(string))
+	if ctx.Value(constants.RequestID) != nil {
+		w.Header().Add("X-Request-ID", ctx.Value(constants.RequestID).(string))
 	}
 	w.WriteHeader(httpRespCode)
 	rJSON := &ResponseJSON{

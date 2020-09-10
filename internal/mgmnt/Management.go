@@ -55,7 +55,7 @@ func InitializeRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/management/role/{roleRecId}/user/{userRecId}", DeleteRoleUser).Methods("DELETE")
 	router.HandleFunc("/api/v1/management/role/{roleRecId}/groups", ListRoleGroup).Methods("OPTIONS", "GET")
 	router.HandleFunc("/api/v1/management/role/{roleRecId}/group/{groupRecId}", CreateRoleGroup).Methods("OPTIONS", "PUT")
-	router.HandleFunc("/api/v1/management/role/{roleRecId}/group/{GroupRecId}", DeleteRoleGroup).Methods("DELETE")
+	router.HandleFunc("/api/v1/management/role/{roleRecId}/group/{GroupRecID}", DeleteRoleGroup).Methods("DELETE")
 
 	router.HandleFunc("/api/v1/recovery/recoverPassphrase", RecoverPassphrase).Methods("OPTIONS", "GET")
 	router.HandleFunc("/api/v1/recovery/resetPassphrase", ResetPassphrase).Methods("OPTIONS", "POST")

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * IsRoleInvalid ini melakukan validasi apakah Role-Role yang menjadi syarat
+ * IsRoleValid ini melakukan validasi apakah Role-Role yang menjadi syarat
  * untuk mengakses sebuah resourse ($requires) bisa dipenuhi oleh seorang pengakses
  * yang memiliki Role-Role tertentu ($supplied).
  *

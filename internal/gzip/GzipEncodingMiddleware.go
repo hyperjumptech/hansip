@@ -16,24 +16,24 @@ var (
 	})
 )
 
-func NewGzipEncoderFilter(enable bool, minSizeToCompress int) *GzipEncoderFilter {
+func NewGzipEncoderFilter(enable bool, minSizeToCompress int) *EncoderFilter {
 	if !enable {
 		gzipFilterLog.Warnf("GZIP Compression response body is DISABLED. Should be enabled for best performance.")
 	}
-	return &GzipEncoderFilter{
+	return &EncoderFilter{
 		EnableGzip:  enable,
 		GzipMinSize: minSizeToCompress,
 	}
 }
 
-// GzipEncoderFilter is struct to host Middleware function DoFilter and store minimum data size for gzip
-type GzipEncoderFilter struct {
+// EncoderFilter is struct to host Middleware function DoFilter and store minimum data size for gzip
+type EncoderFilter struct {
 	EnableGzip  bool
 	GzipMinSize int
 }
 
 // DoFilter will return the middleware function for compressing body IF the client ask for Accept-Encoding: gzip
-func (filter *GzipEncoderFilter) DoFilter(next http.Handler) http.Handler {
+func (filter *EncoderFilter) DoFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check if the client can accept the gzip encoding.
 		if filter.EnableGzip == false || !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {

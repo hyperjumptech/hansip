@@ -35,7 +35,7 @@ func (r *Recipients) AddAll(re []string) {
 
 func (r *Recipients) Recipients() []string {
 	ret := make([]string, 0)
-	for k, _ := range r.To {
+	for k := range r.To {
 		ret = append(ret, k)
 	}
 	return ret

@@ -21,7 +21,7 @@ type RecoverPassphraseRequest struct {
 }
 
 func RecoverPassphrase(w http.ResponseWriter, r *http.Request) {
-	fLog := recoveryLogger.WithField("func", "RecoverPassphrase").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := recoveryLogger.WithField("func", "RecoverPassphrase").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	req := &RecoverPassphraseRequest{}
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -65,7 +65,7 @@ type ResetPassphraseRequest struct {
 }
 
 func ResetPassphrase(w http.ResponseWriter, r *http.Request) {
-	fLog := recoveryLogger.WithField("func", "ResetPassphrase").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	fLog := recoveryLogger.WithField("func", "ResetPassphrase").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	req := &ResetPassphraseRequest{}
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {

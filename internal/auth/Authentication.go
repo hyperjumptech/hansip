@@ -29,18 +29,18 @@ var (
 	initialized = false
 )
 
-type AuthRequest struct {
+type Request struct {
 	Email      string `json:"email"`
 	Passphrase string `json:"passphrase"`
 }
 
-type AuthWith2FARequest struct {
+type RequestWith2FA struct {
 	Email      string `json:"email"`
 	Passphrase string `json:"passphrase"`
 	SecretKey  string `json:"2FA_secret_key"`
 }
 
-type AuthResponse struct {
+type Response struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
@@ -62,24 +62,24 @@ func InitializeAuthRouter(router *mux.Router) {
 
 	router.HandleFunc("/api/v1/auth/authenticate", Authentication).Methods("OPTIONS", "POST")
 	router.HandleFunc("/api/v1/auth/refresh", Refresh).Methods("OPTIONS", "POST")
-	router.HandleFunc("/api/v1/auth/2fa", Auth2FA).Methods("OPTIONS", "POST")
+	router.HandleFunc("/api/v1/auth/2fa", TwoFA).Methods("OPTIONS", "POST")
 	router.HandleFunc("/api/v1/auth/authenticate2fa", Authentication2FA).Methods("OPTIONS", "POST")
 
 	initialized = true
 }
 
-type Auth2FARequest struct {
+type TwoFARequest struct {
 	Token string `json:"2FA_token"`
 	Otp   string `json:"2FA_otp"`
 }
 
-func Auth2FA(w http.ResponseWriter, r *http.Request) {
+func TwoFA(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	authReq := &Auth2FARequest{}
+	authReq := &TwoFARequest{}
 	err = json.Unmarshal(body, authReq)
 	if err != nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
@@ -127,7 +127,7 @@ func Auth2FA(w http.ResponseWriter, r *http.Request) {
 		// Add user's role into Token audiences info.
 		roles = make([]string, len(userRoles))
 		for k, v := range userRoles {
-			r, err := roleRepo.GetRoleByRecId(r.Context(), v.RecId)
+			r, err := roleRepo.GetRoleByRecID(r.Context(), v.RecID)
 			if err == nil {
 				roles[k] = r.RoleName
 			}
@@ -142,7 +142,7 @@ func Auth2FA(w http.ResponseWriter, r *http.Request) {
 
 	access, refresh, err := TokenFactory.CreateTokenPair(subject, audience, nil)
 
-	resp := &AuthResponse{
+	resp := &Response{
 		AccessToken:  access,
 		RefreshToken: refresh,
 	}
@@ -165,8 +165,8 @@ func Authentication2FA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse the body into AuthRequest
-	authReq := &AuthWith2FARequest{}
+	// Parse the body into Request
+	authReq := &RequestWith2FA{}
 	err = json.Unmarshal(body, authReq)
 	if err != nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
@@ -229,7 +229,7 @@ func Authentication2FA(w http.ResponseWriter, r *http.Request) {
 	// Add user's role into Token audiences info.
 	roles = make([]string, len(userRoles))
 	for k, v := range userRoles {
-		r, err := roleRepo.GetRoleByRecId(r.Context(), v.RecId)
+		r, err := roleRepo.GetRoleByRecID(r.Context(), v.RecID)
 		if err == nil {
 			roles[k] = r.RoleName
 		}
@@ -243,7 +243,7 @@ func Authentication2FA(w http.ResponseWriter, r *http.Request) {
 
 	access, refresh, err := TokenFactory.CreateTokenPair(subject, audience, nil)
 
-	resp := &AuthResponse{
+	resp := &Response{
 		AccessToken:  access,
 		RefreshToken: refresh,
 	}
@@ -266,8 +266,8 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse the body into AuthRequest
-	authReq := &AuthRequest{}
+	// Parse the body into Request
+	authReq := &Request{}
 	err = json.Unmarshal(body, authReq)
 	if err != nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
@@ -280,7 +280,7 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 		if authReq.Email == config.Get("setup.admin.email") && authReq.Passphrase == config.Get("setup.admin.passphrase") {
 			bytes, _ := bcrypt.GenerateFromPassword([]byte(authReq.Passphrase), 14)
 			user = &connector.User{
-				RecId:             helper.MakeRandomString(10, true, true, true, false),
+				RecID:             helper.MakeRandomString(10, true, true, true, false),
 				Email:             config.Get("setup.admin.email"),
 				HashedPassphrase:  string(bytes),
 				Enabled:           true,
@@ -360,7 +360,7 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 		// Add user's role into Token audiences info.
 		roles = make([]string, len(userRoles))
 		for k, v := range userRoles {
-			r, err := roleRepo.GetRoleByRecId(r.Context(), v.RecId)
+			r, err := roleRepo.GetRoleByRecID(r.Context(), v.RecID)
 			if err == nil {
 				roles[k] = r.RoleName
 			}
@@ -375,7 +375,7 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 
 	access, refresh, err := TokenFactory.CreateTokenPair(subject, audience, nil)
 
-	resp := &AuthResponse{
+	resp := &Response{
 		AccessToken:  access,
 		RefreshToken: refresh,
 	}

@@ -13,8 +13,8 @@ type DBUtil interface {
 
 // UserRepository manage User table
 type UserRepository interface {
-	// GetUserByRecId return a user record
-	GetUserByRecId(ctx context.Context, recID string) (*User, error)
+	// GetUserByRecID return a user record
+	GetUserByRecID(ctx context.Context, recID string) (*User, error)
 
 	// CreateUserRecord in the User table
 	CreateUserRecord(ctx context.Context, email, passphrase string) (*User, error)
@@ -46,8 +46,8 @@ type UserRepository interface {
 
 // GroupRepository manage Group table
 type GroupRepository interface {
-	// GetGroupByRecId return a group record
-	GetGroupByRecId(ctx context.Context, recId string) (*Group, error)
+	// GetGroupByRecID return a group record
+	GetGroupByRecID(ctx context.Context, recId string) (*Group, error)
 
 	// CreateGroup into the Group table
 	CreateGroup(ctx context.Context, groupName, description string) (*Group, error)
@@ -137,8 +137,8 @@ type GroupRoleRepository interface {
 
 // RoleRepository manage Role table
 type RoleRepository interface {
-	// GetRoleByRecId return an existing role
-	GetRoleByRecId(ctx context.Context, recId string) (*Role, error)
+	// GetRoleByRecID return an existing role
+	GetRoleByRecID(ctx context.Context, recID string) (*Role, error)
 
 	// CreateRole into Role table
 	CreateRole(ctx context.Context, roleName, description string) (*Role, error)
@@ -155,8 +155,8 @@ type RoleRepository interface {
 
 // User record entity
 type User struct {
-	// RecId. Primary key
-	RecId string `json:"rec_id"`
+	// RecID. Primary key
+	RecID string `json:"rec_id"`
 
 	// Email address. unique
 	Email string `json:"email"`
@@ -200,8 +200,8 @@ type User struct {
 
 // Group record entity
 type Group struct {
-	// RecId. Primary key
-	RecId string `json:"rec_id"`
+	// RecID. Primary key
+	RecID string `json:"rec_id"`
 	// GroupName of the group, Primary Key
 	GroupName string `json:"group_name"`
 	// Description of the group
@@ -211,31 +211,31 @@ type Group struct {
 // UserGroup record entity
 type UserGroup struct {
 	// Email composite key to User
-	UserRecId string `json:"user_rec_id"`
+	UserRecID string `json:"user_rec_id"`
 	// GroupName composite key to Group
-	GroupRecId string `json:"group_rec_id"`
+	GroupRecID string `json:"group_rec_id"`
 }
 
 // UserRole record entity
 type UserRole struct {
 	// Email composite key to User
-	UserRecId string `json:"user_rec_id"`
+	UserRecID string `json:"user_rec_id"`
 	// RoleName composite key to Role
-	RoleRecId string `json:"role_rec_id"`
+	RoleRecID string `json:"role_rec_id"`
 }
 
 // GroupRole record entity
 type GroupRole struct {
 	// GroupName composite key to Group
-	GroupRecId string `json:"group_rec_id"`
+	GroupRecID string `json:"group_rec_id"`
 	// RoleName composite key to Role
-	RoleRecId string `json:"role_rec_id"`
+	RoleRecID string `json:"role_rec_id"`
 }
 
 // Role record entity
 type Role struct {
-	// RecId. Primary key
-	RecId string `json:"rec_id"`
+	// RecID. Primary key
+	RecID string `json:"rec_id"`
 	// RoleName of the role, Unique
 	RoleName string `json:"role_name"`
 	// Description of the role
