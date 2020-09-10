@@ -50,6 +50,12 @@ type SimpleUser struct {
 }
 
 func ListAllUsers(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "Mohomaaf ...dsb", nil, nil)
+		}
+	}()
+
 	fLog := userMgmtLogger.WithField("func", "ListAllUsers").WithField("RequestId", r.Context().Value(constants.RequestId)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	fLog.Trace("Listing Users")
 	pageRequest, err := helper.NewPageRequestFromRequest(r)

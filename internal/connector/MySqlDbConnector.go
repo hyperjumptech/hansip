@@ -734,7 +734,7 @@ func (db *MySqlDB) ListRoles(ctx context.Context, request *helper.PageRequest) (
 	}
 	for rows.Next() {
 		r := &Role{}
-		err := row.Scan(&r.RecId, &r.RoleName, &r.Description)
+		err := rows.Scan(&r.RecId, &r.RoleName, &r.Description)
 		if err != nil {
 			fLog.Warnf("row.Scan got  %s", err.Error())
 		} else {
@@ -847,7 +847,7 @@ func (db *MySqlDB) ListGroups(ctx context.Context, request *helper.PageRequest) 
 	}
 	for rows.Next() {
 		r := &Group{}
-		err := row.Scan(&r.RecId, &r.GroupName, &r.Description)
+		err := rows.Scan(&r.RecId, &r.GroupName, &r.Description)
 		if err != nil {
 			fLog.Warnf("row.Scan got  %s", err.Error())
 		} else {
