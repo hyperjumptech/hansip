@@ -21,7 +21,7 @@ build: build-static
 lint: build-static
 	golint -set_exit_status ./internal/... ./pkg/... ./cmd/...
 
-test: build-static
+test: lint
 	go install github.com/newm4n/goornogo
 	export GO111MODULE on; \
 	go test ./... -cover -vet -all -v -short -covermode=count -coverprofile=coverage.out
