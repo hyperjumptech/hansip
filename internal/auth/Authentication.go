@@ -119,25 +119,23 @@ func TwoFA(w http.ResponseWriter, r *http.Request) {
 
 	var roles []string
 
-	if config.GetBoolean("setup.admin.enable") {
-		roles = []string{"admin@aaa", "user@aaa"}
-	} else {
-		// Add user's role from direct UserRole relation.
-		userRoles, _, err := userRoleRepo.ListUserRoleByUser(r.Context(), user, &helper.PageRequest{
-			No:       1,
-			PageSize: 1000,
-		})
-		if err != nil {
-			helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
-			return
-		}
-		// Add user's role into Token audiences info.
-		roles = make([]string, len(userRoles))
-		for k, v := range userRoles {
-			r, err := roleRepo.GetRoleByRecID(r.Context(), v.RecID)
-			if err == nil {
-				roles[k] = r.RoleName
-			}
+	// Add user's role from direct UserRole relation.
+	userRoles, _, err := userRepo.ListAllUserRoles(r.Context(), user, &helper.PageRequest{
+		No:       1,
+		PageSize: 1000,
+		OrderBy:  "ROLE_NAME",
+		Sort:     "ASC",
+	})
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+	// Add user's role into Token audiences info.
+	roles = make([]string, len(userRoles))
+	for k, v := range userRoles {
+		r, err := roleRepo.GetRoleByRecID(r.Context(), v.RecID)
+		if err == nil {
+			roles[k] = r.RoleName
 		}
 	}
 
@@ -226,9 +224,11 @@ func Authentication2FA(w http.ResponseWriter, r *http.Request) {
 	var roles []string
 
 	// Add user's role from direct UserRole relation.
-	userRoles, _, err := userRoleRepo.ListUserRoleByUser(r.Context(), user, &helper.PageRequest{
+	userRoles, _, err := userRepo.ListAllUserRoles(r.Context(), user, &helper.PageRequest{
 		No:       1,
 		PageSize: 1000,
+		OrderBy:  "ROLE_NAME",
+		Sort:     "ASC",
 	})
 	if err != nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
@@ -354,18 +354,21 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 
 	var roles []string
 
-	if config.GetBoolean("setup.admin.enable") {
+	if config.GetBoolean("setup.admin.enable") && authReq.Email == config.Get("setup.admin.email") && authReq.Passphrase == config.Get("setup.admin.passphrase") {
 		roles = []string{"admin@aaa", "user@aaa"}
 	} else {
 		// Add user's role from direct UserRole relation.
-		userRoles, _, err := userRoleRepo.ListUserRoleByUser(r.Context(), user, &helper.PageRequest{
+		userRoles, _, err := userRepo.ListAllUserRoles(r.Context(), user, &helper.PageRequest{
 			No:       1,
 			PageSize: 1000,
+			OrderBy:  "ROLE_NAME",
+			Sort:     "ASC",
 		})
 		if err != nil {
 			helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 			return
 		}
+
 		// Add user's role into Token audiences info.
 		roles = make([]string, len(userRoles))
 		for k, v := range userRoles {

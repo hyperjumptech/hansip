@@ -32,6 +32,28 @@ run: build
 	export AAA_SERVER_PORT=8088; \
 	export AAA_SETUP_ADMIN_ENABLE=true; \
 	export AAA_SERVER_LOG_LEVEL=TRACE; \
+	export AAA_SERVER_HTTP_CORS_ENABLE=true; \
+	export AAA_SERVER_HTTP_CORS_ALLOW_ORIGINS=*; \
+	export AAA_SERVER_HTTP_CORS_ALLOW_CREDENTIAL=true; \
+	export AAA_SERVER_HTTP_CORS_ALLOW_METHOD=GET,PUT,DELETE,POST,OPTIONS; \
+	export AAA_SERVER_HTTP_CORS_ALLOW_HEADERS=Accept,Authorization,Content-Type,X-CSRF-TOKEN,Accept-Encoding; \
+	export AAA_SERVER_HTTP_CORS_EXPOSED_HEADERS=*; \
+	export AAA_SERVER_HTTP_CORS_IGNOREOPTION=false; \
+	export AAA_SERVER_HTTP_CORS_OPTIONSTATUS=200; \
+	export AAA_TOKEN_ISSUER=aaa.prakerja.go.id; \
+	export AAA_TOKEN_CRYPT_KEY=t0k3n#CrYpt!prak3rdja^shouLd_not.b3*5harEd; \
+	export AAA_DB_TYPE=MYSQL; \
+	export AAA_DB_MYSQL_HOST=rm-d9j6r781en570h7b9.mysql.ap-southeast-5.rds.aliyuncs.com; \
+	export AAA_DB_MYSQL_PORT=3306; \
+	export AAA_DB_MYSQL_USER=user_svc; \
+	export AAA_DB_MYSQL_PASSWORD=Pr4K3rj4S3laM4ny4; \
+	export AAA_DB_MYSQL_DATABASE=aaa; \
+	export AAA_MAILER_TYPE=SENDMAIL; \
+	export AAA_MAILER_FROM=aaa@prakerja.go.id; \
+	export AAA_MAILER_SENDMAIL_HOST=prakerja.go.id; \
+	export AAA_MAILER_SENDMAIL_PORT=25; \
+	export AAA_MAILER_SENDMAIL_USER=mailer; \
+	export AAA_MAILER_SENDMAIL_PASSWORD=mailerpass; \
 	./$(IMAGE_NAME).app
 	rm -f $(IMAGE_NAME).app
 
