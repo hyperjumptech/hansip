@@ -13,6 +13,7 @@ var (
 	roleMgmtLogger = log.WithField("go", "RoleManagement")
 )
 
+// ListAllRole handling endpoint to serve Listing all roles in database.
 func ListAllRole(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "ListAllRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	pageRequest, err := helper.NewPageRequestFromRequest(r)
@@ -40,11 +41,13 @@ func ListAllRole(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "List of all roles paginated", nil, ret)
 }
 
+// CreateRoleRequest hold dta model for requesting to create new role
 type CreateRoleRequest struct {
 	RoleName    string `json:"role_name"`
 	Description string `json:"description"`
 }
 
+// CreateRole serve the creation new role endpoint
 func CreateRole(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "CreateRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	req := &CreateRoleRequest{}
@@ -69,6 +72,8 @@ func CreateRole(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Success creating role", nil, role)
 	return
 }
+
+// GetRoleDetail serving request to get role detail
 func GetRoleDetail(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "GetRoleDetail").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}", r.URL.Path)
@@ -83,6 +88,8 @@ func GetRoleDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Role fetched", nil, role)
 }
+
+// DeleteRole serving request to delete a role
 func DeleteRole(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "DeleteRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}", r.URL.Path)
@@ -98,6 +105,8 @@ func DeleteRole(w http.ResponseWriter, r *http.Request) {
 	RoleRepo.DeleteRole(r.Context(), role)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Role deleted", nil, nil)
 }
+
+// ListRoleUser serving request to list user-role.
 func ListRoleUser(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "ListRoleUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/users", r.URL.Path)
@@ -134,6 +143,8 @@ func ListRoleUser(w http.ResponseWriter, r *http.Request) {
 	ret["page"] = page
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "List of users paginated", nil, ret)
 }
+
+// CreateRoleUser serving request to create new user-role
 func CreateRoleUser(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "CreateRoleUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/user/{userRecId}", r.URL.Path)
@@ -160,6 +171,8 @@ func CreateRoleUser(w http.ResponseWriter, r *http.Request) {
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Role created", nil, nil)
 }
+
+// DeleteRoleUser serving request to delete user-role
 func DeleteRoleUser(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "DeleteRoleUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/user/{userRecId}", r.URL.Path)
@@ -192,6 +205,8 @@ func DeleteRoleUser(w http.ResponseWriter, r *http.Request) {
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Role deleted", nil, nil)
 }
+
+// ListRoleGroup endpoint to serve group-role
 func ListRoleGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "ListRoleGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/groups", r.URL.Path)
@@ -223,6 +238,8 @@ func ListRoleGroup(w http.ResponseWriter, r *http.Request) {
 	ret["page"] = page
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "List of groups paginated", nil, ret)
 }
+
+// CreateRoleGroup serving request to create new group-role
 func CreateRoleGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "CreateRoleGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/group/{groupRecId}", r.URL.Path)
@@ -249,6 +266,8 @@ func CreateRoleGroup(w http.ResponseWriter, r *http.Request) {
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Group-Role created", nil, nil)
 }
+
+// DeleteRoleGroup serving request to delete group-role
 func DeleteRoleGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "DeleteRoleGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/group/{groupRecId}", r.URL.Path)

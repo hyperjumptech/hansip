@@ -6,8 +6,12 @@ import (
 	"time"
 )
 
+// DBUtil is interface to help working with table create and drop
 type DBUtil interface {
+	// DropAllTables will drop all existing table
 	DropAllTables(ctx context.Context) error
+
+	// CreateAllTable will create tables needed for the Apps if not exist
 	CreateAllTable(ctx context.Context) error
 }
 
@@ -47,7 +51,7 @@ type UserRepository interface {
 // GroupRepository manage Group table
 type GroupRepository interface {
 	// GetGroupByRecID return a group record
-	GetGroupByRecID(ctx context.Context, recId string) (*Group, error)
+	GetGroupByRecID(ctx context.Context, recID string) (*Group, error)
 
 	// CreateGroup into the Group table
 	CreateGroup(ctx context.Context, groupName, description string) (*Group, error)

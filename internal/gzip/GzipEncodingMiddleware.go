@@ -16,6 +16,7 @@ var (
 	})
 )
 
+// NewGzipEncoderFilter creates new encoder filter that handles gzip compression.
 func NewGzipEncoderFilter(enable bool, minSizeToCompress int) *EncoderFilter {
 	if !enable {
 		gzipFilterLog.Warnf("GZIP Compression response body is DISABLED. Should be enabled for best performance.")

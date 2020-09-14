@@ -9,8 +9,8 @@ var (
 	// ForwardedForHeader header key for X-Forwarded-For
 	ForwardedForHeader = http.CanonicalHeaderKey("X-Forwarded-For")
 
-	// RealIpHeader header key for X-Real-IP
-	RealIpHeader = http.CanonicalHeaderKey("X-Real-IP")
+	// RealIPHeader header key for X-Real-IP
+	RealIPHeader = http.CanonicalHeaderKey("X-Real-IP")
 )
 
 // ClientIPResolverMiddleware will try to resolve caller's real IP address by looking for gateway injected header such as X-Forwarded-For and X-Real-IP
@@ -20,7 +20,7 @@ func ClientIPResolverMiddleware(next http.Handler) http.Handler {
 		if len(ForwardedForHeader) > 0 {
 			r.RemoteAddr = ForwardedHeader
 		} else {
-			RealHeader := r.Header.Get(RealIpHeader)
+			RealHeader := r.Header.Get(RealIPHeader)
 			if len(RealHeader) > 0 {
 				i := strings.Index(RealHeader, ", ")
 				if i == -1 {

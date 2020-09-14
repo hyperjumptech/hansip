@@ -132,6 +132,8 @@ func (mem *InMemoryDb) GetUserByEmail(ctx context.Context, email string) (*User,
 	}
 	return nil, fmt.Errorf("email not found")
 }
+
+// GetUserBy2FAToken fetch user by 2fa token
 func (mem *InMemoryDb) GetUserBy2FAToken(ctx context.Context, token string) (*User, error) {
 	for _, u := range mem.UserTable {
 		if u.Token2FA == token {
@@ -140,6 +142,8 @@ func (mem *InMemoryDb) GetUserBy2FAToken(ctx context.Context, token string) (*Us
 	}
 	return nil, fmt.Errorf("token not found")
 }
+
+// GetUserByRecoveryToken fetch user by recovery token
 func (mem *InMemoryDb) GetUserByRecoveryToken(ctx context.Context, token string) (*User, error) {
 	for _, u := range mem.UserTable {
 		if u.RecoveryCode == token {
@@ -148,6 +152,8 @@ func (mem *InMemoryDb) GetUserByRecoveryToken(ctx context.Context, token string)
 	}
 	return nil, fmt.Errorf("token not found")
 }
+
+// DeleteUser delete a user
 func (mem *InMemoryDb) DeleteUser(ctx context.Context, user *User) error {
 	if _, ok := mem.UserTable[user.RecID]; ok {
 		delete(mem.UserTable, user.RecID)
@@ -155,6 +161,8 @@ func (mem *InMemoryDb) DeleteUser(ctx context.Context, user *User) error {
 	}
 	return fmt.Errorf("user not found")
 }
+
+// SaveOrUpdate will save a user if its not saved, or update if its already exist
 func (mem *InMemoryDb) SaveOrUpdate(ctx context.Context, user *User) error {
 	if u, err := mem.GetUserByEmail(ctx, user.Email); err != nil {
 		if user.RecID != u.RecID {
@@ -164,6 +172,8 @@ func (mem *InMemoryDb) SaveOrUpdate(ctx context.Context, user *User) error {
 	mem.UserTable[user.RecID] = user
 	return nil
 }
+
+// ListUser list all users
 func (mem *InMemoryDb) ListUser(ctx context.Context, request *helper.PageRequest) ([]*User, *helper.Page, error) {
 	userList := make([]*User, 0)
 	for _, v := range mem.UserTable {
@@ -186,10 +196,13 @@ func (mem *InMemoryDb) ListUser(ctx context.Context, request *helper.PageRequest
 
 	return retList, page, nil
 }
+
+// Count will count all user entries
 func (mem *InMemoryDb) Count(ctx context.Context) (int, error) {
 	return len(mem.UserTable), nil
 }
 
+// ListAllUserRoles list a role owned by user
 func (mem *InMemoryDb) ListAllUserRoles(ctx context.Context, user *User, request *helper.PageRequest) ([]*Role, *helper.Page, error) {
 	retMap := make(map[string]*Role)
 	for _, v := range mem.UserRoleTable {
@@ -228,6 +241,7 @@ func (mem *InMemoryDb) ListAllUserRoles(ctx context.Context, user *User, request
 	return roles[page.OffsetStart:page.OffsetEnd], page, nil
 }
 
+// GetUserRole get all roles of user
 func (mem *InMemoryDb) GetUserRole(ctx context.Context, user *User, role *Role) (*UserRole, error) {
 	key := fmt.Sprintf("%s%s", user.RecID, role.RecID)
 	if val, ok := mem.UserRoleTable[key]; ok {
@@ -235,6 +249,8 @@ func (mem *InMemoryDb) GetUserRole(ctx context.Context, user *User, role *Role) 
 	}
 	return nil, fmt.Errorf("not found")
 }
+
+// CreateUserRole assign a role to user
 func (mem *InMemoryDb) CreateUserRole(ctx context.Context, user *User, role *Role) (*UserRole, error) {
 	key := fmt.Sprintf("%s%s", user.RecID, role.RecID)
 	if _, ok := mem.UserRoleTable[key]; ok {
@@ -247,6 +263,8 @@ func (mem *InMemoryDb) CreateUserRole(ctx context.Context, user *User, role *Rol
 	mem.UserRoleTable[key] = urole
 	return urole, nil
 }
+
+// ListUserRoleByUser fetch role owned by user
 func (mem *InMemoryDb) ListUserRoleByUser(ctx context.Context, user *User, request *helper.PageRequest) ([]*Role, *helper.Page, error) {
 	ret := make([]*Role, 0)
 	for _, v := range mem.UserRoleTable {
@@ -257,6 +275,8 @@ func (mem *InMemoryDb) ListUserRoleByUser(ctx context.Context, user *User, reque
 	page := helper.NewPage(request, uint(len(ret)))
 	return ret[page.OffsetStart:page.OffsetEnd], page, nil
 }
+
+// ListUserRoleByRole fetch user who owns a role
 func (mem *InMemoryDb) ListUserRoleByRole(ctx context.Context, role *Role, request *helper.PageRequest) ([]*User, *helper.Page, error) {
 	ret := make([]*User, 0)
 	for _, v := range mem.UserRoleTable {
@@ -267,11 +287,15 @@ func (mem *InMemoryDb) ListUserRoleByRole(ctx context.Context, role *Role, reque
 	page := helper.NewPage(request, uint(len(ret)))
 	return ret[page.OffsetStart:page.OffsetEnd], page, nil
 }
+
+// DeleteUserRole delete relation between user and role
 func (mem *InMemoryDb) DeleteUserRole(ctx context.Context, userRole *UserRole) error {
 	key := fmt.Sprintf("%s%s", userRole.UserRecID, userRole.RoleRecID)
 	delete(mem.UserRoleTable, key)
 	return nil
 }
+
+// DeleteUserRoleByUser delete user-role relation by user
 func (mem *InMemoryDb) DeleteUserRoleByUser(ctx context.Context, user *User) error {
 	todel := make([]string, 0)
 	for k, v := range mem.UserRoleTable {
@@ -284,6 +308,8 @@ func (mem *InMemoryDb) DeleteUserRoleByUser(ctx context.Context, user *User) err
 	}
 	return nil
 }
+
+// DeleteUserRoleByRole delete user-role relation by a role
 func (mem *InMemoryDb) DeleteUserRoleByRole(ctx context.Context, role *Role) error {
 	todel := make([]string, 0)
 	for k, v := range mem.UserRoleTable {
@@ -296,12 +322,16 @@ func (mem *InMemoryDb) DeleteUserRoleByRole(ctx context.Context, role *Role) err
 	}
 	return nil
 }
+
+// GetRoleByRecID get a specific role by its recID
 func (mem *InMemoryDb) GetRoleByRecID(ctx context.Context, recID string) (*Role, error) {
 	if r, ok := mem.RoleTable[recID]; ok {
 		return r, nil
 	}
 	return nil, fmt.Errorf("not found")
 }
+
+// CreateRole  creates new role
 func (mem *InMemoryDb) CreateRole(ctx context.Context, roleName, description string) (*Role, error) {
 	if _, ok := mem.RoleTable[roleName]; ok {
 		return nil, fmt.Errorf("duplicate")
@@ -314,6 +344,8 @@ func (mem *InMemoryDb) CreateRole(ctx context.Context, roleName, description str
 	mem.RoleTable[role.RecID] = role
 	return role, nil
 }
+
+// ListRoles list all roles
 func (mem *InMemoryDb) ListRoles(ctx context.Context, request *helper.PageRequest) ([]*Role, *helper.Page, error) {
 	ret := make([]*Role, 0)
 	for _, v := range mem.RoleTable {
@@ -322,20 +354,28 @@ func (mem *InMemoryDb) ListRoles(ctx context.Context, request *helper.PageReques
 	page := helper.NewPage(request, uint(len(ret)))
 	return ret[page.OffsetStart:page.OffsetEnd], page, nil
 }
+
+// DeleteRole deletes a role and all relation to user and group
 func (mem *InMemoryDb) DeleteRole(ctx context.Context, role *Role) error {
 	delete(mem.RoleTable, role.RecID)
 	return nil
 }
+
+// SaveOrUpdateRole will save a role into db if its not exist, or update it if its already exist
 func (mem *InMemoryDb) SaveOrUpdateRole(ctx context.Context, role *Role) error {
 	mem.RoleTable[role.RoleName] = role
 	return nil
 }
+
+// GetGroupByRecID Get a group by its RecID
 func (mem *InMemoryDb) GetGroupByRecID(ctx context.Context, recID string) (*Group, error) {
 	if g, ok := mem.GroupTable[recID]; ok {
 		return g, nil
 	}
 	return nil, fmt.Errorf("not found")
 }
+
+// CreateGroup creates new Group
 func (mem *InMemoryDb) CreateGroup(ctx context.Context, groupName, description string) (*Group, error) {
 	for _, v := range mem.GroupTable {
 		if v.GroupName == groupName {
@@ -350,6 +390,8 @@ func (mem *InMemoryDb) CreateGroup(ctx context.Context, groupName, description s
 	mem.GroupTable[group.RecID] = group
 	return group, nil
 }
+
+// ListGroups list all groups
 func (mem *InMemoryDb) ListGroups(ctx context.Context, request *helper.PageRequest) ([]*Group, *helper.Page, error) {
 	ret := make([]*Group, 0)
 	for _, v := range mem.GroupTable {
@@ -358,10 +400,14 @@ func (mem *InMemoryDb) ListGroups(ctx context.Context, request *helper.PageReque
 	page := helper.NewPage(request, uint(len(ret)))
 	return ret[page.OffsetStart:page.OffsetEnd], page, nil
 }
+
+// DeleteGroup will deletes a group and all relation to user and role
 func (mem *InMemoryDb) DeleteGroup(ctx context.Context, group *Group) error {
 	delete(mem.GroupTable, group.RecID)
 	return nil
 }
+
+// SaveOrUpdateGroup save or update group data.
 func (mem *InMemoryDb) SaveOrUpdateGroup(ctx context.Context, group *Group) error {
 	for _, v := range mem.GroupTable {
 		if v.GroupName == group.GroupName && v.RecID != group.RecID {
@@ -371,6 +417,8 @@ func (mem *InMemoryDb) SaveOrUpdateGroup(ctx context.Context, group *Group) erro
 	mem.GroupTable[group.RecID] = group
 	return nil
 }
+
+// GetGroupRole will get a group role by specific group and role
 func (mem *InMemoryDb) GetGroupRole(ctx context.Context, group *Group, role *Role) (*GroupRole, error) {
 	key := fmt.Sprintf("%s%s", group.RecID, role.RecID)
 	if g, ok := mem.GroupRoleTable[key]; ok {
@@ -378,6 +426,8 @@ func (mem *InMemoryDb) GetGroupRole(ctx context.Context, group *Group, role *Rol
 	}
 	return nil, fmt.Errorf("not found")
 }
+
+// CreateGroupRole creates new group and role relation
 func (mem *InMemoryDb) CreateGroupRole(ctx context.Context, group *Group, role *Role) (*GroupRole, error) {
 	key := fmt.Sprintf("%s%s", group.RecID, role.RecID)
 	if _, ok := mem.GroupRoleTable[key]; ok {
@@ -390,6 +440,8 @@ func (mem *InMemoryDb) CreateGroupRole(ctx context.Context, group *Group, role *
 	mem.GroupRoleTable[key] = grole
 	return grole, nil
 }
+
+// ListGroupRoleByGroup list all role owned by a group
 func (mem *InMemoryDb) ListGroupRoleByGroup(ctx context.Context, group *Group, request *helper.PageRequest) ([]*Role, *helper.Page, error) {
 	ret := make([]*Role, 0)
 	for _, v := range mem.GroupRoleTable {
@@ -400,6 +452,8 @@ func (mem *InMemoryDb) ListGroupRoleByGroup(ctx context.Context, group *Group, r
 	page := helper.NewPage(request, uint(len(ret)))
 	return ret[page.OffsetStart:page.OffsetEnd], page, nil
 }
+
+// ListGroupRoleByRole list all groups owning a role
 func (mem *InMemoryDb) ListGroupRoleByRole(ctx context.Context, role *Role, request *helper.PageRequest) ([]*Group, *helper.Page, error) {
 	ret := make([]*Group, 0)
 	for _, v := range mem.GroupRoleTable {
@@ -410,10 +464,14 @@ func (mem *InMemoryDb) ListGroupRoleByRole(ctx context.Context, role *Role, requ
 	page := helper.NewPage(request, uint(len(ret)))
 	return ret[page.OffsetStart:page.OffsetEnd], page, nil
 }
+
+// DeleteGroupRole deletes a relation between group and role
 func (mem *InMemoryDb) DeleteGroupRole(ctx context.Context, groupRole *GroupRole) error {
 	delete(mem.GroupRoleTable, groupRole.GroupRecID)
 	return nil
 }
+
+// DeleteGroupRoleByGroup deletes all group-role relation related to a group
 func (mem *InMemoryDb) DeleteGroupRoleByGroup(ctx context.Context, group *Group) error {
 	todel := make([]string, 0)
 	for k, v := range mem.GroupRoleTable {
@@ -426,6 +484,8 @@ func (mem *InMemoryDb) DeleteGroupRoleByGroup(ctx context.Context, group *Group)
 	}
 	return nil
 }
+
+// DeleteGroupRoleByRole deletes all group-role relation related to a role
 func (mem *InMemoryDb) DeleteGroupRoleByRole(ctx context.Context, role *Role) error {
 	todel := make([]string, 0)
 	for k, v := range mem.GroupRoleTable {
@@ -439,6 +499,7 @@ func (mem *InMemoryDb) DeleteGroupRoleByRole(ctx context.Context, role *Role) er
 	return nil
 }
 
+// GetUserGroup get user group relation by user and group
 func (mem *InMemoryDb) GetUserGroup(ctx context.Context, user *User, group *Group) (*UserGroup, error) {
 	key := fmt.Sprintf("%s%s", user.RecID, group.RecID)
 	if g, ok := mem.UserGroupTable[key]; ok {
@@ -447,6 +508,7 @@ func (mem *InMemoryDb) GetUserGroup(ctx context.Context, user *User, group *Grou
 	return nil, fmt.Errorf("not found")
 }
 
+// CreateUserGroup create a new user-group relation
 func (mem *InMemoryDb) CreateUserGroup(ctx context.Context, user *User, group *Group) (*UserGroup, error) {
 	key := fmt.Sprintf("%s%s", user.RecID, group.RecID)
 	if _, ok := mem.UserGroupTable[key]; ok {
@@ -459,6 +521,8 @@ func (mem *InMemoryDb) CreateUserGroup(ctx context.Context, user *User, group *G
 	mem.UserGroupTable[key] = ugroup
 	return ugroup, nil
 }
+
+// ListUserGroupByUser will list all groups joined by a user
 func (mem *InMemoryDb) ListUserGroupByUser(ctx context.Context, user *User, request *helper.PageRequest) ([]*Group, *helper.Page, error) {
 	ret := make([]*Group, 0)
 	for _, v := range mem.UserGroupTable {
@@ -469,6 +533,8 @@ func (mem *InMemoryDb) ListUserGroupByUser(ctx context.Context, user *User, requ
 	page := helper.NewPage(request, uint(len(ret)))
 	return ret[page.OffsetStart:page.OffsetEnd], page, nil
 }
+
+// ListUserGroupByGroup will list all users joining a group
 func (mem *InMemoryDb) ListUserGroupByGroup(ctx context.Context, group *Group, request *helper.PageRequest) ([]*User, *helper.Page, error) {
 	ret := make([]*User, 0)
 	for _, v := range mem.UserGroupTable {
@@ -479,11 +545,15 @@ func (mem *InMemoryDb) ListUserGroupByGroup(ctx context.Context, group *Group, r
 	page := helper.NewPage(request, uint(len(ret)))
 	return ret[page.OffsetStart:page.OffsetEnd], page, nil
 }
+
+// DeleteUserGroup will delete a speciffic user-group relation.
 func (mem *InMemoryDb) DeleteUserGroup(ctx context.Context, userGroup *UserGroup) error {
 	key := fmt.Sprintf("%s%s", userGroup.UserRecID, userGroup.GroupRecID)
 	delete(mem.UserGroupTable, key)
 	return nil
 }
+
+// DeleteUserGroupByUser delete all user-group relations by a user.
 func (mem *InMemoryDb) DeleteUserGroupByUser(ctx context.Context, user *User) error {
 	todel := make([]string, 0)
 	for k, v := range mem.UserGroupTable {
@@ -496,6 +566,8 @@ func (mem *InMemoryDb) DeleteUserGroupByUser(ctx context.Context, user *User) er
 	}
 	return nil
 }
+
+// DeleteUserGroupByGroup deletes all user-group relation by a group
 func (mem *InMemoryDb) DeleteUserGroupByGroup(ctx context.Context, group *Group) error {
 	todel := make([]string, 0)
 	for k, v := range mem.UserGroupTable {

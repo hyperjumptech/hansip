@@ -42,6 +42,7 @@ func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
 	w.Write(png)
 }
 
+// SimpleUser hold data model of user. showing important attributes only.
 type SimpleUser struct {
 	RecID     string `json:"rec_id"`
 	Email     string `json:"email"`
@@ -49,6 +50,7 @@ type SimpleUser struct {
 	Suspended bool   `json:"suspended"`
 }
 
+// ListAllUsers serving listing all user request
 func ListAllUsers(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -85,11 +87,13 @@ func ListAllUsers(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "List of all user paginated", nil, ret)
 }
 
+// CreateNewUserRequest hold the data model for requesting to create new user.
 type CreateNewUserRequest struct {
 	Email      string `json:"email"`
 	Passphrase string `json:"passphrase"`
 }
 
+// CreateNewUserResponse hold the data model for responding CreateNewUser request
 type CreateNewUserResponse struct {
 	RecordID    string    `json:"rec_id"`
 	Email       string    `json:"email"`
@@ -100,6 +104,7 @@ type CreateNewUserResponse struct {
 	TotpEnabled bool      `json:"2fa_enabled"`
 }
 
+// CreateNewUser handles request to create new user
 func CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "CreateNewUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	fLog.Trace("Creating new user")
@@ -146,11 +151,13 @@ func CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// ChangePassphraseRequest stores change password request
 type ChangePassphraseRequest struct {
 	OldPassphrase string `json:"old_passphrase"`
 	NewPassphrase string `json:"new_passphrase"`
 }
 
+// ChangePassphrase handles the change password request
 func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "ChangePassphrase").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/passwd", r.URL.Path)
@@ -198,11 +205,13 @@ func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Password changed", nil, nil)
 }
 
+// ActivateUserRequest hold request data for activating user
 type ActivateUserRequest struct {
 	Email           string `json:"email"`
 	ActivationToken string `json:"activation_token"`
 }
 
+// WhoAmIResponse holds the response structure for WhoAmI request
 type WhoAmIResponse struct {
 	RecordID  string          `json:"rec_id"`
 	Email     string          `json:"email"`
@@ -212,25 +221,30 @@ type WhoAmIResponse struct {
 	Groups    []*GroupSummary `json:"groups"`
 }
 
+// RoleSummary hold role information summay
 type RoleSummary struct {
 	RecordID string `json:"rec_id"`
 	RoleName string `json:"role_name"`
 }
 
+// GroupSummary hold group information summay
 type GroupSummary struct {
 	RecordID  string         `json:"rec_id"`
 	GroupName string         `json:"group_name"`
 	Roles     []*RoleSummary `json:"roles"`
 }
 
+// Activate2FARequest hold request structure for activating the 2FA request
 type Activate2FARequest struct {
 	Token string `json:"2FA_token"`
 }
 
+// Activate2FAResponse hold response structure for activating the 2FA request
 type Activate2FAResponse struct {
 	Secret string `json:"2FA_secret_key"`
 }
 
+// Activate2FA handle 2FA activation request
 func Activate2FA(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "Activate2FA").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	authCtx := r.Context().Value(constants.HansipAuthentication).(*hansipcontext.AuthenticationContext)
@@ -277,6 +291,7 @@ func Activate2FA(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "2FA Activated", nil, resp)
 }
 
+// WhoAmI handles who am I inquiry request
 func WhoAmI(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "WhoAmI").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	authCtx := r.Context().Value(constants.HansipAuthentication).(*hansipcontext.AuthenticationContext)
@@ -420,6 +435,7 @@ func GetUserDetail(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User retrieved", nil, ret)
 }
 
+// UpdateUserRequest hold request data for requesting to update user information.
 type UpdateUserRequest struct {
 	Email     string `json:"email"`
 	Enabled   bool   `json:"enabled"`

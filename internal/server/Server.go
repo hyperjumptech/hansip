@@ -108,12 +108,12 @@ func InitializeRouter() {
 		mgmnt.GroupRoleRepo = connector.GetInMemoryDbInstance()
 	} else if config.Get("db.type") == "MYSQL" {
 		log.Warnf("Using MYSQL")
-		mgmnt.UserRepo = connector.GetMySqlDBInstance()
-		mgmnt.GroupRepo = connector.GetMySqlDBInstance()
-		mgmnt.RoleRepo = connector.GetMySqlDBInstance()
-		mgmnt.UserGroupRepo = connector.GetMySqlDBInstance()
-		mgmnt.UserRoleRepo = connector.GetMySqlDBInstance()
-		mgmnt.GroupRoleRepo = connector.GetMySqlDBInstance()
+		mgmnt.UserRepo = connector.GetMySQLDBInstance()
+		mgmnt.GroupRepo = connector.GetMySQLDBInstance()
+		mgmnt.RoleRepo = connector.GetMySQLDBInstance()
+		mgmnt.UserGroupRepo = connector.GetMySQLDBInstance()
+		mgmnt.UserRoleRepo = connector.GetMySQLDBInstance()
+		mgmnt.GroupRoleRepo = connector.GetMySQLDBInstance()
 	} else {
 		panic(fmt.Sprintf("unknown database type %s. Correct your configuration 'db.type' or env-var 'AAA_DB_TYPE'. allowed values are INMEMORY or MYSQL", config.Get("db.type")))
 	}

@@ -9,6 +9,7 @@ import (
 	"net/http"
 )
 
+// SimpleGroup hold basic data of group
 type SimpleGroup struct {
 	RecID     string `json:"rec_id"`
 	GroupName string `json:"group_name"`
@@ -18,6 +19,7 @@ var (
 	groupMgmtLog = log.WithField("go", "GroupManagement")
 )
 
+// ListAllGroup serving the listing of group request
 func ListAllGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "ListAllGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	pageRequest, err := helper.NewPageRequestFromRequest(r)
@@ -45,11 +47,13 @@ func ListAllGroup(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "List of all user paginated", nil, ret)
 }
 
+// CreateGroupRequest hold model for Create new Group.
 type CreateGroupRequest struct {
 	GroupName   string `json:"group_name"`
 	Description string `json:"description"`
 }
 
+// CreateNewGroup serving request to create new Group
 func CreateNewGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "CreateNewGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	req := &CreateGroupRequest{}
@@ -74,6 +78,8 @@ func CreateNewGroup(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Success creating group", nil, group)
 	return
 }
+
+// GetGroupDetail serving request to fetch group detail
 func GetGroupDetail(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "GetGroupDetail").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}", r.URL.Path)
@@ -88,6 +94,8 @@ func GetGroupDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Group fetched", nil, group)
 }
+
+// DeleteGroup serving request to delete a group
 func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "DeleteGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}", r.URL.Path)
@@ -103,6 +111,8 @@ func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	GroupRepo.DeleteGroup(r.Context(), group)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Group deleted", nil, nil)
 }
+
+// ListGroupUser serving request to list Users of a group
 func ListGroupUser(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "ListGroupUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/users", r.URL.Path)
@@ -139,6 +149,8 @@ func ListGroupUser(w http.ResponseWriter, r *http.Request) {
 	ret["page"] = page
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "List of users paginated", nil, ret)
 }
+
+// CreateGroupUser serving request to create new User-Group
 func CreateGroupUser(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "CreateGroupUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/user/{userRecId}", r.URL.Path)
@@ -165,6 +177,8 @@ func CreateGroupUser(w http.ResponseWriter, r *http.Request) {
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Group created", nil, nil)
 }
+
+// DeleteGroupUser serving request to delete user-group
 func DeleteGroupUser(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "DeleteGroupUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/user/{userRecId}", r.URL.Path)
@@ -197,6 +211,8 @@ func DeleteGroupUser(w http.ResponseWriter, r *http.Request) {
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Group deleted", nil, nil)
 }
+
+// ListGroupRole serving request to list all group-role
 func ListGroupRole(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "ListGroupRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/roles", r.URL.Path)
@@ -231,6 +247,8 @@ func ListGroupRole(w http.ResponseWriter, r *http.Request) {
 	ret["page"] = page
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "List of roles paginated", nil, ret)
 }
+
+// CreateGroupRole serving reqest to create new group role
 func CreateGroupRole(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "CreateGroupRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/role/{roleRecId}", r.URL.Path)
@@ -258,6 +276,7 @@ func CreateGroupRole(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Group-Role created", nil, nil)
 }
 
+// DeleteGroupRole serving request to delete group-role
 func DeleteGroupRole(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "DeleteGroupRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/role/{roleRecId}", r.URL.Path)

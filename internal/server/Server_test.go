@@ -57,7 +57,7 @@ func TestAll(t *testing.T) {
 	if config.Get("db.type") == "INMEMORY" {
 		dbUtil = connector.GetInMemoryDbInstance()
 	} else {
-		dbUtil = connector.GetMySqlDBInstance()
+		dbUtil = connector.GetMySQLDBInstance()
 	}
 
 	err := dbUtil.DropAllTables(context.Background())

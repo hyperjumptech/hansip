@@ -68,7 +68,7 @@ func initialize() {
 	defCfg["mailer.templates.passrecover.body"] = "<html><body>Dear Hansip User<br><br>To recover your passphrase<br>please click this <a href=\"http://hansip.io/activate?code={{.RecoveryCode}}\">link to change your passphrase</a>.<br><br>Cordially,<br>HANSIP team</body></html>"
 	defCfg["mailer.sendgrid.token"] = "SENDGRIDTOKEN"
 
-	for k, _ := range defCfg {
+	for k := range defCfg {
 		err := viper.BindEnv(k)
 		if err != nil {
 			log.Errorf("Failed to bind env \"%s\" into configuration. Got %s", k, err)

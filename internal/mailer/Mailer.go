@@ -11,13 +11,22 @@ import (
 )
 
 var (
-	mailerLogger  = log.WithField("go", "Mailer")
+	mailerLogger = log.WithField("go", "Mailer")
+
+	// MailerChannel mailer channel to receive new mail to send.
 	MailerChannel chan *Email
-	KillChannel   chan bool
-	Sender        connector.EmailSender
-	Templates     map[string]*EmailTemplates
+
+	// KillChannel a bolean channel to detect mailer server shutdown
+	KillChannel chan bool
+
+	// Sender the connector used in this mailer
+	Sender connector.EmailSender
+
+	// Templates maps list of email template to use
+	Templates map[string]*EmailTemplates
 )
 
+// Email contains data structure of a new email
 type Email struct {
 	context  context.Context
 	From     string
@@ -29,6 +38,7 @@ type Email struct {
 	Data     interface{}
 }
 
+// EmailTemplates data structure for an email template
 type EmailTemplates struct {
 	SubjectTemplate *template.Template
 	BodyTemplate    *template.Template
@@ -57,6 +67,7 @@ func init() {
 
 }
 
+// Start will start this mailer server
 func Start() {
 	mailerLogger.Info("Mailer starting")
 	running := true
@@ -97,11 +108,13 @@ func Start() {
 	mailerLogger.Info("Mailer stopped")
 }
 
+// Send will add an email to the channel for sending.
 func Send(context context.Context, mail *Email) {
 	mail.context = context
 	MailerChannel <- mail
 }
 
+// Stop stop the channel
 func Stop() {
 	KillChannel <- true
 }

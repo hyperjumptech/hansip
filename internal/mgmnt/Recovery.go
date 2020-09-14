@@ -16,10 +16,12 @@ var (
 	recoveryLogger = log.WithField("go", "Recovery")
 )
 
+// RecoverPassphraseRequest hold the model for requesting passphrase recovery
 type RecoverPassphraseRequest struct {
 	Email string `json:"email"`
 }
 
+// RecoverPassphrase serving request for recovering passphrase
 func RecoverPassphrase(w http.ResponseWriter, r *http.Request) {
 	fLog := recoveryLogger.WithField("func", "RecoverPassphrase").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	req := &RecoverPassphraseRequest{}
@@ -59,11 +61,13 @@ func RecoverPassphrase(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Check your email", nil, nil)
 }
 
+// ResetPassphraseRequest hold data model for reseting passphrase
 type ResetPassphraseRequest struct {
 	ResetToken    string `json:"passphraseResetToken"`
 	NewPassphrase string `json:"newPassphrase"`
 }
 
+// ResetPassphrase serving passphrase reset request
 func ResetPassphrase(w http.ResponseWriter, r *http.Request) {
 	fLog := recoveryLogger.WithField("func", "ResetPassphrase").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	req := &ResetPassphraseRequest{}
