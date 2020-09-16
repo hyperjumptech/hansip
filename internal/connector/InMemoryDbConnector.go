@@ -19,12 +19,13 @@ var (
 func GetInMemoryDbInstance() *InMemoryDb {
 	if inMemoryInstance == nil {
 		inMemoryInstance = &InMemoryDb{
-			UserTable:      make(map[string]*User),
-			UserRoleTable:  make(map[string]*UserRole),
-			RoleTable:      make(map[string]*Role),
-			GroupTable:     make(map[string]*Group),
-			GroupRoleTable: make(map[string]*GroupRole),
-			UserGroupTable: make(map[string]*UserGroup),
+			UserTable:             make(map[string]*User),
+			UserRoleTable:         make(map[string]*UserRole),
+			RoleTable:             make(map[string]*Role),
+			GroupTable:            make(map[string]*Group),
+			GroupRoleTable:        make(map[string]*GroupRole),
+			UserGroupTable:        make(map[string]*UserGroup),
+			TOTPRecoveryCodeTable: make(map[string]*TOTPRecoveryCode),
 		}
 	}
 	return inMemoryInstance
@@ -32,12 +33,13 @@ func GetInMemoryDbInstance() *InMemoryDb {
 
 // InMemoryDb structure that stores inmemory data.
 type InMemoryDb struct {
-	UserTable      map[string]*User
-	UserRoleTable  map[string]*UserRole
-	RoleTable      map[string]*Role
-	GroupTable     map[string]*Group
-	GroupRoleTable map[string]*GroupRole
-	UserGroupTable map[string]*UserGroup
+	UserTable             map[string]*User
+	UserRoleTable         map[string]*UserRole
+	RoleTable             map[string]*Role
+	GroupTable            map[string]*Group
+	GroupRoleTable        map[string]*GroupRole
+	UserGroupTable        map[string]*UserGroup
+	TOTPRecoveryCodeTable map[string]*TOTPRecoveryCode
 }
 
 func (mem *InMemoryDb) cloneUser(u *User) *User {
@@ -57,6 +59,49 @@ func (mem *InMemoryDb) cloneUser(u *User) *User {
 		Token2FA:          u.Token2FA,
 		RecoveryCode:      u.RecoveryCode,
 	}
+}
+
+// GetTOTPRecoveryCodes retrieves all valid/not used TOTP recovery codes.
+func (mem *InMemoryDb) GetTOTPRecoveryCodes(ctx context.Context, user *User) ([]string, error) {
+	ret := make([]string, 0)
+	for _, recode := range mem.TOTPRecoveryCodeTable {
+		if recode.UserRecID == user.RecID && !recode.Used {
+			ret = append(ret, recode.Code)
+		}
+	}
+	return ret, nil
+}
+
+// RecreateTOTPRecoveryCodes recreates 16 new recovery codes.
+func (mem *InMemoryDb) RecreateTOTPRecoveryCodes(ctx context.Context, user *User) ([]string, error) {
+	for key, recode := range mem.TOTPRecoveryCodeTable {
+		if recode.UserRecID == user.RecID {
+			delete(mem.TOTPRecoveryCodeTable, key)
+		}
+	}
+	ret := make([]string, 16)
+	for i := 0; i < 16; i++ {
+		key := helper.MakeRandomString(10, true, true, true, false)
+		code := helper.MakeRandomString(8, true, true, true, false)
+		mem.TOTPRecoveryCodeTable[key] = &TOTPRecoveryCode{
+			RecID:     key,
+			Code:      code,
+			Used:      false,
+			UserRecID: user.RecID,
+		}
+		ret = append(ret, code)
+	}
+	return ret, nil
+}
+
+// MarkTOTPRecoveryCodeUsed will mark the specific recovery code as used and thus can not be used anymore.
+func (mem *InMemoryDb) MarkTOTPRecoveryCodeUsed(ctx context.Context, user *User, code string) error {
+	for _, recode := range mem.TOTPRecoveryCodeTable {
+		if recode.UserRecID == user.RecID && code == recode.Code {
+			recode.Used = true
+		}
+	}
+	return nil
 }
 
 // DropAllTables will do nothing in this inmemory implementation
@@ -84,6 +129,9 @@ func (mem *InMemoryDb) CreateAllTable(ctx context.Context) error {
 	}
 	for k := range mem.UserGroupTable {
 		delete(mem.UserGroupTable, k)
+	}
+	for k := range mem.TOTPRecoveryCodeTable {
+		delete(mem.TOTPRecoveryCodeTable, k)
 	}
 	return nil
 }

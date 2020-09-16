@@ -160,7 +160,7 @@
                 "passphrase": {
                   "type": "string"
                 },
-                "2FA_secret_key": {
+                "2FA_recovery_code": {
                   "type": "string"
                 }
               }
@@ -545,8 +545,11 @@
                 "data": {
                   "type": "object",
                   "properties": {
-                    "2FA_secret_key": {
-                      "type": "string"
+                    "2FA_recovery_codes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     }
                   }
                 }

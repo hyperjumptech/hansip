@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
+
 	// Initializes mysql driver
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hyperjumptech/hansip/internal/config"
@@ -74,6 +76,14 @@ const (
     PRIMARY KEY (GROUP_REC_ID,ROLE_REC_ID),
     FOREIGN KEY (GROUP_REC_ID) REFERENCES HANSIP_GROUP(REC_ID) ON DELETE CASCADE,
     FOREIGN KEY (ROLE_REC_ID) REFERENCES HANSIP_ROLE(REC_ID) ON DELETE CASCADE
+) ENGINE=INNODB;`
+	// CreateTOTPRecoveryCodeSQL contains SQL to create HANSIP_TOTP_RECOVERY_CODES table
+	CreateTOTPRecoveryCodeSQL = `CREATE TABLE IF NOT EXISTS HANSIP_TOTP_RECOVERY_CODES (
+    REC_ID VARCHAR(32) NOT NULL,
+    RECOVERY_CODE VARCHAR(8) NOT NULL,
+    USED_FLAG TINYINT(1) UNSIGNED DEFAULT 0,
+    USER_REC_ID VARCHAR(32) NOT NULL,
+    FOREIGN KEY (USER_REC_ID) REFERENCES HANSIP_USER(REC_ID) ON DELETE CASCADE
 ) ENGINE=INNODB;`
 )
 
@@ -203,6 +213,20 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 			fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s", err.Error())
 		}
 	}
+
+	fLog.Infof("Checking table HANSIP_TOTP_RECOVERY_CODES")
+	exist, err = db.isTableExist(ctx, "HANSIP_TOTP_RECOVERY_CODES")
+	if err != nil {
+		return err
+	}
+	if !exist {
+		fLog.Infof("Create table HANSIP_TOTP_RECOVERY_CODES")
+		_, err := db.instance.ExecContext(ctx, CreateTOTPRecoveryCodeSQL)
+		if err != nil {
+			fLog.Errorf("db.instance.ExecContext HANSIP_TOTP_RECOVERY_CODES Got %s", err.Error())
+		}
+	}
+
 	return nil
 }
 
@@ -256,6 +280,10 @@ func (db *MySQLDB) CreateAllTable(ctx context.Context) error {
 	_, err = db.instance.ExecContext(ctx, CreateGroupRoleSQL)
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s", err.Error())
+	}
+	_, err = db.instance.ExecContext(ctx, CreateTOTPRecoveryCodeSQL)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext HANSIP_TOTP_RECOVERY_CODES Got %s", err.Error())
 	}
 	_, err = db.CreateRole(ctx, "admin@aaa", "Administrator role")
 	if err != nil {
@@ -327,6 +355,70 @@ func (db *MySQLDB) CreateUserRecord(ctx context.Context, email, passphrase strin
 	}
 
 	return user, nil
+}
+
+// GetTOTPRecoveryCodes retrieves all valid/not used TOTP recovery codes.
+func (db *MySQLDB) GetTOTPRecoveryCodes(ctx context.Context, user *User) ([]string, error) {
+	fLog := mysqlLog.WithField("func", "GetTOTPRecoveryCodes").WithField("RequestID", ctx.Value(constants.RequestID))
+
+	ret := make([]string, 0)
+	rows, err := db.instance.QueryContext(ctx, "SELECT RECOVERY_CODE FROM HANSIP_TOTP_RECOVERY_CODES WHERE USER_REC_ID = ? && USED_FLAG = ?", user.RecID, 0)
+	if err != nil {
+		fLog.Errorf("db.instance.QueryContext got %s", err.Error())
+		return nil, err
+	}
+	for rows.Next() {
+		code := ""
+		err = rows.Scan(&code)
+		if err != nil {
+			fLog.Errorf("rows.Scan got %s", err.Error())
+		} else {
+			ret = append(ret, code)
+		}
+	}
+	return ret, nil
+}
+
+// RecreateTOTPRecoveryCodes recreates 16 new recovery codes.
+func (db *MySQLDB) RecreateTOTPRecoveryCodes(ctx context.Context, user *User) ([]string, error) {
+	fLog := mysqlLog.WithField("func", "RecreateTOTPRecoveryCodes").WithField("RequestID", ctx.Value(constants.RequestID))
+
+	// first we clear out all existing codes.
+	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_TOTP_RECOVERY_CODES WHERE USER_REC_ID = ?", user.RecID)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		return nil, err
+	}
+
+	// Now lets recreate all new records.
+	ret := make([]string, 0)
+	for i := 0; i < 16; i++ {
+		recID := helper.MakeRandomString(10, true, true, true, false)
+		code := helper.MakeRandomString(8, true, false, true, false)
+		_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_TOTP_RECOVERY_CODES(REC_ID, RECOVERY_CODE, USED_FLAG, USER_REC_ID) VALUES (?,?,?,?)", recID, code, 0, user.RecID)
+		if err != nil {
+			fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		} else {
+			ret = append(ret, code)
+		}
+	}
+	return ret, nil
+}
+
+// MarkTOTPRecoveryCodeUsed will mark the specific recovery code as used and thus can not be used anymore.
+func (db *MySQLDB) MarkTOTPRecoveryCodeUsed(ctx context.Context, user *User, code string) error {
+	fLog := mysqlLog.WithField("func", "MarkTOTPRecoveryCodeUsed").WithField("RequestID", ctx.Value(constants.RequestID))
+
+	rexp := regexp.MustCompile(`^[A-Z0-9]{8}$`)
+	if rexp.Match([]byte(code)) {
+		_, err := db.instance.ExecContext(ctx, "UPDATE HANSIP_TOTP_RECOVERY_CODES SET USED_FLAG = ? WHERE USER_REC_ID = ? AND RECOVERY_CODE=?", 1, user.RecID, code)
+		if err != nil {
+			fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		}
+		return err
+	}
+	fLog.Warnf("Invalid Code format. expect 8 digit contains capital Alphabet and number only. But %s", code)
+	return nil
 }
 
 // GetUserByEmail get user record by its email address

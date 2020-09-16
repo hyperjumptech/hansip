@@ -46,6 +46,15 @@ type UserRepository interface {
 
 	// ListAllUserRoles will list all roles owned by a particular user
 	ListAllUserRoles(ctx context.Context, user *User, request *helper.PageRequest) ([]*Role, *helper.Page, error)
+
+	// GetTOTPRecoveryCodes retrieves all valid/not used TOTP recovery codes.
+	GetTOTPRecoveryCodes(ctx context.Context, user *User) ([]string, error)
+
+	// RecreateTOTPRecoveryCodes recreates 16 new recovery codes.
+	RecreateTOTPRecoveryCodes(ctx context.Context, user *User) ([]string, error)
+
+	// MarkTOTPRecoveryCodeUsed will mark the specific recovery code as used and thus can not be used anymore.
+	MarkTOTPRecoveryCodeUsed(ctx context.Context, user *User, code string) error
 }
 
 // GroupRepository manage Group table
@@ -202,12 +211,29 @@ type User struct {
 	RecoveryCode string `json:"recovery_code"`
 }
 
+// TOTPRecoveryCode used to login the user if the user lost his TOTP code due to lost of 2FE token device.
+type TOTPRecoveryCode struct {
+	// RecID. Primary Key
+	RecID string `json:"rec_id"`
+
+	// The 8 digit key used once code. No dash separator. Only upper A-Z and 0-9
+	Code string `json:"code"`
+
+	// The used flag. If true, this token can not be used anymore.
+	Used bool `json:"used"`
+
+	// The owner of this code.
+	UserRecID string `json:"user_rec_id"`
+}
+
 // Group record entity
 type Group struct {
 	// RecID. Primary key
 	RecID string `json:"rec_id"`
+
 	// GroupName of the group, Primary Key
 	GroupName string `json:"group_name"`
+
 	// Description of the group
 	Description string `json:"description"`
 }
@@ -216,6 +242,7 @@ type Group struct {
 type UserGroup struct {
 	// Email composite key to User
 	UserRecID string `json:"user_rec_id"`
+
 	// GroupName composite key to Group
 	GroupRecID string `json:"group_rec_id"`
 }
@@ -224,6 +251,7 @@ type UserGroup struct {
 type UserRole struct {
 	// Email composite key to User
 	UserRecID string `json:"user_rec_id"`
+
 	// RoleName composite key to Role
 	RoleRecID string `json:"role_rec_id"`
 }
@@ -232,6 +260,7 @@ type UserRole struct {
 type GroupRole struct {
 	// GroupName composite key to Group
 	GroupRecID string `json:"group_rec_id"`
+
 	// RoleName composite key to Role
 	RoleRecID string `json:"role_rec_id"`
 }
@@ -240,8 +269,10 @@ type GroupRole struct {
 type Role struct {
 	// RecID. Primary key
 	RecID string `json:"rec_id"`
+
 	// RoleName of the role, Unique
 	RoleName string `json:"role_name"`
+
 	// Description of the role
 	Description string `json:"description"`
 }

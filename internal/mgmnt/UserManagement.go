@@ -31,6 +31,23 @@ func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user.UserTotpSecretKey = totp.MakeRandomTotpKey()
+	err = UserRepo.SaveOrUpdate(r.Context(), user)
+	if err != nil {
+		fLog.Errorf("UserRepo.SaveOrUpdate got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	fLog.Warnf("New TOTP secret is created for %s", user.Email)
+
+	codes, err := UserRepo.RecreateTOTPRecoveryCodes(r.Context(), user)
+	if err != nil {
+		fLog.Errorf("UserRepo.RecreateTOTPRecoveryCodes got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	fLog.Warnf("Created %d recovery codes for %s", len(codes), user.Email)
+
 	png, err := totp.MakeTotpQrImage(user.UserTotpSecretKey, fmt.Sprintf("AAA:%s", user.Email))
 	if err != nil {
 		fLog.Errorf("totp.MakeTotpQrImage got %s", err.Error())
@@ -241,7 +258,7 @@ type Activate2FARequest struct {
 
 // Activate2FAResponse hold response structure for activating the 2FA request
 type Activate2FAResponse struct {
-	Secret string `json:"2FA_secret_key"`
+	Codes []string `json:"2FA_recovery_codes"`
 }
 
 // Activate2FA handle 2FA activation request
@@ -278,8 +295,14 @@ func Activate2FA(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, "Invalid OTP")
 		return
 	}
+	codes, err := UserRepo.GetTOTPRecoveryCodes(r.Context(), user)
+	if err != nil {
+		fLog.Errorf("UserRepo.GetTOTPRecoveryCodes got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
 	resp := Activate2FAResponse{
-		Secret: user.UserTotpSecretKey,
+		Codes: codes,
 	}
 	user.Enable2FactorAuth = true
 	err = UserRepo.SaveOrUpdate(r.Context(), user)

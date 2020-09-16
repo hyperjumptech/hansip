@@ -107,7 +107,7 @@ paths:
                 type: "string"
               passphrase:
                 type: "string"
-              2FA_secret_key:
+              2FA_recovery_code:
                 type: "string"
       responses:
         200:
@@ -354,8 +354,10 @@ paths:
               data:
                 type: object
                 properties:
-                  2FA_secret_key:
-                    type: "string"
+                  2FA_recovery_codes:
+                    type: "array"
+                    items:
+                      type: string
         401:
           description: "You are not authorized"
         403:

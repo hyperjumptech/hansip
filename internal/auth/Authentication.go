@@ -39,7 +39,7 @@ type Request struct {
 type RequestWith2FA struct {
 	Email      string `json:"email"`
 	Passphrase string `json:"passphrase"`
-	SecretKey  string `json:"2FA_secret_key"`
+	SecretKey  string `json:"2FA_recovery_code"`
 }
 
 // Response a model for responding successful authentication
@@ -213,10 +213,28 @@ func Authentication2FA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.UserTotpSecretKey != authReq.SecretKey {
+	codes, err := userRepo.GetTOTPRecoveryCodes(r.Context(), user)
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	codeCorrect := false
+	for _, v := range codes {
+		if v == authReq.SecretKey {
+			codeCorrect = true
+			break
+		}
+	}
+	if !codeCorrect {
+		user.FailCount++
+		if user.FailCount > 3 {
+			user.Suspended = true
+		}
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "invalid secret key", nil, nil)
 		return
 	}
+
+	_ = userRepo.MarkTOTPRecoveryCodeUsed(r.Context(), user, authReq.SecretKey)
 
 	// If the password is valid, reset the user's FailCount
 	user.FailCount = 0
