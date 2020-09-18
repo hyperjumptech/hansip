@@ -41,13 +41,7 @@ run: build
 	export AAA_SERVER_HTTP_CORS_IGNOREOPTION=false; \
 	export AAA_SERVER_HTTP_CORS_OPTIONSTATUS=200; \
 	export AAA_TOKEN_ISSUER=aaa.prakerja.go.id; \
-	export AAA_TOKEN_CRYPT_KEY=t0k3n#CrYpt!prak3rdja^shouLd_not.b3*5harEd; \
 	export AAA_DB_TYPE=INMEMORY; \
-	export AAA_DB_MYSQL_HOST=rm-d9j6r781en570h7b9.mysql.ap-southeast-5.rds.aliyuncs.com; \
-	export AAA_DB_MYSQL_PORT=3306; \
-	export AAA_DB_MYSQL_USER=user_svc; \
-	export AAA_DB_MYSQL_PASSWORD=Pr4K3rj4S3laM4ny4; \
-	export AAA_DB_MYSQL_DATABASE=aaa; \
 	export AAA_MAILER_TYPE=DUMMY; \
 	export AAA_MAILER_FROM=aaa@prakerja.go.id; \
 	export AAA_MAILER_SENDMAIL_HOST=prakerja.go.id; \
