@@ -163,7 +163,7 @@ func (mem *InMemoryDb) CreateUserRecord(ctx context.Context, email, passphrase s
 			ActivationCode:    helper.MakeRandomString(6, true, false, false, false),
 			ActivationDate:    time.Now(),
 			Enable2FactorAuth: false,
-			UserTotpSecretKey: totp.MakeRandomTotpKey(),
+			UserTotpSecretKey: totp.MakeSecret().Base32(),
 		}
 		mem.UserTable[user.RecID] = user
 		return user, nil

@@ -1,7 +1,6 @@
 package mgmnt
 
 import (
-	"encoding/base32"
 	"encoding/json"
 	"fmt"
 	"github.com/hyperjumptech/hansip/internal/config"
@@ -14,7 +13,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -33,7 +31,7 @@ func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.UserTotpSecretKey = totp.MakeRandomTotpKey()
+	user.UserTotpSecretKey = totp.MakeSecret().Base32()
 	err = UserRepo.SaveOrUpdate(r.Context(), user)
 	if err != nil {
 		fLog.Errorf("UserRepo.SaveOrUpdate got %s", err.Error())
@@ -50,9 +48,7 @@ func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
 	}
 	fLog.Warnf("Created %d recovery codes for %s", len(codes), user.Email)
 
-	secretstr := strings.TrimRight(base32.StdEncoding.EncodeToString([]byte(user.UserTotpSecretKey)), "=")
-
-	png, err := totp.MakeTotpQrImage(secretstr, fmt.Sprintf("AAA:%s", user.Email))
+	png, err := totp.MakeTotpQrImage(totp.SecretFromBase32(user.UserTotpSecretKey), config.Get("token.issuer"), user.Email)
 	if err != nil {
 		fLog.Errorf("totp.MakeTotpQrImage got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
@@ -288,13 +284,15 @@ func Activate2FA(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "Malformed json body", nil, nil)
 		return
 	}
-	otp, err := totp.GenerateTotpWithDrift(user.UserTotpSecretKey, time.Now().UTC(), 30, 6)
+
+	secret := totp.SecretFromBase32(user.UserTotpSecretKey)
+	valid, err := totp.Authenticate(secret, c.Token, true)
 	if err != nil {
 		fLog.Errorf("totp.GenerateTotpWithDrift got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	if c.Token != otp {
+	if !valid {
 		fLog.Errorf("Invalid OTP token for %s", user.Email)
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, "Invalid OTP")
 		return
@@ -505,7 +503,7 @@ func UpdateUserDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !user.Enable2FactorAuth && req.Enable2FA {
-		user.UserTotpSecretKey = totp.MakeRandomTotpKey()
+		user.UserTotpSecretKey = totp.MakeSecret().Base32()
 	}
 
 	user.Email = req.Email

@@ -2,7 +2,6 @@ package auth
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/connector"
@@ -87,6 +86,7 @@ type TwoFATestRequest struct {
 	Otp   string `json:"2FA_otp"`
 }
 
+// TwoFATest is an endpoint handler used for testing 2FA
 func TwoFATest(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -104,13 +104,15 @@ func TwoFATest(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	otp, err := totp.GenerateTotpWithDrift(user.UserTotpSecretKey, time.Now().UTC(), 30, 6)
+
+	secret := totp.SecretFromBase32(user.UserTotpSecretKey)
+	valid, err := totp.Authenticate(secret, authReq.Otp, true)
 	if err != nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	if otp != authReq.Otp {
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "OTP not valid", nil, fmt.Sprintf("OTP %s != %s : secret is : %s", otp, authReq.Otp, user.UserTotpSecretKey))
+	if !valid {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "OTP not valid", nil, nil)
 	} else {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "OTP Valid", nil, nil)
 	}
@@ -135,7 +137,9 @@ func TwoFA(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	otp, err := totp.GenerateTotpWithDrift(user.UserTotpSecretKey, time.Now().UTC(), 30, 6)
+
+	secret := totp.SecretFromBase32(user.UserTotpSecretKey)
+	valid, err := totp.Authenticate(secret, authReq.Otp, true)
 	if err != nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
@@ -143,7 +147,7 @@ func TwoFA(w http.ResponseWriter, r *http.Request) {
 
 	defer userRepo.SaveOrUpdate(r.Context(), user)
 
-	if otp != authReq.Otp {
+	if !valid {
 		user.FailCount = user.FailCount + 1
 		if user.FailCount > 3 {
 			user.Suspended = true
@@ -355,7 +359,7 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 				FailCount:         0,
 				ActivationCode:    "",
 				ActivationDate:    time.Time{},
-				UserTotpSecretKey: helper.MakeRandomString(32, true, true, true, false),
+				UserTotpSecretKey: totp.MakeSecret().Base32(),
 				Enable2FactorAuth: false,
 			}
 		}

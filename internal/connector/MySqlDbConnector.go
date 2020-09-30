@@ -343,7 +343,7 @@ func (db *MySQLDB) CreateUserRecord(ctx context.Context, email, passphrase strin
 		ActivationCode:    helper.MakeRandomString(6, true, false, false, false),
 		ActivationDate:    time.Now(),
 		Enable2FactorAuth: false,
-		UserTotpSecretKey: totp.MakeRandomTotpKey(),
+		UserTotpSecretKey: totp.MakeSecret().Base32(),
 		Token2FA:          helper.MakeRandomString(6, true, false, false, false),
 		RecoveryCode:      helper.MakeRandomString(6, true, false, false, false),
 	}
