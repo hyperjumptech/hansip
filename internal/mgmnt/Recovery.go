@@ -2,9 +2,11 @@ package mgmnt
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/internal/mailer"
+	"github.com/hyperjumptech/hansip/internal/passphrase"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
@@ -83,6 +85,14 @@ func ResetPassphrase(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 		return
 	}
+	isValidPassphrase := passphrase.Validate(req.NewPassphrase, config.GetInt("security.passphrase.minchars"), config.GetInt("security.passphrase.minwords"), config.GetInt("security.passphrase.mincharsinword"))
+	if !isValidPassphrase {
+		fLog.Errorf("Passphrase invalid")
+		invalidMsg := fmt.Sprintf("Invalid passphrase. Passphrase must at least has %d characters and %d words and for each word have minimum %d characters", config.GetInt("security.passphrase.minchars"), config.GetInt("security.passphrase.minwords"), config.GetInt("security.passphrase.mincharsinword"))
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "invalid passphrase", nil, invalidMsg)
+		return
+	}
+
 	user, err := UserRepo.GetUserByRecoveryToken(r.Context(), req.ResetToken)
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecoveryToken got %s", err.Error())
