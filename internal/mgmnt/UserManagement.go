@@ -7,6 +7,7 @@ import (
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/internal/hansipcontext"
 	"github.com/hyperjumptech/hansip/internal/mailer"
+	"github.com/hyperjumptech/hansip/internal/passphrase"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	"github.com/hyperjumptech/hansip/pkg/totp"
 	log "github.com/sirupsen/logrus"
@@ -138,6 +139,13 @@ func CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 		return
 	}
+	isValidPassphrase := passphrase.Validate(req.Passphrase, config.GetInt("security.passphrase.minchars"), config.GetInt("security.passphrase.minwords"), config.GetInt("security.passphrase.mincharsinword"))
+	if !isValidPassphrase {
+		fLog.Errorf("Passphrase invalid")
+		invalidMsg := fmt.Sprintf("Invalid passphrase. Passphrase must at least has %d characters and %d words and for each word have minimum %d characters", config.GetInt("security.passphrase.minchars"), config.GetInt("security.passphrase.minwords"), config.GetInt("security.passphrase.mincharsinword"))
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "invalid passphrase", nil, invalidMsg)
+		return
+	}
 	user, err := UserRepo.CreateUserRecord(r.Context(), req.Email, req.Passphrase)
 	if err != nil {
 		fLog.Errorf("UserRepo.CreateUserRecord got %s", err.Error())
@@ -194,6 +202,15 @@ func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "Malformed json body", nil, nil)
 		return
 	}
+
+	isValidPassphrase := passphrase.Validate(c.NewPassphrase, config.GetInt("security.passphrase.minchars"), config.GetInt("security.passphrase.minwords"), config.GetInt("security.passphrase.mincharsinword"))
+	if !isValidPassphrase {
+		fLog.Errorf("new passphrase invalid")
+		invalidMsg := fmt.Sprintf("Invalid new passphrase. Passphrase must at least has %d characters and %d words and for each word have minimum %d characters", config.GetInt("security.passphrase.minchars"), config.GetInt("security.passphrase.minwords"), config.GetInt("security.passphrase.mincharsinword"))
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "invalid new passphrase", nil, invalidMsg)
+		return
+	}
+
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
@@ -230,12 +247,13 @@ type ActivateUserRequest struct {
 
 // WhoAmIResponse holds the response structure for WhoAmI request
 type WhoAmIResponse struct {
-	RecordID  string          `json:"rec_id"`
-	Email     string          `json:"email"`
-	Enabled   bool            `json:"enabled"`
-	Suspended bool            `json:"suspended"`
-	Roles     []*RoleSummary  `json:"roles"`
-	Groups    []*GroupSummary `json:"groups"`
+	RecordID   string          `json:"rec_id"`
+	Email      string          `json:"email"`
+	Enabled    bool            `json:"enabled"`
+	Suspended  bool            `json:"suspended"`
+	Roles      []*RoleSummary  `json:"roles"`
+	Groups     []*GroupSummary `json:"groups"`
+	Enabled2FA bool            `json:"enabled_2fa"`
 }
 
 // RoleSummary hold role information summay
@@ -327,12 +345,13 @@ func WhoAmI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	whoami := &WhoAmIResponse{
-		RecordID:  user.RecID,
-		Email:     user.Email,
-		Enabled:   user.Enabled,
-		Suspended: user.Suspended,
-		Roles:     make([]*RoleSummary, 0),
-		Groups:    make([]*GroupSummary, 0),
+		RecordID:   user.RecID,
+		Email:      user.Email,
+		Enabled:    user.Enabled,
+		Suspended:  user.Suspended,
+		Roles:      make([]*RoleSummary, 0),
+		Groups:     make([]*GroupSummary, 0),
+		Enabled2FA: user.Enable2FactorAuth,
 	}
 	roles, _, err := UserRoleRepo.ListUserRoleByUser(r.Context(), user, &helper.PageRequest{
 		No:       1,

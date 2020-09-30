@@ -1537,6 +1537,8 @@ definitions:
         allOf:
           - $ref: '#/definitions/UserSummary'
         properties:
+          enabled_2fa:
+            type: string
           roles:
             type: array
             items:

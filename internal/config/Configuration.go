@@ -55,6 +55,10 @@ func initialize() {
 	defCfg["db.mysql.maxidle"] = "3"
 	defCfg["db.mysql.maxopen"] = "10"
 
+	defCfg["security.passphrase.minchars"] = "8"
+	defCfg["security.passphrase.minwords"] = "3"
+	defCfg["security.passphrase.mincharsinword"] = "3"
+
 	defCfg["mailer.type"] = "DUMMY" // DUMMY, SENDMAIL, SENDGRID
 	defCfg["mailer.from"] = "hansip@aaa.com"
 	defCfg["mailer.from.name"] = "hansip@aaa.com"
