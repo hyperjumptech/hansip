@@ -34,6 +34,7 @@ var (
 		&ACL{PathPattern: "/api/v1/auth/authenticate", AllowedAudiences: []string{}, Method: "POST"},
 		&ACL{PathPattern: "/api/v1/auth/refresh", AllowedAudiences: []string{"user@aaa", "admin@aaa"}, Method: "POST"},
 		&ACL{PathPattern: "/api/v1/auth/2fa", AllowedAudiences: []string{}, Method: "POST"},
+		&ACL{PathPattern: "/api/v1/auth/2fatest", AllowedAudiences: []string{}, Method: "POST"},
 		&ACL{PathPattern: "/api/v1/auth/authenticate2fa", AllowedAudiences: []string{}, Method: "POST"},
 
 		&ACL{PathPattern: "/api/v1/recovery/**/*", AllowedAudiences: []string{}, Method: "POST"},

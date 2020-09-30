@@ -1,6 +1,7 @@
 package mgmnt
 
 import (
+	"encoding/base32"
 	"encoding/json"
 	"fmt"
 	"github.com/hyperjumptech/hansip/internal/config"
@@ -13,6 +14,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -48,7 +50,9 @@ func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
 	}
 	fLog.Warnf("Created %d recovery codes for %s", len(codes), user.Email)
 
-	png, err := totp.MakeTotpQrImage(user.UserTotpSecretKey, fmt.Sprintf("AAA:%s", user.Email))
+	secretstr := strings.TrimRight(base32.StdEncoding.EncodeToString([]byte(user.UserTotpSecretKey)), "=")
+
+	png, err := totp.MakeTotpQrImage(secretstr, fmt.Sprintf("AAA:%s", user.Email))
 	if err != nil {
 		fLog.Errorf("totp.MakeTotpQrImage got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
@@ -284,7 +288,7 @@ func Activate2FA(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "Malformed json body", nil, nil)
 		return
 	}
-	otp, err := totp.GenerateTotpWithDrift(user.UserTotpSecretKey, time.Now(), 30, 6)
+	otp, err := totp.GenerateTotpWithDrift(user.UserTotpSecretKey, time.Now().UTC(), 30, 6)
 	if err != nil {
 		fLog.Errorf("totp.GenerateTotpWithDrift got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)

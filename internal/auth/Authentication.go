@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/connector"
@@ -68,6 +69,7 @@ func InitializeAuthRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/auth/authenticate", Authentication).Methods("OPTIONS", "POST")
 	router.HandleFunc("/api/v1/auth/refresh", Refresh).Methods("OPTIONS", "POST")
 	router.HandleFunc("/api/v1/auth/2fa", TwoFA).Methods("OPTIONS", "POST")
+	router.HandleFunc("/api/v1/auth/2fatest", TwoFATest).Methods("OPTIONS", "POST")
 	router.HandleFunc("/api/v1/auth/authenticate2fa", Authentication2FA).Methods("OPTIONS", "POST")
 
 	initialized = true
@@ -77,6 +79,42 @@ func InitializeAuthRouter(router *mux.Router) {
 type TwoFARequest struct {
 	Token string `json:"2FA_token"`
 	Otp   string `json:"2FA_otp"`
+}
+
+// TwoFATestRequest model for sending 2FA authentication
+type TwoFATestRequest struct {
+	Email string `json:"email"`
+	Otp   string `json:"2FA_otp"`
+}
+
+func TwoFATest(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	authReq := &TwoFATestRequest{}
+	err = json.Unmarshal(body, authReq)
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+	user, err := userRepo.GetUserByEmail(r.Context(), authReq.Email)
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		return
+	}
+	otp, err := totp.GenerateTotpWithDrift(user.UserTotpSecretKey, time.Now().UTC(), 30, 6)
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if otp != authReq.Otp {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "OTP not valid", nil, fmt.Sprintf("OTP %s != %s : secret is : %s", otp, authReq.Otp, user.UserTotpSecretKey))
+	} else {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "OTP Valid", nil, nil)
+	}
+	return
 }
 
 // TwoFA validate 2FA token and authenticate the user
@@ -97,7 +135,7 @@ func TwoFA(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	otp, err := totp.GenerateTotpWithDrift(user.UserTotpSecretKey, time.Now(), 30, 6)
+	otp, err := totp.GenerateTotpWithDrift(user.UserTotpSecretKey, time.Now().UTC(), 30, 6)
 	if err != nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
