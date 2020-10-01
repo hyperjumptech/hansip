@@ -1,57 +1,62 @@
 package helper
 
-// StringToIntHash will create an uint64 hash out of a string.
-// For example :
-// - "a" -> 0xC1
-// - "aa" -> 0xC1C1
-// - "aaa" -> 0xC1C1C1
-// - "aaaaaaaa" -> 0xC1C1C1C1C1C1C1C1
-// - "aaaaaaaaa" -> 0xC1C1C1C1C1C1C100
-// - "aaaaaaaaaa" -> 0xC1C1C1C1C1C10000
-// - "a quick brown fox jumps over lazy dogs" -> 0x28CA548533F78701
-func StringToIntHash(txt string) uint64 {
-	slots := 8
+import (
+	"crypto/md5"
+	"fmt"
+	"runtime"
+	"strconv"
+	"strings"
+)
 
-	// primes is array of prime numbers between 0 to 255. Its used to xor the byte portion of uint64 result.
-	primes := []uint64{2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251}
-
-	// slot is the binary representation of our uint64 result. The value presented here is just the initial flavour.
-	// 0         1         2         3         4         5         6
-	// 0123456789012345678901234567890123456789012345678901234567890123
-	// <slot 1><slot 2><slot 3><slot 4><slot 5><slot 6><slot 7><slot 8>
-
-	slot := make([]uint64, slots)
-
-	// for each byte character in the txt
-	// we going to select the prime number based on the character byte and xor them with the designated slot.
-	//
-	// txt[n].prime,   txt[n+8].prime  will xor slot-1
-	// txt[n+1].prime, txt[n+9].prime  will xor slot-2
-	// txt[n+2].prime, txt[n+10].prime will xor slot-3
-	// txt[n+3].prime, txt[n+11].prime will xor slot-4
-	// txt[n+4].prime, txt[n+12].prime will xor slot-5
-	// txt[n+5].prime, txt[n+13].prime will xor slot-6
-	// txt[n+6].prime, txt[n+14].prime will xor slot-7
-	// txt[n+7].prime, txt[n+15].prime will xor slot-8
-	//
-	for i, b := range []byte(txt) {
-		// select the prime number for that byte character from our prime array
-		p := primes[int(b)%len(primes)]
-
-		// xor the slot byte with the selected prime.
-		iof := i % slots
-		slot[iof] = slot[iof] ^ p
+// StringToIntHash will create an int hash out of a string.
+//
+// captureBit is number of bit to be captured.
+//     in 64 bit system, the valid value are between 8 to 64
+//     in 32 bit system, the valid value are between 8 to 32
+//     note : The higher the captureBit, it'll be more unlikely for two string get the same hash.
+//            The lower the captureBit, it'll be more likely for two string to have the same hash.
+//     to capture 11 digit integer, 36 bit to be captured.
+func StringToIntHash(txt string, captureBit int) int {
+	bytes := md5.Sum([]byte(strings.Repeat(txt, 10)))
+	rets := 0
+	slots := 0
+	if strings.Contains(runtime.GOARCH, "64") {
+		slots = 8
+	} else {
+		slots = 4
 	}
-
-	// insert and shift each slot into the final uint64
-	ret := uint64(0)
-	for i, _ := range slot {
-		if i > 0 {
-			slot[i] = slot[i] << (i * slots)
+	slot := make([]byte, slots)
+	for i, b := range bytes {
+		if i < len(slot) {
+			slot[i] = b
+		} else {
+			slot[i%4] = slot[i%4] ^ b
 		}
-		ret = ret | slot[i]
 	}
-	return ret
+	bits := captureBit
+	if captureBit > (slots * 8) {
+		bits = slots * 8
+	}
+	if captureBit < 8 {
+		bits = 8
+	}
+	bitmap := fmt.Sprintf("%s%s", strings.Repeat("0", (slots*8)-bits), strings.Repeat("1", bits))
+	for i := 0; i < slots; i++ {
+		inte, err := strconv.ParseInt(bitmap[i*8:(i*8)+8], 2, 64)
+		if err != nil {
+			panic(err.Error())
+		}
+		slot[i] = slot[i] & byte(inte)
+	}
+	for i := 0; i < slots; i++ {
+		if i == 0 {
+			rets = int(slot[i])
+		} else {
+			rets = rets << 8
+			rets = rets | int(slot[i])
+		}
+	}
+	return rets
 }
 
 // StringArrayContainString returns true if the array contains specified string.

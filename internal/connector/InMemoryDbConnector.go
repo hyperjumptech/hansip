@@ -146,6 +146,10 @@ func (mem *InMemoryDb) GetUserByRecID(ctx context.Context, recID string) (*User,
 
 // CreateUserRecord creates new user
 func (mem *InMemoryDb) CreateUserRecord(ctx context.Context, email, passphrase string) (*User, error) {
+	user, err := mem.GetUserByEmail(ctx, email)
+	if err == nil && user != nil {
+		return nil, fmt.Errorf("duplicate user email")
+	}
 	bytes, err := bcrypt.GenerateFromPassword([]byte(passphrase), 14)
 	if err != nil {
 		return nil, err
