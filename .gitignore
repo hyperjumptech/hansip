@@ -149,4 +149,21 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+
 # End of https://www.toptal.com/developers/gitignore/api/macos,go,intellij
+
+#ignore executable file from vscode debug 
+/cmd/main/__debug_bin
+#ignore stuffed static files, keeps changing all the time
+/api/StaticApi.go  
