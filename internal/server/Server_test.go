@@ -123,7 +123,7 @@ func TestAll(t *testing.T) {
 		t.FailNow()
 	}
 	for i := 0; i < 35; i++ {
-		CreateUserTesting(t, accessToken, fmt.Sprintf("user-%d@email.com", i), fmt.Sprintf("this is all number %d", i))
+		CreateUserTesting(t, accessToken, fmt.Sprintf("user-%d@email.com", i), fmt.Sprintf("this all number 00%d", i))
 	}
 	group1 := CreateNewGroupTesting(t, accessToken, "GroupOne")
 	if group1.RecID == "" {
@@ -435,7 +435,7 @@ func GetUserByRecIDTesting(t *testing.T, accessToken, recID string) *SimpleUser 
 }
 
 func CreateUserTesting(t *testing.T, accessToken, email, passphrase string) {
-	t.Log("Testing Creating User")
+	t.Log("Testing Creating User. Pass : ", passphrase)
 	recorder := httptest.NewRecorder()
 	body := map[string]string{
 		"email":      email,

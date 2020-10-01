@@ -11,13 +11,13 @@ var (
 	issuer     = "anIssuer"
 	subject    = "aSubject"
 	audience   = []string{"aud1", "aud2"}
-	issuedAt   = time.Date(2010, 1, 1, 1, 0, 0, 0, time.Local)
-	notBefore  = time.Date(2019, 1, 1, 1, 0, 0, 0, time.Local)
-	expiry     = time.Date(2030, 1, 1, 1, 0, 0, 0, time.Local)
+	issuedAt   = time.Date(2010, 1, 1, 1, 0, 0, 0, time.UTC)
+	notBefore  = time.Date(2019, 1, 1, 1, 0, 0, 0, time.UTC)
+	expiry     = time.Date(2030, 1, 1, 1, 0, 0, 0, time.UTC)
 	additional = map[string]interface{}{
 		"type": "access",
 	}
-	token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsiYXVkMSIsImF1ZDIiXSwiZXhwIjoxODkzNDM0NDAwLCJpYXQiOjEyNjIyODI0MDAsImlzcyI6ImFuSXNzdWVyIiwibmJmIjoxNTQ2Mjc5MjAwLCJzdWIiOiJhU3ViamVjdCIsInR5cGUiOiJhY2Nlc3MifQ.ve00z6ZL4o26pnfkPpG5xjrT4dyUCq0x4Fn4Fjl-Cco"
+	token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsiYXVkMSIsImF1ZDIiXSwiZXhwIjoxODkzNDU5NjAwLCJpYXQiOjEyNjIzMDc2MDAsImlzcyI6ImFuSXNzdWVyIiwibmJmIjoxNTQ2MzA0NDAwLCJzdWIiOiJhU3ViamVjdCIsInR5cGUiOiJhY2Nlc3MifQ.VsqnUp2kapOFUHhNvP75RNDgicc7iN_SZF34LkAAWoo"
 )
 
 func TestCreateJWTStringToken(t *testing.T) {
@@ -50,13 +50,13 @@ func TestReadJWTStringToken(t *testing.T) {
 	if aud[1] != audience[1] {
 		t.Errorf("expect audience[1] %s but %s", audience[1], aud[1])
 	}
-	if nbf != notBefore {
+	if !nbf.Equal(notBefore) {
 		t.Errorf("expect notBefore %s but %s", notBefore, nbf)
 	}
-	if iat != issuedAt {
+	if !iat.Equal(issuedAt) {
 		t.Errorf("expect issuedAt %s but %s", issuedAt, iat)
 	}
-	if exp != expiry {
+	if !exp.Equal(expiry) {
 		t.Errorf("expect expiry %s but %s", expiry, exp)
 	}
 	if additional["type"] != add["type"] {
