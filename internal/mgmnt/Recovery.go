@@ -107,5 +107,5 @@ func ResetPassphrase(w http.ResponseWriter, r *http.Request) {
 	}
 	user.HashedPassphrase = string(pass)
 	UserRepo.SaveOrUpdate(r.Context(), user)
-	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Password changed", nil, nil)
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Passphrase changed", nil, nil)
 }
