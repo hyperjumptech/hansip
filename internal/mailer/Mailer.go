@@ -6,6 +6,8 @@ import (
 	"github.com/hyperjumptech/hansip/internal/connector"
 	"github.com/hyperjumptech/hansip/internal/constants"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
+	"net/url"
 	"strings"
 	"text/template"
 )
@@ -38,6 +40,22 @@ type Email struct {
 	Data     interface{}
 }
 
+// TemplateLoader will load from specified resourceURI.
+// if the specified resource URI is not valid, it will return the resource in the parameter.
+// if the specified resource URI is valid, it will load the specified file and return its content.
+func TemplateLoader(resourceURI string) (string, error) {
+	url, err := url.ParseRequestURI(resourceURI)
+	if err != nil {
+		return resourceURI, nil
+	}
+	filePath := url.Path
+	content, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return "", err
+	}
+	return string(content), nil
+}
+
 // EmailTemplates data structure for an email template
 type EmailTemplates struct {
 	SubjectTemplate *template.Template
@@ -56,13 +74,33 @@ func init() {
 	MailerChannel = make(chan *Email)
 	KillChannel = make(chan bool)
 	Templates = make(map[string]*EmailTemplates)
+
+	emailVeriSubTempl, err := TemplateLoader(config.Get("mailer.templates.emailveri.subject"))
+	if err != nil {
+		panic(err.Error())
+	}
+	emailVeriBodTempl, err := TemplateLoader(config.Get("mailer.templates.emailveri.body"))
+	if err != nil {
+		panic(err.Error())
+	}
+
+	emailPassRecSubTempl, err := TemplateLoader(config.Get("mailer.templates.passrecover.subject"))
+	if err != nil {
+		panic(err.Error())
+	}
+
+	emailPassRecBodTempl, err := TemplateLoader(config.Get("mailer.templates.passrecover.body"))
+	if err != nil {
+		panic(err.Error())
+	}
+
 	Templates["EMAIL_VERIFY"] = &EmailTemplates{
-		SubjectTemplate: parseTemplate("verifySubject", config.Get("mailer.templates.emailveri.subject")),
-		BodyTemplate:    parseTemplate("verifyBody", config.Get("mailer.templates.emailveri.body")),
+		SubjectTemplate: parseTemplate("verifySubject", emailVeriSubTempl),
+		BodyTemplate:    parseTemplate("verifyBody", emailVeriBodTempl),
 	}
 	Templates["PASSPHRASE_RECOVERY"] = &EmailTemplates{
-		SubjectTemplate: parseTemplate("passRecoverSubject", config.Get("mailer.templates.passrecover.subject")),
-		BodyTemplate:    parseTemplate("passRecoverBody", config.Get("mailer.templates.passrecover.body")),
+		SubjectTemplate: parseTemplate("passRecoverSubject", emailPassRecSubTempl),
+		BodyTemplate:    parseTemplate("passRecoverBody", emailPassRecBodTempl),
 	}
 
 }
