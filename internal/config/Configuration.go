@@ -67,9 +67,9 @@ func initialize() {
 	defCfg["mailer.sendmail.user"] = "sendmail"
 	defCfg["mailer.sendmail.password"] = "password"
 	defCfg["mailer.templates.emailveri.subject"] = "Please verify your new Hansip account's email"
-	defCfg["mailer.templates.emailveri.body"] = "<html><body>Dear New Hansip User<br><br>Your new account is ready!<br>please click this <a href=\"http://hansip.io/activate?code={{.ActivationCode}}\">link to activate</a> your account.<br><br>Cordially,<br>HANSIP team</body></html>"
+	defCfg["mailer.templates.emailveri.body"] = "<html><body>Dear New Hansip User<br><br>Your new account is ready!<br>please click this <a href=\"http://hansip.io/activate?email={{.Email}}&code={{.ActivationCode}}\">link to activate</a> your account.<br><br>Cordially,<br>HANSIP team</body></html>"
 	defCfg["mailer.templates.passrecover.subject"] = "Passphrase recovery instruction"
-	defCfg["mailer.templates.passrecover.body"] = "<html><body>Dear Hansip User<br><br>To recover your passphrase<br>please click this <a href=\"http://hansip.io/activate?code={{.RecoveryCode}}\">link to change your passphrase</a>.<br><br>Cordially,<br>HANSIP team</body></html>"
+	defCfg["mailer.templates.passrecover.body"] = "<html><body>Dear Hansip User<br><br>To recover your passphrase<br>please click this <a href=\"http://hansip.io/activate?email={{.Email}}&code={{.RecoveryCode}}\">link to change your passphrase</a>.<br><br>Cordially,<br>HANSIP team</body></html>"
 	defCfg["mailer.sendgrid.token"] = "SENDGRIDTOKEN"
 
 	for k := range defCfg {

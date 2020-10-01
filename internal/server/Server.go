@@ -127,8 +127,12 @@ func InitializeRouter() {
 			User:     config.Get("mailer.sendmail.user"),
 			Password: config.Get("mailer.sendmail.password"),
 		}
+	} else if config.Get("mailer.type") == "SENDGRID" {
+		mgmnt.EmailSender = &connector.SendGridSender{
+			Token: config.Get("mailer.sendgrid.token"),
+		}
 	} else {
-		panic(fmt.Sprintf("unknown mailer type %s. Correct your configuration 'mailer.type' or env-var 'AAA_MAILER_TYPE'. allowed values are DUMMY or SENDMAIL", config.Get("mailer.type")))
+		panic(fmt.Sprintf("unknown mailer type %s. Correct your configuration 'mailer.type' or env-var 'AAA_MAILER_TYPE'. allowed values are DUMMY, SENDMAIL or SENDGRID", config.Get("mailer.type")))
 	}
 	mailer.Sender = mgmnt.EmailSender
 
