@@ -805,6 +805,18 @@ func (db *MySQLDB) GetRoleByRecID(ctx context.Context, recID string) (*Role, err
 	return r, err
 }
 
+// GetRoleByName return a role record
+func (db *MySQLDB) GetRoleByName(ctx context.Context, roleName string) (*Role, error) {
+	fLog := mysqlLog.WithField("func", "GetRoleByName").WithField("RequestID", ctx.Value(constants.RequestID))
+	row := db.instance.QueryRowContext(ctx, "SELECT REC_ID, ROLE_NAME, DESCRIPTION FROM HANSIP_ROLE WHERE ROLE_NAME=?", roleName)
+	r := &Role{}
+	err := row.Scan(&r.RecID, &r.RoleName, &r.Description)
+	if err != nil {
+		fLog.Errorf("db.instance.QueryRowContext got  %s", err.Error())
+	}
+	return nil, fmt.Errorf("not found")
+}
+
 // CreateRole creates a new role
 func (db *MySQLDB) CreateRole(ctx context.Context, roleName, description string) (*Role, error) {
 	fLog := mysqlLog.WithField("func", "CreateRole").WithField("RequestID", ctx.Value(constants.RequestID))
@@ -910,6 +922,17 @@ func (db *MySQLDB) SaveOrUpdateRole(ctx context.Context, role *Role) error {
 func (db *MySQLDB) GetGroupByRecID(ctx context.Context, recID string) (*Group, error) {
 	fLog := mysqlLog.WithField("func", "GetGroupByRecID").WithField("RequestID", ctx.Value(constants.RequestID))
 	row := db.instance.QueryRowContext(ctx, "SELECT REC_ID, GROUP_NAME, DESCRIPTION FROM HANSIP_GROUP WHERE REC_ID=?", recID)
+	r := &Group{}
+	err := row.Scan(&r.RecID, &r.GroupName, &r.Description)
+	if err != nil {
+		fLog.Errorf("db.instance.QueryRowContext got %s", err.Error())
+	}
+	return r, err
+}
+
+func (db *MySQLDB) GetGroupByName(ctx context.Context, groupName string) (*Group, error) {
+	fLog := mysqlLog.WithField("func", "GetGroupByName").WithField("RequestID", ctx.Value(constants.RequestID))
+	row := db.instance.QueryRowContext(ctx, "SELECT REC_ID, GROUP_NAME, DESCRIPTION FROM HANSIP_GROUP WHERE GROUP_NAME=?", groupName)
 	r := &Group{}
 	err := row.Scan(&r.RecID, &r.GroupName, &r.Description)
 	if err != nil {

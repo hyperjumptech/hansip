@@ -854,6 +854,99 @@
             "description": "Not found"
           }
         }
+      },
+      "put": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Set list of roles to straightly owned this user.",
+        "description": "Set list of roles to straightly owned this user. If previously there are roles owned this user, those roles removed first",
+        "operationId": "SetUserRoles",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "required": true,
+            "name": "roleRecIDs",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly set role ownerships"
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Remove all roles from this user ownership",
+        "description": "Clear out the roles ownership of this user",
+        "operationId": "RemoveUserRoles",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly remove role ownerships"
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
       }
     },
     "/management/user/{userRecId}/all-roles": {
@@ -1101,6 +1194,99 @@
             "schema": {
               "$ref": "#/definitions/ListGroupResponse"
             }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Set list of grops to straightly joined this user.",
+        "description": "Set list of groups to straightly member this user. If previously there are groups joined this user, those groups removed first",
+        "operationId": "SetUserGroups",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "required": true,
+            "name": "groupRecIDs",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly set user to join those groups"
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-user"
+        ],
+        "summary": "Remove all groups from this user join list",
+        "description": "Remove all groups from this user join list",
+        "operationId": "RemoveUserGroups",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "userRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly leave all groups"
           },
           "401": {
             "description": "You are not authorized"
@@ -1376,6 +1562,66 @@
           }
         }
       },
+      "put": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "Update a speciffic group",
+        "description": "Update a speciffic group name and description",
+        "operationId": "UpdateGroup",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "required": true,
+            "name": "UpdateGroupRequestBody",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "group_name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly update group data",
+            "schema": {
+              "$ref": "#/definitions/GroupDetailResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
       "delete": {
         "tags": [
           "management-group"
@@ -1486,6 +1732,99 @@
             "schema": {
               "$ref": "#/definitions/ListAllUserResponse"
             }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "Set multiple user directly into this group",
+        "description": "Set multiple user directly into this group, if the group previously have set of users, they will be cleared out first",
+        "operationId": "SetGroupUsers",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "required": true,
+            "name": "UserRecIDList",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly added group members"
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "Remove all user from membership this group",
+        "description": "Remove all user group assigment that related to this group. This will leave this group have no user",
+        "operationId": "ClearGroupUsers",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly cleared out group members"
           },
           "401": {
             "description": "You are not authorized"
@@ -1666,6 +2005,99 @@
             "schema": {
               "$ref": "#/definitions/ListRoleResponse"
             }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "Set multiple roles directly into this group",
+        "description": "Set multiple roles directly into this group, if the group previously have set of roles, they will be cleared out first",
+        "operationId": "SetGroupRoles",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "required": true,
+            "name": "RoleRecIDList",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly added group members"
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-group"
+        ],
+        "summary": "Remove all role from this group",
+        "description": "Remove all role group assigment that related to this group. This will leave this group have no role",
+        "operationId": "ClearGroupRoles",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "groupRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly cleared out group roles"
           },
           "401": {
             "description": "You are not authorized"
@@ -1941,6 +2373,66 @@
           }
         }
       },
+      "put": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "Update a speciffic role",
+        "description": "Update a speciffic role name and description",
+        "operationId": "UpdateRole",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "required": true,
+            "name": "UpdateRoleRequestBody",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "role_name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly update role data",
+            "schema": {
+              "$ref": "#/definitions/RoleDetailResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
       "delete": {
         "tags": [
           "management-role"
@@ -2062,6 +2554,99 @@
             "description": "Not found"
           }
         }
+      },
+      "put": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "Set list of users to straightly own this role.",
+        "description": "Set list of users to straightly own this role. If previously there are users owning this rule, their ownership will be removed first",
+        "operationId": "SetRoleUsers",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "required": true,
+            "name": "userRecIDs",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly set role ownerships"
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "Remove all user from owning this role",
+        "description": "Clear out the user ownership of this role",
+        "operationId": "RemoveRoleUsers",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly remove role ownerships"
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
       }
     },
     "/management/role/{roleRecId}/user/{userRecId}": {
@@ -2166,7 +2751,7 @@
         }
       }
     },
-    "/management/role/{roleRecId}/group": {
+    "/management/role/{roleRecId}/groups": {
       "get": {
         "tags": [
           "management-role"
@@ -2231,6 +2816,99 @@
             "schema": {
               "$ref": "#/definitions/ListGroupResponse"
             }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "Set list of groups to straightly own this role.",
+        "description": "Set list of groups to straightly own this role. If previously there are groups owning this rule, their ownership will be removed first",
+        "operationId": "SetRoleGroups",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "required": true,
+            "name": "groupRecIDs",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly set role ownerships"
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-role"
+        ],
+        "summary": "Remove all groups from owning this role",
+        "description": "Clear out the groups ownership of this role",
+        "operationId": "RemoveRoleGroups",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "roleRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly remove role ownerships"
           },
           "401": {
             "description": "You are not authorized"
@@ -2439,7 +3117,7 @@
         "suspended": {
           "type": "boolean"
         },
-        "2fa_enabled": {
+        "enabled_2fa": {
           "type": "boolean"
         }
       }
@@ -2458,7 +3136,7 @@
         "last_login": {
           "type": "string"
         },
-        "2fa_enabled": {
+        "enabled_2fa": {
           "type": "boolean"
         }
       }
@@ -2765,6 +3443,9 @@
         },
         "activation_token": {
           "type": "string"
+        },
+        "new_passphrase": {
+          "type": "string"
         }
       }
     },
@@ -2797,7 +3478,7 @@
             "roles": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/RoleSummary"
+                "$ref": "#/definitions/Role"
               }
             },
             "page": {
@@ -2848,7 +3529,7 @@
             "users": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/GroupSummary"
+                "$ref": "#/definitions/Group"
               }
             },
             "page": {

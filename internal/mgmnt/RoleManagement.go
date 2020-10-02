@@ -2,6 +2,7 @@ package mgmnt
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	log "github.com/sirupsen/logrus"
@@ -12,6 +13,143 @@ import (
 var (
 	roleMgmtLogger = log.WithField("go", "RoleManagement")
 )
+
+func SetRoleUsers(w http.ResponseWriter, r *http.Request) {
+	fLog := roleMgmtLogger.WithField("func", "SetRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/users", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Role recID %s not found", params["roleRecId"]), nil, nil)
+		return
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	userIds := make([]string, 0)
+	err = json.Unmarshal(body, &userIds)
+	if err != nil {
+		fLog.Errorf("json.Unmarshal got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+
+	err = UserRoleRepo.DeleteUserRoleByRole(r.Context(), role)
+	if err != nil {
+		fLog.Errorf("UserRoleRepo.DeleteUserRoleByRole got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+
+	counter := 0
+	for _, userId := range userIds {
+		user, err := UserRepo.GetUserByRecID(r.Context(), userId)
+		if err != nil {
+			fLog.Warnf("UserRepo.GetUserByRecID got %s, this user %s will not be added to role %s user", err.Error(), userId, role.RecID)
+		} else {
+			_, err := UserRoleRepo.CreateUserRole(r.Context(), user, role)
+			if err != nil {
+				fLog.Warnf("UserRoleRepo.CreateUserRole got %s, this role %s will not be added to user %s role", err.Error(), userId, role.RecID)
+			} else {
+				counter++
+			}
+		}
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d users added the role", counter), nil, nil)
+}
+
+func DeleteRoleUsers(w http.ResponseWriter, r *http.Request) {
+	fLog := roleMgmtLogger.WithField("func", "DeleteRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/users", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Role recID %s not found", params["roleRecId"]), nil, nil)
+		return
+	}
+	err = UserRoleRepo.DeleteUserRoleByRole(r.Context(), role)
+	if err != nil {
+		fLog.Errorf("UserRoleRepo.DeleteUserRoleByRole got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly removed role from all user", nil, nil)
+}
+func SetRoleGroups(w http.ResponseWriter, r *http.Request) {
+	fLog := roleMgmtLogger.WithField("func", "SetRoleGroups").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/groups", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Role recID %s not found", params["roleRecId"]), nil, nil)
+		return
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	groupIds := make([]string, 0)
+	err = json.Unmarshal(body, &groupIds)
+	if err != nil {
+		fLog.Errorf("json.Unmarshal got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+
+	err = GroupRoleRepo.DeleteGroupRoleByRole(r.Context(), role)
+	if err != nil {
+		fLog.Errorf("GroupRoleRepo.DeleteGroupRoleByRole got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+
+	counter := 0
+	for _, groupId := range groupIds {
+		group, err := GroupRepo.GetGroupByRecID(r.Context(), groupId)
+		if err != nil {
+			fLog.Warnf("UserRepo.GetUserByRecID got %s, this group %s will not be added to role %s user", err.Error(), groupId, role.RecID)
+		} else {
+			_, err := GroupRoleRepo.CreateGroupRole(r.Context(), group, role)
+			if err != nil {
+				fLog.Warnf("UserRoleRepo.CreateUserRole got %s, this group %s will not be added to user %s role", err.Error(), groupId, role.RecID)
+			} else {
+				counter++
+			}
+		}
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d groups added the role", counter), nil, nil)
+}
+
+func DeleteRoleGroups(w http.ResponseWriter, r *http.Request) {
+	fLog := roleMgmtLogger.WithField("func", "DeleteRoleGroups").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/groups", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Role recID %s not found", params["roleRecId"]), nil, nil)
+		return
+	}
+	err = GroupRoleRepo.DeleteGroupRoleByRole(r.Context(), role)
+	if err != nil {
+		fLog.Errorf("GroupRoleRepo.DeleteGroupRoleByRole got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly removed role from all group", nil, nil)
+}
 
 // ListAllRole handling endpoint to serve Listing all roles in database.
 func ListAllRole(w http.ResponseWriter, r *http.Request) {
@@ -28,15 +166,8 @@ func ListAllRole(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	sroles := make([]*SimpleRole, len(roles))
-	for k, v := range roles {
-		sroles[k] = &SimpleRole{
-			RecID:    v.RecID,
-			RoleName: v.RoleName,
-		}
-	}
 	ret := make(map[string]interface{})
-	ret["roles"] = sroles
+	ret["roles"] = roles
 	ret["page"] = page
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "List of all roles paginated", nil, ret)
 }
@@ -71,6 +202,52 @@ func CreateRole(w http.ResponseWriter, r *http.Request) {
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Success creating role", nil, role)
 	return
+}
+
+// UpdateRole serving request to update role detail
+func UpdateRole(w http.ResponseWriter, r *http.Request) {
+	fLog := groupMgmtLog.WithField("func", "UpdateRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+	req := &CreateRoleRequest{}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	err = json.Unmarshal(body, req)
+	if err != nil {
+		fLog.Errorf("json.Unmarshal got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+
+	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
+	if err != nil {
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		return
+	}
+	role.RoleName = req.RoleName
+	role.Description = req.Description
+
+	exRole, err := RoleRepo.GetRoleByName(r.Context(), req.RoleName)
+	if err == nil && exRole.RoleName == req.RoleName && exRole.RecID != params["roleRecId"] {
+		fLog.Errorf("Duplicate role name. role %s already exist", req.RoleName)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		return
+	}
+
+	err = RoleRepo.SaveOrUpdateRole(r.Context(), role)
+	if err != nil {
+		fLog.Errorf("RoleRepo.SaveOrUpdateRole got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Role updated", nil, role)
 }
 
 // GetRoleDetail serving request to get role detail

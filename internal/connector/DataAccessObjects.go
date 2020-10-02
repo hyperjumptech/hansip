@@ -62,6 +62,9 @@ type GroupRepository interface {
 	// GetGroupByRecID return a group record
 	GetGroupByRecID(ctx context.Context, recID string) (*Group, error)
 
+	// GetGroupByName return a group record
+	GetGroupByName(ctx context.Context, groupName string) (*Group, error)
+
 	// CreateGroup into the Group table
 	CreateGroup(ctx context.Context, groupName, description string) (*Group, error)
 
@@ -152,6 +155,9 @@ type GroupRoleRepository interface {
 type RoleRepository interface {
 	// GetRoleByRecID return an existing role
 	GetRoleByRecID(ctx context.Context, recID string) (*Role, error)
+
+	// GetRoleByName return a role record
+	GetRoleByName(ctx context.Context, roleName string) (*Role, error)
 
 	// CreateRole into Role table
 	CreateRole(ctx context.Context, roleName, description string) (*Role, error)

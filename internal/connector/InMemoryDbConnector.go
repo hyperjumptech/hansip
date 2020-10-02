@@ -383,10 +383,22 @@ func (mem *InMemoryDb) GetRoleByRecID(ctx context.Context, recID string) (*Role,
 	return nil, fmt.Errorf("not found")
 }
 
+// GetRoleByName return a role record
+func (mem *InMemoryDb) GetRoleByName(ctx context.Context, roleName string) (*Role, error) {
+	for _, v := range mem.RoleTable {
+		if v.RoleName == roleName {
+			return v, nil
+		}
+	}
+	return nil, fmt.Errorf("not found")
+}
+
 // CreateRole  creates new role
 func (mem *InMemoryDb) CreateRole(ctx context.Context, roleName, description string) (*Role, error) {
-	if _, ok := mem.RoleTable[roleName]; ok {
-		return nil, fmt.Errorf("duplicate")
+	for _, v := range mem.RoleTable {
+		if v.RoleName == roleName {
+			return nil, fmt.Errorf("duplicate")
+		}
 	}
 	role := &Role{
 		RecID:       helper.MakeRandomString(10, true, true, true, false),
@@ -423,6 +435,16 @@ func (mem *InMemoryDb) SaveOrUpdateRole(ctx context.Context, role *Role) error {
 func (mem *InMemoryDb) GetGroupByRecID(ctx context.Context, recID string) (*Group, error) {
 	if g, ok := mem.GroupTable[recID]; ok {
 		return g, nil
+	}
+	return nil, fmt.Errorf("not found")
+}
+
+// GetGroupByName return a group record
+func (mem *InMemoryDb) GetGroupByName(ctx context.Context, groupName string) (*Group, error) {
+	for _, v := range mem.GroupTable {
+		if v.GroupName == groupName {
+			return v, nil
+		}
 	}
 	return nil, fmt.Errorf("not found")
 }

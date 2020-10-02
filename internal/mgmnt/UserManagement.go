@@ -21,6 +21,144 @@ var (
 	userMgmtLogger = log.WithField("go", "UserManagement")
 )
 
+func SetUserRoles(w http.ResponseWriter, r *http.Request) {
+	fLog := userMgmtLogger.WithField("func", "SetUserRoles").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/roles", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recID %s not found", params["userRecId"]), nil, nil)
+		return
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	roleIds := make([]string, 0)
+	err = json.Unmarshal(body, &roleIds)
+	if err != nil {
+		fLog.Errorf("json.Unmarshal got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+
+	err = UserRoleRepo.DeleteUserRoleByUser(r.Context(), user)
+	if err != nil {
+		fLog.Errorf("UserRoleRepo.DeleteUserRoleByUser got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+
+	counter := 0
+	for _, roleId := range roleIds {
+		role, err := RoleRepo.GetRoleByRecID(r.Context(), roleId)
+		if err != nil {
+			fLog.Warnf("RoleRepo.GetRoleByRecID got %s, this role %s will not be added to user %s role", err.Error(), roleId, user.RecID)
+		} else {
+			_, err := UserRoleRepo.CreateUserRole(r.Context(), user, role)
+			if err != nil {
+				fLog.Warnf("UserRoleRepo.CreateUserRole got %s, this role %s will not be added to user %s role", err.Error(), roleId, user.RecID)
+			} else {
+				counter++
+			}
+		}
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d roles added into user", counter), nil, nil)
+}
+
+func DeleteUserRoles(w http.ResponseWriter, r *http.Request) {
+	fLog := userMgmtLogger.WithField("func", "DeleteUserRoles").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/roles", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recID %s not found", params["userRecId"]), nil, nil)
+		return
+	}
+	err = UserRoleRepo.DeleteUserRoleByUser(r.Context(), user)
+	if err != nil {
+		fLog.Errorf("UserRoleRepo.DeleteUserRoleByUser got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly removed all roles from user", nil, nil)
+}
+
+func SetUserGroups(w http.ResponseWriter, r *http.Request) {
+	fLog := userMgmtLogger.WithField("func", "SetUserGroups").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/groups", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recID %s not found", params["userRecId"]), nil, nil)
+		return
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	groupIds := make([]string, 0)
+	err = json.Unmarshal(body, &groupIds)
+	if err != nil {
+		fLog.Errorf("json.Unmarshal got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+
+	err = UserGroupRepo.DeleteUserGroupByUser(r.Context(), user)
+	if err != nil {
+		fLog.Errorf("UserGroupRepo.DeleteUserGroupByUser got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+
+	counter := 0
+	for _, groupId := range groupIds {
+		group, err := GroupRepo.GetGroupByRecID(r.Context(), groupId)
+		if err != nil {
+			fLog.Warnf("GroupRepo.GetGroupByRecID got %s, this group %s will not be joined by user %s", err.Error(), groupId, user.RecID)
+		} else {
+			_, err := UserGroupRepo.CreateUserGroup(r.Context(), user, group)
+			if err != nil {
+				fLog.Warnf("UserGroupRepo.CreateUserGroup got %s, this group %s will not be joined by user %s", err.Error(), groupId, user.RecID)
+			} else {
+				counter++
+			}
+		}
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d groups joined by user", counter), nil, nil)
+}
+
+func DeleteUserGroups(w http.ResponseWriter, r *http.Request) {
+	fLog := userMgmtLogger.WithField("func", "DeleteUserGroups").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/user/{userRecId}/groups", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recID %s not found", params["userRecId"]), nil, nil)
+		return
+	}
+	err = UserGroupRepo.DeleteUserGroupByUser(r.Context(), user)
+	if err != nil {
+		fLog.Errorf("UserGroupRepo.DeleteUserGroupByUser got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "user successfuly leaves all groups", nil, nil)
+}
+
 // Show2FAQrCode shows 2FA QR code. It returns a PNG image bytes.
 func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "Show2FAQrCode").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
@@ -119,7 +257,7 @@ type CreateNewUserResponse struct {
 	Suspended   bool      `json:"suspended"`
 	LastSeen    time.Time `json:"last_seen"`
 	LastLogin   time.Time `json:"last_login"`
-	TotpEnabled bool      `json:"2fa_enabled"`
+	TotpEnabled bool      `json:"enabled_2fa"`
 }
 
 // CreateNewUser handles request to create new user
@@ -243,6 +381,7 @@ func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
 type ActivateUserRequest struct {
 	Email           string `json:"email"`
 	ActivationToken string `json:"activation_token"`
+	NewPassphrase   string `json:"new_passphrase"`
 }
 
 // WhoAmIResponse holds the response structure for WhoAmI request
@@ -427,6 +566,15 @@ func ActivateUser(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "Malformed json body", nil, nil)
 		return
 	}
+
+	isValidPassphrase := passphrase.Validate(c.NewPassphrase, config.GetInt("security.passphrase.minchars"), config.GetInt("security.passphrase.minwords"), config.GetInt("security.passphrase.mincharsinword"))
+	if !isValidPassphrase {
+		fLog.Errorf("New Passphrase invalid")
+		invalidMsg := fmt.Sprintf("Invalid passphrase. Passphrase must at least has %d characters and %d words and for each word have minimum %d characters", config.GetInt("security.passphrase.minchars"), config.GetInt("security.passphrase.minwords"), config.GetInt("security.passphrase.mincharsinword"))
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "invalid passphrase", nil, invalidMsg)
+		return
+	}
+
 	user, err := UserRepo.GetUserByEmail(r.Context(), c.Email)
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByEmail got %s", err.Error())
@@ -435,7 +583,14 @@ func ActivateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	if user.ActivationCode == c.ActivationToken {
 		user.Enabled = true
-		err := UserRepo.SaveOrUpdate(r.Context(), user)
+		newHashed, err := bcrypt.GenerateFromPassword([]byte(c.NewPassphrase), 14)
+		if err != nil {
+			fLog.Errorf("bcrypt.GenerateFromPassword got %s", err.Error())
+			helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+			return
+		}
+		user.HashedPassphrase = string(newHashed)
+		err = UserRepo.SaveOrUpdate(r.Context(), user)
 		if err != nil {
 			fLog.Errorf("UserRepo.SaveOrUpdate got %s", err.Error())
 			helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
@@ -448,7 +603,7 @@ func ActivateUser(w http.ResponseWriter, r *http.Request) {
 		ret["suspended"] = user.Suspended
 		ret["last_seen"] = user.LastSeen
 		ret["last_login"] = user.LastLogin
-		ret["2fa_enabled"] = user.Enable2FactorAuth
+		ret["enabled_2fa"] = user.Enable2FactorAuth
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User activated", nil, ret)
 	} else {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, "Activation token and email not match", nil, nil)
@@ -475,7 +630,7 @@ func GetUserDetail(w http.ResponseWriter, r *http.Request) {
 	ret["suspended"] = user.Suspended
 	ret["last_seen"] = user.LastSeen
 	ret["last_login"] = user.LastLogin
-	ret["2fa_enabled"] = user.Enable2FactorAuth
+	ret["enabled_2fa"] = user.Enable2FactorAuth
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User retrieved", nil, ret)
 }
 
@@ -484,7 +639,7 @@ type UpdateUserRequest struct {
 	Email     string `json:"email"`
 	Enabled   bool   `json:"enabled"`
 	Suspended bool   `json:"suspended"`
-	Enable2FA bool   `json:"2fa_enabled"`
+	Enable2FA bool   `json:"enabled_2fa"`
 }
 
 // UpdateUserDetail rest endpoint to update user detail
@@ -557,7 +712,7 @@ func UpdateUserDetail(w http.ResponseWriter, r *http.Request) {
 	ret["suspended"] = user.Suspended
 	ret["last_seen"] = user.LastSeen
 	ret["last_login"] = user.LastLogin
-	ret["2fa_enabled"] = user.Enable2FactorAuth
+	ret["enabled_2fa"] = user.Enable2FactorAuth
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User updated", nil, ret)
 
 }

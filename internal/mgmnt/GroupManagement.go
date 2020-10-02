@@ -2,6 +2,7 @@ package mgmnt
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	log "github.com/sirupsen/logrus"
@@ -19,6 +20,142 @@ var (
 	groupMgmtLog = log.WithField("go", "GroupManagement")
 )
 
+func SetGroupUsers(w http.ResponseWriter, r *http.Request) {
+	fLog := roleMgmtLogger.WithField("func", "SetRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/users", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group recID %s not found", params["groupRecId"]), nil, nil)
+		return
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	userIds := make([]string, 0)
+	err = json.Unmarshal(body, &userIds)
+	if err != nil {
+		fLog.Errorf("json.Unmarshal got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+
+	err = UserGroupRepo.DeleteUserGroupByGroup(r.Context(), group)
+	if err != nil {
+		fLog.Errorf("UserGroupRepo.DeleteUserGroupByGroup got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+
+	counter := 0
+	for _, userId := range userIds {
+		user, err := UserRepo.GetUserByRecID(r.Context(), userId)
+		if err != nil {
+			fLog.Warnf("UserRepo.GetUserByRecID got %s, this user %s will not be added to group %s user", err.Error(), userId, group.RecID)
+		} else {
+			_, err := UserGroupRepo.CreateUserGroup(r.Context(), user, group)
+			if err != nil {
+				fLog.Warnf("UserGroupRepo.CreateUserGroup got %s, this role %s will not be added to group %s user", err.Error(), userId, group.RecID)
+			} else {
+				counter++
+			}
+		}
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d users added the group", counter), nil, nil)
+}
+func DeleteGroupUsers(w http.ResponseWriter, r *http.Request) {
+	fLog := roleMgmtLogger.WithField("func", "SetRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/users", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group recID %s not found", params["groupRecId"]), nil, nil)
+		return
+	}
+	err = UserGroupRepo.DeleteUserGroupByGroup(r.Context(), group)
+	if err != nil {
+		fLog.Errorf("UserGroupRepo.DeleteUserGroupByGroup got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly cleared group member", nil, nil)
+}
+func SetGroupRoles(w http.ResponseWriter, r *http.Request) {
+	fLog := roleMgmtLogger.WithField("func", "SetRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/roles", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group recID %s not found", params["groupRecId"]), nil, nil)
+		return
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	roleIds := make([]string, 0)
+	err = json.Unmarshal(body, &roleIds)
+	if err != nil {
+		fLog.Errorf("json.Unmarshal got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+
+	err = GroupRoleRepo.DeleteGroupRoleByGroup(r.Context(), group)
+	if err != nil {
+		fLog.Errorf("GroupRoleRepo.DeleteGroupRoleByGroup got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+
+	counter := 0
+	for _, roleId := range roleIds {
+		role, err := RoleRepo.GetRoleByRecID(r.Context(), roleId)
+		if err != nil {
+			fLog.Warnf("RoleRepo.GetRoleByRecID got %s, this role %s will not be added to group %s role", err.Error(), roleId, group.RecID)
+		} else {
+			_, err := GroupRoleRepo.CreateGroupRole(r.Context(), group, role)
+			if err != nil {
+				fLog.Warnf("GroupRoleRepo.CreateGroupRole got %s, this role %s will not be added to group %s role", err.Error(), roleId, group.RecID)
+			} else {
+				counter++
+			}
+		}
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d roles added the group", counter), nil, nil)
+}
+
+func DeleteGroupRoles(w http.ResponseWriter, r *http.Request) {
+	fLog := roleMgmtLogger.WithField("func", "SetRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/roles", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group recID %s not found", params["groupRecId"]), nil, nil)
+		return
+	}
+	err = GroupRoleRepo.DeleteGroupRoleByGroup(r.Context(), group)
+	if err != nil {
+		fLog.Errorf("GroupRoleRepo.DeleteGroupRoleByGroup got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly cleared all roles of group", nil, nil)
+}
+
 // ListAllGroup serving the listing of group request
 func ListAllGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "ListAllGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
@@ -34,15 +171,8 @@ func ListAllGroup(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	sgroups := make([]*SimpleGroup, len(groups))
-	for k, v := range groups {
-		sgroups[k] = &SimpleGroup{
-			RecID:     v.RecID,
-			GroupName: v.GroupName,
-		}
-	}
 	ret := make(map[string]interface{})
-	ret["groups"] = sgroups
+	ret["groups"] = groups
 	ret["page"] = page
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "List of all user paginated", nil, ret)
 }
@@ -86,13 +216,83 @@ func GetGroupDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+	req := &CreateGroupRequest{}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	err = json.Unmarshal(body, req)
+	if err != nil {
+		fLog.Errorf("json.Unmarshal got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
 		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Group fetched", nil, group)
+	group.GroupName = req.GroupName
+	group.Description = req.Description
+	// TODO add logic to ensure no duplicate group name
+	err = GroupRepo.SaveOrUpdateGroup(r.Context(), group)
+	if err != nil {
+		fLog.Errorf("GroupRepo.SaveOrUpdateGroup got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Group updated", nil, group)
+}
+
+// UpdateGroup serving request to update group detail
+func UpdateGroup(w http.ResponseWriter, r *http.Request) {
+	fLog := groupMgmtLog.WithField("func", "UpdateGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}", r.URL.Path)
+	if err != nil {
+		panic(err)
+	}
+
+	req := &CreateGroupRequest{}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	err = json.Unmarshal(body, req)
+	if err != nil {
+		fLog.Errorf("json.Unmarshal got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
+
+	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
+	if err != nil {
+		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		return
+	}
+	group.GroupName = req.GroupName
+	group.Description = req.Description
+
+	exGroup, err := GroupRepo.GetGroupByName(r.Context(), req.GroupName)
+	if err == nil && exGroup.GroupName == req.GroupName && exGroup.RecID != params["groupRecId"] {
+		fLog.Errorf("Duplicate group name. group %s already exist", req.GroupName)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		return
+	}
+
+	err = GroupRepo.SaveOrUpdateGroup(r.Context(), group)
+	if err != nil {
+		fLog.Errorf("GroupRepo.SaveOrUpdateGroupe got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Group updated", nil, group)
+
 }
 
 // DeleteGroup serving request to delete a group
