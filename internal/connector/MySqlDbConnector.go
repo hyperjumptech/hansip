@@ -525,8 +525,9 @@ func (db *MySQLDB) IsUserRecIDExist(ctx context.Context, recID string) (bool, er
 // SaveOrUpdate save or update a user data
 func (db *MySQLDB) SaveOrUpdate(ctx context.Context, user *User) error {
 	fLog := mysqlLog.WithField("func", "SaveOrUpdate").WithField("RequestID", ctx.Value(constants.RequestID))
-	creating, err := db.IsUserRecIDExist(ctx, user.RecID)
+	updating, err := db.IsUserRecIDExist(ctx, user.RecID)
 	if err != nil {
+		fLog.Errorf("db.IsUserRecIDExist got %s", err.Error())
 		return err
 	}
 	enabled := 0
@@ -541,7 +542,8 @@ func (db *MySQLDB) SaveOrUpdate(ctx context.Context, user *User) error {
 	if user.Enable2FactorAuth {
 		enable2fa = 1
 	}
-	if creating {
+	if !updating {
+		fLog.Infof("Creating user %s", user.Email)
 		_, err = db.instance.ExecContext(ctx, "INSERT INTO HANSIP_USER(REC_ID,EMAIL,HASHED_PASSPHRASE,ENABLED, SUSPENDED,LAST_SEEN,LAST_LOGIN,FAIL_COUNT,ACTIVATION_CODE,ACTIVATION_DATE,TOTP_KEY,ENABLE_2FE,TOKEN_2FE,RECOVERY_CODE) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
 			user.RecID, user.Email, user.HashedPassphrase, enabled, suspended, user.LastSeen, user.LastLogin, user.FailCount, user.ActivationCode,
 			user.ActivationDate, user.UserTotpSecretKey, enable2fa, user.Token2FA, user.RecoveryCode)
@@ -550,6 +552,7 @@ func (db *MySQLDB) SaveOrUpdate(ctx context.Context, user *User) error {
 		}
 		return err
 	}
+	fLog.Infof("Updating user %s", user.Email)
 	_, err = db.instance.ExecContext(ctx, "UPDATE HANSIP_USER SET EMAIL=?,HASHED_PASSPHRASE=?,ENABLED=?, SUSPENDED=?,LAST_SEEN=?,LAST_LOGIN=?,FAIL_COUNT=?,ACTIVATION_CODE=?,ACTIVATION_DATE=?,TOTP_KEY=?,ENABLE_2FE=?,TOKEN_2FE=?,RECOVERY_CODE=? WHERE REC_ID=?",
 		user.Email, user.HashedPassphrase, enabled, suspended, user.LastSeen, user.LastLogin, user.FailCount, user.ActivationCode,
 		user.ActivationDate, user.UserTotpSecretKey, enable2fa, user.Token2FA, user.RecoveryCode, user.RecID)
@@ -891,27 +894,27 @@ func (db *MySQLDB) IsRoleRecIDExist(ctx context.Context, recID string) (bool, er
 // SaveOrUpdateRole save or update a role record
 func (db *MySQLDB) SaveOrUpdateRole(ctx context.Context, role *Role) error {
 	fLog := mysqlLog.WithField("func", "SaveOrUpdateRole").WithField("RequestID", ctx.Value(constants.RequestID))
-	creating := false
+	updating := false
 	if len(role.RecID) == 0 {
 		role.RecID = helper.MakeRandomString(10, true, true, true, false)
-		creating = true
+		updating = false
 	} else {
-		create, err := db.IsRoleRecIDExist(ctx, role.RecID)
+		update, err := db.IsRoleRecIDExist(ctx, role.RecID)
 		if err != nil {
 			return err
 		}
-		creating = create
+		updating = update
 	}
-	if creating {
-		_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_ROLE(REC_ID,ROLE_NAME,DESCRIPTION) VALUES(?,?,?)",
-			role.RecID, role.RoleName, role.Description)
+	if updating {
+		_, err := db.instance.ExecContext(ctx, "UPDATE HANSIP_ROLE SET ROLE_NAME=?, DESCRIPTION=? WHERE REC_ID=?",
+			role.RoleName, role.Description, role.RecID)
 		if err != nil {
 			fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
 		}
 		return err
 	}
-	_, err := db.instance.ExecContext(ctx, "UPDATE HANSIP_ROLE SET ROLE_NAME=?, DESCRIPTION=? WHERE REC_ID=?",
-		role.RoleName, role.Description, role.RecID)
+	_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_ROLE(REC_ID,ROLE_NAME,DESCRIPTION) VALUES(?,?,?)",
+		role.RecID, role.RoleName, role.Description)
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
 	}
@@ -1015,27 +1018,27 @@ func (db *MySQLDB) IsGroupRecIDExist(ctx context.Context, recID string) (bool, e
 // SaveOrUpdateGroup delete one specific group
 func (db *MySQLDB) SaveOrUpdateGroup(ctx context.Context, group *Group) error {
 	fLog := mysqlLog.WithField("func", "SaveOrUpdateGroup").WithField("RequestID", ctx.Value(constants.RequestID))
-	creating := false
+	updating := false
 	if len(group.RecID) == 0 {
 		group.RecID = helper.MakeRandomString(10, true, true, true, false)
-		creating = true
+		updating = false
 	} else {
-		create, err := db.IsGroupRecIDExist(ctx, group.RecID)
+		update, err := db.IsGroupRecIDExist(ctx, group.RecID)
 		if err != nil {
 			return err
 		}
-		creating = create
+		updating = update
 	}
-	if creating {
-		_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_GROUP(REC_ID,GROUP_NAME,DESCRIPTION) VALUES(?,?,?)",
-			group.RecID, group.GroupName, group.Description)
+	if updating {
+		_, err := db.instance.ExecContext(ctx, "UPDATE HANSIP_GROUP SET GROUP_NAME=?, DESCRIPTION=? WHERE REC_ID=?",
+			group.GroupName, group.Description, group.RecID)
 		if err != nil {
 			fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
 		}
 		return err
 	}
-	_, err := db.instance.ExecContext(ctx, "UPDATE HANSIP_GROUP SET GROUP_NAME=?, DESCRIPTION=? WHERE REC_ID=?",
-		group.GroupName, group.Description, group.RecID)
+	_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_GROUP(REC_ID,GROUP_NAME,DESCRIPTION) VALUES(?,?,?)",
+		group.RecID, group.GroupName, group.Description)
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
 	}
