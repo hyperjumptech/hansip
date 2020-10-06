@@ -1,0 +1,111 @@
+@import url("https://fonts.googleapis.com/css?family=Karla:400,700&display=swap");
+
+@tailwind base;
+
+/* Write your own custom base styles here */
+
+/* Start purging... */
+@tailwind components;
+/* Stop purging. */
+
+/* Write you own custom component styles here */
+.btn-blue {
+  @apply bg-blue-500 text-white font-bold py-2 px-4 rounded;
+
+  :hover {
+    @apply bg-blue-700;
+  }
+
+  :focus {
+    @apply outline-none shadow-outline;
+  }
+}
+
+.btn-red {
+  @apply bg-red-500 text-white font-bold py-2 px-4 rounded;
+
+  :hover {
+    @apply bg-red-700;
+  }
+
+  :focus {
+    @apply outline-none shadow-outline;
+  }
+}
+
+.btn-red:disabled {
+  @apply bg-red-300 cursor-not-allowed;
+}
+
+.btn-blue:disabled {
+  @apply bg-blue-300 cursor-not-allowed;
+}
+
+.btn-blue-underline {
+  @apply text-blue-600 underline;
+}
+
+.btn-blue-underline:disabled {
+  @apply text-blue-300 cursor-not-allowed;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+  @apply shadow bg-white  border border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal;
+  :focus {
+    @apply outline-none shadow-outline;
+  }
+}
+
+.backup-code::after {
+  content: " ";
+}
+
+.bg-gradient {
+  background-color: #4158d0;
+  background-image: linear-gradient(
+    43deg,
+    rgba(158, 219, 255, 1) 0%,
+    rgba(0, 117, 190, 1) 100%
+  );
+}
+
+.resource-form {
+  @apply flex flex-col p-4 max-w-md;
+}
+
+.error-box {
+  @apply w-full rounded-md bg-red-400 text-white p-4 my-2;
+}
+
+/* Start purging... */
+@tailwind utilities;
+/* Stop purging. */
+
+/* Your own custom utilities */
+
+.font-family-karla {
+  font-family: karla;
+}
+.bg-sidebar {
+  background: #3d68ff;
+}
+.cta-btn {
+  color: #3d68ff;
+}
+.upgrade-btn {
+  background: #0a79c1;
+}
+.upgrade-btn:hover {
+  background: #0038fd;
+}
+.active-nav-link {
+  background: #0a79c1;
+}
+.nav-item:hover {
+  background: #0a79c1;
+}
+.account-link:hover {
+  background: #3d68ff;
+}

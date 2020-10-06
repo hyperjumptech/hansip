@@ -1,0 +1,46 @@
+{
+  "httpcode": 200,
+  "message": "List of all roles paginated",
+  "status": "SUCCESS",
+  "data": {
+    "page": {
+      "no": 1,
+      "total_pages": 2,
+      "page_size": 5,
+      "items": 5,
+      "total_items": 8,
+      "has_next": true,
+      "has_prev": false,
+      "is_first": true,
+      "is_last": false,
+      "fist_page": 1,
+      "next_page": 2,
+      "prev_page": 1,
+      "last_page": 2,
+      "order_by": "role_name",
+      "sort": "ASC"
+    },
+    "roles": [
+      {
+        "role_name": "Role 1",
+        "rec_id": "0001"
+      },
+      {
+        "role_name": "Role 2",
+        "rec_id": "0002"
+      },
+      {
+        "role_name": "Role 3",
+        "rec_id": "0003"
+      },
+      {
+        "role_name": "Role 4",
+        "rec_id": "0004"
+      },
+      {
+        "role_name": "Role 5",
+        "rec_id": "0005"
+      }
+    ]
+  }
+}

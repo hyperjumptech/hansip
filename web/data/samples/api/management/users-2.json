@@ -1,0 +1,53 @@
+{
+  "httpcode": 200,
+  "message": "List of all user paginated",
+  "status": "SUCCESS",
+  "data": {
+    "page": {
+      "no": 1,
+      "total_pages": 2,
+      "page_size": 5,
+      "items": 3,
+      "total_items": 8,
+      "has_next": false,
+      "has_prev": true,
+      "is_first": false,
+      "is_last": true,
+      "fist_page": 1,
+      "next_page": 2,
+      "prev_page": 1,
+      "last_page": 2,
+      "order_by": "email",
+      "sort": "ASC"
+    },
+    "users": [
+      {
+        "rec_id": "0005",
+        "email": "joey.tribbiani6@gmail.com",
+        "enabled": true,
+        "suspended": false,
+        "last_seen": "2020-08-09T16:41:12+00:00",
+        "last_login": "2020-08-09T16:41:12+00:00",
+        "enabled_2fa": false
+      },
+      {
+        "rec_id": "0006",
+        "email": "joey.tribbiani7@gmail.com",
+        "enabled": true,
+        "suspended": false,
+        "last_seen": "2020-08-09T16:41:12+00:00",
+        "last_login": "2020-08-09T16:41:12+00:00",
+        "enabled_2fa": false
+      },
+      {
+        "rec_id": "0007",
+        "email": "joey.tribbiani8@gmail.com",
+        "enabled": true,
+        "suspended": false,
+        "last_seen": "2020-08-09T16:41:12+00:00",
+        "last_login": "2020-08-09T16:41:12+00:00",
+        "enabled_2fa": false
+      }
+    ]
+  }
+}

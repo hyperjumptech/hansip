@@ -1,0 +1,10 @@
+{
+  "httpcode": 200,
+  "message": "List of all groups paginated",
+  "status": "SUCCESS",
+  "data": {
+    "rec_id": "0001",
+    "group_name": "Group 6",
+    "description": "This is a group description"
+  }
+}

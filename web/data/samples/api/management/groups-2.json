@@ -1,0 +1,41 @@
+{
+  "httpcode": 200,
+  "message": "List of all groups paginated",
+  "status": "SUCCESS",
+  "data": {
+    "page": {
+      "no": 2,
+      "total_pages": 2,
+      "page_size": 5,
+      "items": 3,
+      "total_items": 8,
+      "has_next": false,
+      "has_prev": true,
+      "is_first": false,
+      "is_last": true,
+      "fist_page": 1,
+      "next_page": 2,
+      "prev_page": 1,
+      "last_page": 2,
+      "order_by": "group_name",
+      "sort": "ASC"
+    },
+    "groups": [
+      {
+        "group_name": "Group 6",
+        "rec_id": "0006",
+        "description": "This is a group description"
+      },
+      {
+        "group_name": "Group 7",
+        "rec_id": "0007",
+        "description": "This is a group description"
+      },
+      {
+        "group_name": "Group 8",
+        "rec_id": "0008",
+        "description": "This is a group description"
+      }
+    ]
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "httpcode": 200,
+  "message": "List of all user paginated",
+  "status": "SUCCESS",
+  "data": {
+    "page": {
+      "no": 1,
+      "total_pages": 2,
+      "page_size": 5,
+      "items": 5,
+      "total_items": 8,
+      "has_next": true,
+      "has_prev": false,
+      "is_first": true,
+      "is_last": false,
+      "fist_page": 1,
+      "next_page": 2,
+      "prev_page": 1,
+      "last_page": 2,
+      "order_by": "email",
+      "sort": "ASC"
+    },
+    "users": [
+      {
+        "rec_id": "0000",
+        "email": "joey.tribbiani1@gmail.com",
+        "enabled": true,
+        "suspended": false,
+        "last_seen": "2020-08-09T16:41:12+00:00",
+        "last_login": "2020-08-09T16:41:12+00:00",
+        "enabled_2fa": false
+      },
+      {
+        "rec_id": "0001",
+        "email": "joey.tribbiani2@gmail.com",
+        "enabled": true,
+        "suspended": false,
+        "last_seen": "2020-08-09T16:41:12+00:00",
+        "last_login": "2020-08-09T16:41:12+00:00",
+        "enabled_2fa": false
+      },
+      {
+        "rec_id": "0002",
+        "email": "joey.tribbiani3@gmail.com",
+        "enabled": true,
+        "suspended": false,
+        "last_seen": "2020-08-09T16:41:12+00:00",
+        "last_login": "2020-08-09T16:41:12+00:00",
+        "enabled_2fa": false
+      },
+      {
+        "rec_id": "0003",
+        "email": "joey.tribbiani4@gmail.com",
+        "enabled": true,
+        "suspended": false,
+        "last_seen": "2020-08-09T16:41:12+00:00",
+        "last_login": "2020-08-09T16:41:12+00:00",
+        "enabled_2fa": false
+      },
+      {
+        "rec_id": "0004",
+        "email": "joey.tribbiani5@gmail.com",
+        "enabled": true,
+        "suspended": false,
+        "last_seen": "2020-08-09T16:41:12+00:00",
+        "last_login": "2020-08-09T16:41:12+00:00",
+        "enabled_2fa": false
+      }
+    ]
+  }
+}
