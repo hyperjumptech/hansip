@@ -572,7 +572,7 @@ func (db *MySQLDB) ListUser(ctx context.Context, request *helper.PageRequest) ([
 	}
 	page := helper.NewPage(request, uint(count))
 	userList := make([]*User, 0)
-	q := fmt.Sprintf("SELECT REC_ID, EMAIL,HASHED_PASSPHRASE,ENABLED, SUSPENDED,LAST_SEEN,LAST_LOGIN,FAIL_COUNT,ACTIVATION_CODE,ACTIVATION_DATE,TOTP_KEY,ENABLE_2FE,TOKEN_2FE,RECOVERY_CODE FROM HANSIP_USER ORDER BY %s %s LIMIT %d, %d", request.OrderBy, request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
+	q := fmt.Sprintf("SELECT REC_ID, EMAIL,HASHED_PASSPHRASE,ENABLED, SUSPENDED,LAST_SEEN,LAST_LOGIN,FAIL_COUNT,ACTIVATION_CODE,ACTIVATION_DATE,TOTP_KEY,ENABLE_2FE,TOKEN_2FE,RECOVERY_CODE FROM HANSIP_USER ORDER BY EMAIL %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	rows, err := db.instance.QueryContext(ctx, q)
 	if err != nil {
 		fLog.Errorf("db.instance.QueryContext got %s", err.Error())
@@ -706,7 +706,7 @@ func (db *MySQLDB) ListUserRoleByUser(ctx context.Context, user *User, request *
 		return nil, nil, err
 	}
 	page := helper.NewPage(request, uint(count))
-	q := fmt.Sprintf("SELECT R.REC_ID, R.ROLE_NAME, R.DESCRIPTION FROM HANSIP_USER_ROLE UR, HANSIP_ROLE R WHERE UR.ROLE_REC_ID = R.REC_ID AND UR.USER_REC_ID = ? ORDER BY R.%s %s LIMIT %d, %d", request.OrderBy, request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
+	q := fmt.Sprintf("SELECT R.REC_ID, R.ROLE_NAME, R.DESCRIPTION FROM HANSIP_USER_ROLE UR, HANSIP_ROLE R WHERE UR.ROLE_REC_ID = R.REC_ID AND UR.USER_REC_ID = ? ORDER BY R.ROLE_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	ret := make([]*Role, 0)
 	rows, err := db.instance.QueryContext(ctx, q, user.RecID)
 	if err != nil {
@@ -736,7 +736,7 @@ func (db *MySQLDB) ListUserRoleByRole(ctx context.Context, role *Role, request *
 		return nil, nil, err
 	}
 	page := helper.NewPage(request, uint(count))
-	q := fmt.Sprintf("SELECT R.REC_ID,R.EMAIL,R.HASHED_PASSPHRASE,R.ENABLED, R.SUSPENDED,R.LAST_SEEN,R.LAST_LOGIN,R.FAIL_COUNT,R.ACTIVATION_CODE,R.ACTIVATION_DATE,R.TOTP_KEY,R.ENABLE_2FE,R.TOKEN_2FE,R.RECOVERY_CODE FROM HANSIP_USER_ROLE UR, HANSIP_USER R WHERE UR.USER_REC_ID = R.REC_ID AND UR.ROLE_REC_ID = ? ORDER BY R.%s %s LIMIT %d, %d", request.OrderBy, request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
+	q := fmt.Sprintf("SELECT R.REC_ID,R.EMAIL,R.HASHED_PASSPHRASE,R.ENABLED, R.SUSPENDED,R.LAST_SEEN,R.LAST_LOGIN,R.FAIL_COUNT,R.ACTIVATION_CODE,R.ACTIVATION_DATE,R.TOTP_KEY,R.ENABLE_2FE,R.TOKEN_2FE,R.RECOVERY_CODE FROM HANSIP_USER_ROLE UR, HANSIP_USER R WHERE UR.USER_REC_ID = R.REC_ID AND UR.ROLE_REC_ID = ? ORDER BY R.EMAIL %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	ret := make([]*User, 0)
 	rows, err := db.instance.QueryContext(ctx, q, role.RecID)
 	if err != nil {
@@ -846,7 +846,7 @@ func (db *MySQLDB) ListRoles(ctx context.Context, request *helper.PageRequest) (
 		return nil, nil, err
 	}
 	page := helper.NewPage(request, uint(count))
-	q := fmt.Sprintf("SELECT REC_ID, ROLE_NAME, DESCRIPTION FROM HANSIP_ROLE ORDER BY %s %s LIMIT %d, %d", request.OrderBy, request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
+	q := fmt.Sprintf("SELECT REC_ID, ROLE_NAME, DESCRIPTION FROM HANSIP_ROLE ORDER BY ROLE_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	ret := make([]*Role, 0)
 	rows, err := db.instance.QueryContext(ctx, q)
 	if err != nil {
@@ -970,7 +970,7 @@ func (db *MySQLDB) ListGroups(ctx context.Context, request *helper.PageRequest) 
 		return nil, nil, err
 	}
 	page := helper.NewPage(request, uint(count))
-	q := fmt.Sprintf("SELECT REC_ID, GROUP_NAME, DESCRIPTION FROM HANSIP_GROUP ORDER BY %s %s LIMIT %d, %d", request.OrderBy, request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
+	q := fmt.Sprintf("SELECT REC_ID, GROUP_NAME, DESCRIPTION FROM HANSIP_GROUP ORDER BY GROUP_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	ret := make([]*Group, 0)
 	rows, err := db.instance.QueryContext(ctx, q)
 	if err != nil {
@@ -1086,7 +1086,7 @@ func (db *MySQLDB) ListGroupRoleByGroup(ctx context.Context, group *Group, reque
 		return nil, nil, err
 	}
 	page := helper.NewPage(request, uint(count))
-	q := fmt.Sprintf("SELECT R.REC_ID, R.ROLE_NAME, R.DESCRIPTION FROM HANSIP_GROUP_ROLE UR, HANSIP_ROLE R WHERE UR.ROLE_REC_ID = R.REC_ID AND UR.GROUP_REC_ID = ? ORDER BY R.%s %s LIMIT %d, %d", request.OrderBy, request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
+	q := fmt.Sprintf("SELECT R.REC_ID, R.ROLE_NAME, R.DESCRIPTION FROM HANSIP_GROUP_ROLE UR, HANSIP_ROLE R WHERE UR.ROLE_REC_ID = R.REC_ID AND UR.GROUP_REC_ID = ? ORDER BY R.ROLE_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	ret := make([]*Role, 0)
 	rows, err := db.instance.QueryContext(ctx, q, group.RecID)
 	if err != nil {
@@ -1116,7 +1116,7 @@ func (db *MySQLDB) ListGroupRoleByRole(ctx context.Context, role *Role, request 
 		return nil, nil, err
 	}
 	page := helper.NewPage(request, uint(count))
-	q := fmt.Sprintf("SELECT R.REC_ID, R.GROUP_NAME, R.DESCRIPTION FROM HANSIP_GROUP_ROLE UR, HANSIP_GROUP R WHERE UR.GROUP_REC_ID = R.REC_ID AND UR.ROLE_REC_ID = ? ORDER BY R.%s %s LIMIT %d, %d", request.OrderBy, request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
+	q := fmt.Sprintf("SELECT R.REC_ID, R.GROUP_NAME, R.DESCRIPTION FROM HANSIP_GROUP_ROLE UR, HANSIP_GROUP R WHERE UR.GROUP_REC_ID = R.REC_ID AND UR.ROLE_REC_ID = ? ORDER BY R.GROUP_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	ret := make([]*Group, 0)
 	rows, err := db.instance.QueryContext(ctx, q, role.RecID)
 	if err != nil {
@@ -1206,7 +1206,7 @@ func (db *MySQLDB) ListUserGroupByUser(ctx context.Context, user *User, request 
 		return nil, nil, err
 	}
 	page := helper.NewPage(request, uint(count))
-	q := fmt.Sprintf("SELECT R.REC_ID, R.GROUP_NAME, R.DESCRIPTION FROM HANSIP_USER_GROUP UR, HANSIP_GROUP R WHERE UR.GROUP_REC_ID = R.REC_ID AND UR.USER_REC_ID = ? ORDER BY R.%s %s LIMIT %d, %d", request.OrderBy, request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
+	q := fmt.Sprintf("SELECT R.REC_ID, R.GROUP_NAME, R.DESCRIPTION FROM HANSIP_USER_GROUP UR, HANSIP_GROUP R WHERE UR.GROUP_REC_ID = R.REC_ID AND UR.USER_REC_ID = ? ORDER BY R.GROUP_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	ret := make([]*Group, 0)
 	rows, err := db.instance.QueryContext(ctx, q, user.RecID)
 	if err != nil {
@@ -1236,7 +1236,7 @@ func (db *MySQLDB) ListUserGroupByGroup(ctx context.Context, group *Group, reque
 		return nil, nil, err
 	}
 	page := helper.NewPage(request, uint(count))
-	q := fmt.Sprintf("SELECT R.REC_ID,R.EMAIL,R.HASHED_PASSPHRASE,R.ENABLED, R.SUSPENDED,R.LAST_SEEN,R.LAST_LOGIN,R.FAIL_COUNT,R.ACTIVATION_CODE,R.ACTIVATION_DATE,R.TOTP_KEY,R.ENABLE_2FE,R.TOKEN_2FE,R.RECOVERY_CODE FROM HANSIP_USER_GROUP UR, HANSIP_USER R WHERE UR.USER_REC_ID = R.REC_ID AND UR.GROUP_REC_ID = ? ORDER BY R.%s %s LIMIT %d, %d", request.OrderBy, request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
+	q := fmt.Sprintf("SELECT R.REC_ID,R.EMAIL,R.HASHED_PASSPHRASE,R.ENABLED, R.SUSPENDED,R.LAST_SEEN,R.LAST_LOGIN,R.FAIL_COUNT,R.ACTIVATION_CODE,R.ACTIVATION_DATE,R.TOTP_KEY,R.ENABLE_2FE,R.TOKEN_2FE,R.RECOVERY_CODE FROM HANSIP_USER_GROUP UR, HANSIP_USER R WHERE UR.USER_REC_ID = R.REC_ID AND UR.GROUP_REC_ID = ? ORDER BY R.EMAIL %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	ret := make([]*User, 0)
 	rows, err := db.instance.QueryContext(ctx, q, group.RecID)
 	if err != nil {
