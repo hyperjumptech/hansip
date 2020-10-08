@@ -223,35 +223,13 @@ func GetGroupDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	req := &CreateGroupRequest{}
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
-		return
-	}
-	err = json.Unmarshal(body, req)
-	if err != nil {
-		fLog.Errorf("json.Unmarshal got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
-		return
-	}
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
 		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	group.GroupName = req.GroupName
-	group.Description = req.Description
-	// TODO add logic to ensure no duplicate group name
-	err = GroupRepo.SaveOrUpdateGroup(r.Context(), group)
-	if err != nil {
-		fLog.Errorf("GroupRepo.SaveOrUpdateGroup got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
-		return
-	}
-	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Group updated", nil, group)
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Group retrieved", nil, group)
 }
 
 // UpdateGroup serving request to update group detail
