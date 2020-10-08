@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// Validate parses your passphrase and validates for minimum characters and words
 func Validate(passphrase string, minchars, minwords, mincharsinword int) bool {
 	if len(passphrase) < minchars {
 		return false

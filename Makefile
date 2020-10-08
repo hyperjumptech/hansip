@@ -13,10 +13,10 @@ build-static:
 	go fmt ./...
 
 build: build-static
-	export GO111MODULE=on; \
-	GO_ENABLED=0 go build -a -o $(IMAGE_NAME).app cmd/main/Main.go
+#	export GO111MODULE=on; \
+#	GO_ENABLED=0 go build -a -o $(IMAGE_NAME).app cmd/main/Main.go
 #   Use bellow if you're running on linux.
-#	GO_ENABLED=0 go build -a -ldflags '-extldflags "-static"' -o $(IMAGE_NAME).app cmd/main/Main.go
+	GO_ENABLED=0 go build -a -ldflags '-extldflags "-static"' -o $(IMAGE_NAME).app cmd/main/Main.go
 
 lint: build-static
 	golint -set_exit_status ./internal/... ./pkg/... ./cmd/...
