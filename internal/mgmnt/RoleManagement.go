@@ -83,7 +83,7 @@ func DeleteRoleUsers(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly removed role from all user", nil, nil)
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfully removed role from all user", nil, nil)
 }
 
 // SetRoleGroups assign role to group
@@ -154,7 +154,7 @@ func DeleteRoleGroups(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly removed role from all group", nil, nil)
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfully removed role from all group", nil, nil)
 }
 
 // ListAllRole handling endpoint to serve Listing all roles in database.

@@ -3,13 +3,14 @@ package middlewares
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/internal/hansipcontext"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	log "github.com/sirupsen/logrus"
-	"net/http"
-	"strings"
 )
 
 var (
@@ -114,7 +115,7 @@ func JwtMiddleware(next http.Handler) http.Handler {
 				panic(err)
 			}
 			if match {
-				// First we check the method agains ACL
+				// First we check the method against ACL
 				if strings.ToUpper(r.Method) == acl.Method {
 					// If audience empty, its whitelisted, proceed.
 					if len(acl.AllowedAudiences) == 0 {

@@ -7,6 +7,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hyperjumptech/jiffy v1.0.0
+	github.com/newm4n/goornogo v1.0.2 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/sendgrid/rest v2.6.1+incompatible // indirect
 	github.com/sendgrid/sendgrid-go v3.6.4+incompatible

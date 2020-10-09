@@ -96,5 +96,5 @@ func (gen *EnglishPassphraseGenerator) RandomPassphrase(minWords, minCharInWord 
 		}
 		return fmt.Sprintf("%s %s %s %s and %s %s", gen.randomNoun(chars), gen.randomVerb(chars), gen.randomConnector(), buff.String(), gen.randomAdjective(chars), gen.randomNoun(chars)), nil
 	}
-	return "", fmt.Errorf("some trouble occured")
+	return "", fmt.Errorf("some trouble occurred")
 }

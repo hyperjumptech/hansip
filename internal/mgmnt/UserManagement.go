@@ -90,7 +90,7 @@ func DeleteUserRoles(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly removed all roles from user", nil, nil)
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfully removed all roles from user", nil, nil)
 }
 
 // SetUserGroups assigns group(s) to a user
@@ -161,7 +161,7 @@ func DeleteUserGroups(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "user successfuly leaves all groups", nil, nil)
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "user successfully leaves all groups", nil, nil)
 }
 
 // Show2FAQrCode shows 2FA QR code. It returns a PNG image bytes.

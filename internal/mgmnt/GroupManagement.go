@@ -89,7 +89,7 @@ func DeleteGroupUsers(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly cleared group member", nil, nil)
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfully cleared group member", nil, nil)
 }
 
 // SetGroupRoles assigns a role to a GroupId
@@ -160,7 +160,7 @@ func DeleteGroupRoles(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly cleared all roles of group", nil, nil)
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfully cleared all roles of group", nil, nil)
 }
 
 // ListAllGroup serving the listing of group request
