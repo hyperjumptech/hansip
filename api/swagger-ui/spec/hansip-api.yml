@@ -326,7 +326,7 @@ paths:
       tags:
         - "management-user"
       summary: "Activate the 2FA for the calling user"
-      description: "Activating 2FA for the user, user should call /management/user/2FAQR prior calling this to get the QR code for his 2FA. After scanning it, he should produce 2FA token to activate. If successfuly activated, this endpoint will return the user's 2FA secret key for him to save."
+      description: "Activating 2FA for the user, user should call /management/user/2FAQR prior calling this to get the QR code for his 2FA. After scanning it, he should produce 2FA token to activate. If successfully activated, this endpoint will return the user's 2FA secret key for him to save."
       operationId: "Activate2FA"
       consumes:
         - "application/json"
@@ -489,7 +489,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -576,7 +576,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly set role ownerships"
+          description: "Successfully set role ownerships"
         404:
           description: "Not found"
         401:
@@ -602,7 +602,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove role ownerships"
+          description: "Successfully remove role ownerships"
         404:
           description: "Not found"
         401:
@@ -717,7 +717,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -804,7 +804,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly set user to join those groups"
+          description: "Successfully set user to join those groups"
         404:
           description: "Not found"
         401:
@@ -830,7 +830,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly leave all groups"
+          description: "Successfully leave all groups"
         404:
           description: "Not found"
         401:
@@ -941,7 +941,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly populating user group"
+          description: "Successfully populating user group"
           schema:
             $ref: '#/definitions/ListGroupResponse'
         401:
@@ -997,7 +997,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly fetch group data"
+          description: "Successfully fetch group data"
           schema:
             $ref: '#/definitions/GroupDetailResponse'
         404:
@@ -1035,7 +1035,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly update group data"
+          description: "Successfully update group data"
           schema:
             $ref: '#/definitions/GroupDetailResponse'
         404:
@@ -1063,7 +1063,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -1115,7 +1115,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly populating group members"
+          description: "Successfully populating group members"
           schema:
             $ref: '#/definitions/ListAllUserResponse'
         404:
@@ -1150,7 +1150,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly added group members"
+          description: "Successfully added group members"
         404:
           description: "Not found"
         401:
@@ -1176,7 +1176,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly cleared out group members"
+          description: "Successfully cleared out group members"
         404:
           description: "Not found"
         401:
@@ -1207,7 +1207,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly added"
+          description: "Successfully added"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -1239,7 +1239,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -1291,7 +1291,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly populating group roles"
+          description: "Successfully populating group roles"
           schema:
             $ref: '#/definitions/ListRoleResponse'
         404:
@@ -1326,7 +1326,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly added group members"
+          description: "Successfully added group members"
         404:
           description: "Not found"
         401:
@@ -1352,7 +1352,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly cleared out group roles"
+          description: "Successfully cleared out group roles"
         404:
           description: "Not found"
         401:
@@ -1383,7 +1383,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly assigned"
+          description: "Successfully assigned"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -1415,7 +1415,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -1463,7 +1463,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly populating roles"
+          description: "Successfully populating roles"
           schema:
             $ref: '#/definitions/ListRoleResponse'
         401:
@@ -1492,7 +1492,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly create a role"
+          description: "Successfully create a role"
           schema:
             $ref: '#/definitions/RoleDetailResponse'
         401:
@@ -1519,7 +1519,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly fetch role detail"
+          description: "Successfully fetch role detail"
           schema:
             $ref: '#/definitions/RoleDetailResponse'
         404:
@@ -1557,7 +1557,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly update role data"
+          description: "Successfully update role data"
           schema:
             $ref: '#/definitions/RoleDetailResponse'
         404:
@@ -1585,7 +1585,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -1637,7 +1637,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly populate role users"
+          description: "Successfully populate role users"
           schema:
             $ref: '#/definitions/ListAllUserResponse'
         404:
@@ -1672,7 +1672,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly set role ownerships"
+          description: "Successfully set role ownerships"
         404:
           description: "Not found"
         401:
@@ -1698,7 +1698,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove role ownerships"
+          description: "Successfully remove role ownerships"
         404:
           description: "Not found"
         401:
@@ -1761,7 +1761,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -1813,7 +1813,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly populate role groups"
+          description: "Successfully populate role groups"
           schema:
             $ref: '#/definitions/ListGroupResponse'
         404:
@@ -1848,7 +1848,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly set role ownerships"
+          description: "Successfully set role ownerships"
         404:
           description: "Not found"
         401:
@@ -1874,7 +1874,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove role ownerships"
+          description: "Successfully remove role ownerships"
         404:
           description: "Not found"
         401:
@@ -1905,7 +1905,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly added"
+          description: "Successfully added"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
@@ -1937,7 +1937,7 @@ paths:
         - JWT: []
       responses:
         200:
-          description: "Successfuly remove"
+          description: "Successfully remove"
           schema:
             $ref: '#/definitions/BaseResponse'
         404:
