@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"regexp"
+	"sort"
+	"time"
 
-	// Initializes mysql driver
+	// initialize mysql driver
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/constants"
@@ -14,8 +16,6 @@ import (
 	"github.com/hyperjumptech/hansip/pkg/totp"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
-	"sort"
-	"time"
 )
 
 const (
@@ -921,7 +921,7 @@ func (db *MySQLDB) SaveOrUpdateRole(ctx context.Context, role *Role) error {
 	return err
 }
 
-// GetGroupByRecID return a Group data by its RedID
+// GetGroupByRecID return a Group data by its RecID
 func (db *MySQLDB) GetGroupByRecID(ctx context.Context, recID string) (*Group, error) {
 	fLog := mysqlLog.WithField("func", "GetGroupByRecID").WithField("RequestID", ctx.Value(constants.RequestID))
 	row := db.instance.QueryRowContext(ctx, "SELECT REC_ID, GROUP_NAME, DESCRIPTION FROM HANSIP_GROUP WHERE REC_ID=?", recID)
@@ -933,6 +933,7 @@ func (db *MySQLDB) GetGroupByRecID(ctx context.Context, recID string) (*Group, e
 	return r, err
 }
 
+// GetGroupByName return group by its Name
 func (db *MySQLDB) GetGroupByName(ctx context.Context, groupName string) (*Group, error) {
 	fLog := mysqlLog.WithField("func", "GetGroupByName").WithField("RequestID", ctx.Value(constants.RequestID))
 	row := db.instance.QueryRowContext(ctx, "SELECT REC_ID, GROUP_NAME, DESCRIPTION FROM HANSIP_GROUP WHERE GROUP_NAME=?", groupName)

@@ -7,7 +7,7 @@ import (
 )
 
 // IsRoleValid ini melakukan validasi apakah Role-Role yang menjadi syarat
-// untuk mengakses sebuah resourse (requires) bisa dipenuhi oleh seorang pengakses
+// untuk mengakses sebuah resource (requires) bisa dipenuhi oleh seorang pengakses
 // yang memiliki Role-Role tertentu (supplied).
 //
 // Sebagai contoh :

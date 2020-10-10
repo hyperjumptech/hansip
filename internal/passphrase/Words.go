@@ -15,14 +15,17 @@ var (
 	seeded    = false
 )
 
-type PassphraseGenerator interface {
+// PhraseGenerator interface
+type PhraseGenerator interface {
 	RandomPassphrase(minWords, minCharInWord int) (string, error)
 }
 
-func NewEnglishPassphraseGenerator() PassphraseGenerator {
+// NewEnglishPassphraseGenerator returns generator instance
+func NewEnglishPassphraseGenerator() PhraseGenerator {
 	return &EnglishPassphraseGenerator{}
 }
 
+// EnglishPassphraseGenerator struct
 type EnglishPassphraseGenerator struct {
 }
 
@@ -60,6 +63,7 @@ func randomWord(minlen int, wordset []string) string {
 	}
 }
 
+// RandomPassphrase generates random phrase for passphrase
 func (gen *EnglishPassphraseGenerator) RandomPassphrase(minWords, minCharInWord int) (string, error) {
 	if !seeded {
 		rand.Seed(time.Now().Unix())
@@ -92,5 +96,5 @@ func (gen *EnglishPassphraseGenerator) RandomPassphrase(minWords, minCharInWord 
 		}
 		return fmt.Sprintf("%s %s %s %s and %s %s", gen.randomNoun(chars), gen.randomVerb(chars), gen.randomConnector(), buff.String(), gen.randomAdjective(chars), gen.randomNoun(chars)), nil
 	}
-	return "", fmt.Errorf("some trouble occured")
+	return "", fmt.Errorf("some trouble occurred")
 }

@@ -3,17 +3,19 @@ package mgmnt
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"net/http"
 )
 
 var (
 	roleMgmtLogger = log.WithField("go", "RoleManagement")
 )
 
+// SetRoleUsers assigns a role to UserId
 func SetRoleUsers(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "SetRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/users", r.URL.Path)
@@ -31,8 +33,8 @@ func SetRoleUsers(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	userIds := make([]string, 0)
-	err = json.Unmarshal(body, &userIds)
+	userIDs := make([]string, 0)
+	err = json.Unmarshal(body, &userIDs)
 	if err != nil {
 		fLog.Errorf("json.Unmarshal got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
@@ -47,14 +49,14 @@ func SetRoleUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	counter := 0
-	for _, userId := range userIds {
-		user, err := UserRepo.GetUserByRecID(r.Context(), userId)
+	for _, userID := range userIDs {
+		user, err := UserRepo.GetUserByRecID(r.Context(), userID)
 		if err != nil {
-			fLog.Warnf("UserRepo.GetUserByRecID got %s, this user %s will not be added to role %s user", err.Error(), userId, role.RecID)
+			fLog.Warnf("UserRepo.GetUserByRecID got %s, this user %s will not be added to role %s user", err.Error(), userID, role.RecID)
 		} else {
 			_, err := UserRoleRepo.CreateUserRole(r.Context(), user, role)
 			if err != nil {
-				fLog.Warnf("UserRoleRepo.CreateUserRole got %s, this role %s will not be added to user %s role", err.Error(), userId, role.RecID)
+				fLog.Warnf("UserRoleRepo.CreateUserRole got %s, this role %s will not be added to user %s role", err.Error(), userID, role.RecID)
 			} else {
 				counter++
 			}
@@ -63,6 +65,7 @@ func SetRoleUsers(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d users added the role", counter), nil, nil)
 }
 
+// DeleteRoleUsers remove roles from userId
 func DeleteRoleUsers(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "DeleteRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/users", r.URL.Path)
@@ -80,8 +83,10 @@ func DeleteRoleUsers(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly removed role from all user", nil, nil)
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfully removed role from all user", nil, nil)
 }
+
+// SetRoleGroups assign role to group
 func SetRoleGroups(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "SetRoleGroups").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/groups", r.URL.Path)
@@ -99,8 +104,8 @@ func SetRoleGroups(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	groupIds := make([]string, 0)
-	err = json.Unmarshal(body, &groupIds)
+	groupIDs := make([]string, 0)
+	err = json.Unmarshal(body, &groupIDs)
 	if err != nil {
 		fLog.Errorf("json.Unmarshal got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
@@ -115,14 +120,14 @@ func SetRoleGroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	counter := 0
-	for _, groupId := range groupIds {
-		group, err := GroupRepo.GetGroupByRecID(r.Context(), groupId)
+	for _, groupID := range groupIDs {
+		group, err := GroupRepo.GetGroupByRecID(r.Context(), groupID)
 		if err != nil {
-			fLog.Warnf("UserRepo.GetUserByRecID got %s, this group %s will not be added to role %s user", err.Error(), groupId, role.RecID)
+			fLog.Warnf("UserRepo.GetUserByRecID got %s, this group %s will not be added to role %s user", err.Error(), groupID, role.RecID)
 		} else {
 			_, err := GroupRoleRepo.CreateGroupRole(r.Context(), group, role)
 			if err != nil {
-				fLog.Warnf("UserRoleRepo.CreateUserRole got %s, this group %s will not be added to user %s role", err.Error(), groupId, role.RecID)
+				fLog.Warnf("UserRoleRepo.CreateUserRole got %s, this group %s will not be added to user %s role", err.Error(), groupID, role.RecID)
 			} else {
 				counter++
 			}
@@ -131,6 +136,7 @@ func SetRoleGroups(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d groups added the role", counter), nil, nil)
 }
 
+// DeleteRoleGroups deletes role from group
 func DeleteRoleGroups(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "DeleteRoleGroups").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/role/{roleRecId}/groups", r.URL.Path)
@@ -148,7 +154,7 @@ func DeleteRoleGroups(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly removed role from all group", nil, nil)
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfully removed role from all group", nil, nil)
 }
 
 // ListAllRole handling endpoint to serve Listing all roles in database.

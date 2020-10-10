@@ -3,11 +3,12 @@ package mgmnt
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"net/http"
 )
 
 // SimpleGroup hold basic data of group
@@ -20,6 +21,7 @@ var (
 	groupMgmtLog = log.WithField("go", "GroupManagement")
 )
 
+// SetGroupUsers adds a user as a member to a group
 func SetGroupUsers(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "SetRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/users", r.URL.Path)
@@ -53,14 +55,14 @@ func SetGroupUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	counter := 0
-	for _, userId := range userIds {
-		user, err := UserRepo.GetUserByRecID(r.Context(), userId)
+	for _, userID := range userIds {
+		user, err := UserRepo.GetUserByRecID(r.Context(), userID)
 		if err != nil {
-			fLog.Warnf("UserRepo.GetUserByRecID got %s, this user %s will not be added to group %s user", err.Error(), userId, group.RecID)
+			fLog.Warnf("UserRepo.GetUserByRecID got %s, this user %s will not be added to group %s user", err.Error(), userID, group.RecID)
 		} else {
 			_, err := UserGroupRepo.CreateUserGroup(r.Context(), user, group)
 			if err != nil {
-				fLog.Warnf("UserGroupRepo.CreateUserGroup got %s, this role %s will not be added to group %s user", err.Error(), userId, group.RecID)
+				fLog.Warnf("UserGroupRepo.CreateUserGroup got %s, this role %s will not be added to group %s user", err.Error(), userID, group.RecID)
 			} else {
 				counter++
 			}
@@ -68,6 +70,8 @@ func SetGroupUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d users added the group", counter), nil, nil)
 }
+
+// DeleteGroupUsers removes user from a group membership
 func DeleteGroupUsers(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "SetRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/users", r.URL.Path)
@@ -85,8 +89,10 @@ func DeleteGroupUsers(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly cleared group member", nil, nil)
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfully cleared group member", nil, nil)
 }
+
+// SetGroupRoles assigns a role to a GroupId
 func SetGroupRoles(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "SetRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/roles", r.URL.Path)
@@ -104,8 +110,8 @@ func SetGroupRoles(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	roleIds := make([]string, 0)
-	err = json.Unmarshal(body, &roleIds)
+	roleIDs := make([]string, 0)
+	err = json.Unmarshal(body, &roleIDs)
 	if err != nil {
 		fLog.Errorf("json.Unmarshal got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
@@ -120,14 +126,14 @@ func SetGroupRoles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	counter := 0
-	for _, roleId := range roleIds {
-		role, err := RoleRepo.GetRoleByRecID(r.Context(), roleId)
+	for _, roleID := range roleIDs {
+		role, err := RoleRepo.GetRoleByRecID(r.Context(), roleID)
 		if err != nil {
-			fLog.Warnf("RoleRepo.GetRoleByRecID got %s, this role %s will not be added to group %s role", err.Error(), roleId, group.RecID)
+			fLog.Warnf("RoleRepo.GetRoleByRecID got %s, this role %s will not be added to group %s role", err.Error(), roleID, group.RecID)
 		} else {
 			_, err := GroupRoleRepo.CreateGroupRole(r.Context(), group, role)
 			if err != nil {
-				fLog.Warnf("GroupRoleRepo.CreateGroupRole got %s, this role %s will not be added to group %s role", err.Error(), roleId, group.RecID)
+				fLog.Warnf("GroupRoleRepo.CreateGroupRole got %s, this role %s will not be added to group %s role", err.Error(), roleID, group.RecID)
 			} else {
 				counter++
 			}
@@ -136,6 +142,7 @@ func SetGroupRoles(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d roles added the group", counter), nil, nil)
 }
 
+// DeleteGroupRoles deletes roles from groupID
 func DeleteGroupRoles(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "SetRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams("/api/v1/management/group/{groupRecId}/roles", r.URL.Path)
@@ -153,7 +160,7 @@ func DeleteGroupRoles(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly cleared all roles of group", nil, nil)
+	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfully cleared all roles of group", nil, nil)
 }
 
 // ListAllGroup serving the listing of group request
