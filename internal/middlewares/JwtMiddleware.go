@@ -114,10 +114,13 @@ func JwtMiddleware(next http.Handler) http.Handler {
 				panic(err)
 			}
 			if match {
+				fLog.Tracef("Found ACL %s. Checking method", acl.PathPattern)
 				// First we check the method agains ACL
 				if strings.ToUpper(r.Method) == acl.Method {
+					fLog.Tracef("Found ACL %s for method %s", acl.PathPattern, acl.Method)
 					// If audience empty, its whitelisted, proceed.
 					if len(acl.AllowedAudiences) == 0 {
+						fLog.Tracef("Allowing %s for there are no allowed audience rule", r.URL.Path)
 						next.ServeHTTP(w, r)
 						return
 					}
@@ -148,7 +151,7 @@ func JwtMiddleware(next http.Handler) http.Handler {
 						helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, fmt.Sprintf("Forbidden. Not accepting token from issuer %s ", issuer), nil, nil)
 						return
 					}
-					allowed := true
+					allowed := false
 					for _, allowedAud := range acl.AllowedAudiences {
 						if helper.StringArrayContainString(audience, allowedAud) {
 							allowed = true
@@ -156,6 +159,7 @@ func JwtMiddleware(next http.Handler) http.Handler {
 						}
 					}
 					if allowed {
+						fLog.Tracef("Allowing token audiences %v, verified by allowed %v", audience, acl.AllowedAudiences)
 						hansipContext := &hansipcontext.AuthenticationContext{
 							Token:     tok,
 							Subject:   subject,
