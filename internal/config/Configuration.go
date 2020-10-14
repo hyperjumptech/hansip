@@ -19,6 +19,8 @@ func initialize() {
 	viper.AutomaticEnv()
 	defCfg = make(map[string]string)
 
+	defCfg["api.path.prefix"] = "/api/v1"
+
 	defCfg["server.host"] = "localhost"
 	defCfg["server.port"] = "3000"
 	defCfg["server.log.level"] = "warn" // valid values are trace, debug, info, warn, error, fatal
@@ -70,9 +72,9 @@ func initialize() {
 	defCfg["mailer.sendmail.user"] = "sendmail"
 	defCfg["mailer.sendmail.password"] = "password"
 	defCfg["mailer.templates.emailveri.subject"] = "Please verify your new Hansip account's email"
-	defCfg["mailer.templates.emailveri.body"] = "<html><body>Dear New Hansip User<br><br>Your new account is ready!<br>please click this <a href=\"http://hansip.io/activate?email={{.Email}}&code={{.ActivationCode}}\">link to activate</a> your account.<br><br>Cordially,<br>HANSIP team</body></html>"
+	defCfg["mailer.templates.emailveri.body"] = "<html><body>Dear New Hansip User<br><br>Your new account is ready!<br>please click this <a href=\"http://172.31.219.130:3001/activate?email={{.Email}}&code={{.ActivationCode}}\">link to activate</a> your account.<br><br>Cordially,<br>HANSIP team</body></html>"
 	defCfg["mailer.templates.passrecover.subject"] = "Passphrase recovery instruction"
-	defCfg["mailer.templates.passrecover.body"] = "<html><body>Dear Hansip User<br><br>To recover your passphrase<br>please click this <a href=\"http://hansip.io/recover?email={{.Email}}&code={{.RecoveryCode}}\">link to change your passphrase</a>.<br><br>Cordially,<br>HANSIP team</body></html>"
+	defCfg["mailer.templates.passrecover.body"] = "<html><body>Dear Hansip User<br><br>To recover your passphrase<br>please click this <a href=\"http://172.31.219.130:3001/recover?email={{.Email}}&code={{.RecoveryCode}}\">link to change your passphrase</a>.<br><br>Cordially,<br>HANSIP team</body></html>"
 	defCfg["mailer.sendgrid.token"] = "SENDGRIDTOKEN"
 
 	for k := range defCfg {

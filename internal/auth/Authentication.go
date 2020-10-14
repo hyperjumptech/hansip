@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/connector"
@@ -25,6 +26,8 @@ var (
 
 	// TokenFactory instance used for generating and validating token
 	TokenFactory helper.TokenFactory
+
+	apiPrefix = config.Get("api.path.prefix")
 
 	initialized = false
 )
@@ -65,11 +68,11 @@ func InitializeAuthRouter(router *mux.Router) {
 	groupRepo = mgmnt.GroupRepo
 	groupRoleRepo = mgmnt.GroupRoleRepo
 
-	router.HandleFunc("/api/v1/auth/authenticate", Authentication).Methods("OPTIONS", "POST")
-	router.HandleFunc("/api/v1/auth/refresh", Refresh).Methods("OPTIONS", "POST")
-	router.HandleFunc("/api/v1/auth/2fa", TwoFA).Methods("OPTIONS", "POST")
-	router.HandleFunc("/api/v1/auth/2fatest", TwoFATest).Methods("OPTIONS", "POST")
-	router.HandleFunc("/api/v1/auth/authenticate2fa", Authentication2FA).Methods("OPTIONS", "POST")
+	router.HandleFunc(fmt.Sprintf("%s/auth/authenticate", apiPrefix), Authentication).Methods("OPTIONS", "POST")
+	router.HandleFunc(fmt.Sprintf("%s/auth/refresh", apiPrefix), Refresh).Methods("OPTIONS", "POST")
+	router.HandleFunc(fmt.Sprintf("%s/auth/2fa", apiPrefix), TwoFA).Methods("OPTIONS", "POST")
+	router.HandleFunc(fmt.Sprintf("%s/auth/2fatest", apiPrefix), TwoFATest).Methods("OPTIONS", "POST")
+	router.HandleFunc(fmt.Sprintf("%s/auth/authenticate2fa", apiPrefix), Authentication2FA).Methods("OPTIONS", "POST")
 
 	initialized = true
 }

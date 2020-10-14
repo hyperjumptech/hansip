@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	dbUtil connector.DBUtil
+	dbUtil    connector.DBUtil
+	apiPrefix = config.Get("api.path.prefix")
 )
 
 func pretifyJSON(sjson string) string {
@@ -176,7 +177,7 @@ func TestAll(t *testing.T) {
 func ListUserGroupByUser(t *testing.T, accessToken, userRecID string) {
 	t.Log("Testing List User-Group by User")
 	recorder := httptest.NewRecorder()
-	createRequest := httptest.NewRequest("GET", fmt.Sprintf("/api/v1/management/user/%s/groups?page_no=1&page_size=10&order_by=GROUP_NAME&sort=ASC", userRecID), nil)
+	createRequest := httptest.NewRequest("GET", fmt.Sprintf("%s/management/user/%s/groups?page_no=1&page_size=10&order_by=GROUP_NAME&sort=ASC", apiPrefix, userRecID), nil)
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, createRequest)
 	if recorder.Code != http.StatusOK {
@@ -190,7 +191,7 @@ func ListUserGroupByUser(t *testing.T, accessToken, userRecID string) {
 func ListUserGroupByGroup(t *testing.T, accessToken, groupRecID string) {
 	t.Log("Testing List User-Group by Group")
 	recorder := httptest.NewRecorder()
-	createRequest := httptest.NewRequest("GET", fmt.Sprintf("/api/v1/management/group/%s/users?page_no=1&page_size=10&order_by=EMAIL&sort=ASC", groupRecID), nil)
+	createRequest := httptest.NewRequest("GET", fmt.Sprintf("%s/management/group/%s/users?page_no=1&page_size=10&order_by=EMAIL&sort=ASC", apiPrefix, groupRecID), nil)
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, createRequest)
 	if recorder.Code != http.StatusOK {
@@ -204,7 +205,7 @@ func ListUserGroupByGroup(t *testing.T, accessToken, groupRecID string) {
 func ListUserRoleByUser(t *testing.T, accessToken, userRecID string) {
 	t.Log("Testing List User-Role by User")
 	recorder := httptest.NewRecorder()
-	createRequest := httptest.NewRequest("GET", fmt.Sprintf("/api/v1/management/user/%s/roles?page_no=1&page_size=10&order_by=ROLE_NAME&sort=ASC", userRecID), nil)
+	createRequest := httptest.NewRequest("GET", fmt.Sprintf("%s/management/user/%s/roles?page_no=1&page_size=10&order_by=ROLE_NAME&sort=ASC", apiPrefix, userRecID), nil)
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, createRequest)
 	if recorder.Code != http.StatusOK {
@@ -218,7 +219,7 @@ func ListUserRoleByUser(t *testing.T, accessToken, userRecID string) {
 func ListUserRoleByRole(t *testing.T, accessToken, roleRecID string) {
 	t.Log("Testing List User-Role by Role")
 	recorder := httptest.NewRecorder()
-	createRequest := httptest.NewRequest("GET", fmt.Sprintf("/api/v1/management/role/%s/users?page_no=1&page_size=10&order_by=EMAIL&sort=ASC", roleRecID), nil)
+	createRequest := httptest.NewRequest("GET", fmt.Sprintf("%s/management/role/%s/users?page_no=1&page_size=10&order_by=EMAIL&sort=ASC", apiPrefix, roleRecID), nil)
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, createRequest)
 	if recorder.Code != http.StatusOK {
@@ -232,7 +233,7 @@ func ListUserRoleByRole(t *testing.T, accessToken, roleRecID string) {
 func ListGroupRoleByGroup(t *testing.T, accessToken, groupRecID string) {
 	t.Log("Testing List Group-Role by Group")
 	recorder := httptest.NewRecorder()
-	createRequest := httptest.NewRequest("GET", fmt.Sprintf("/api/v1/management/group/%s/roles?page_no=1&page_size=10&order_by=ROLE_NAME&sort=ASC", groupRecID), nil)
+	createRequest := httptest.NewRequest("GET", fmt.Sprintf("%s/management/group/%s/roles?page_no=1&page_size=10&order_by=ROLE_NAME&sort=ASC", apiPrefix, groupRecID), nil)
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, createRequest)
 	if recorder.Code != http.StatusOK {
@@ -246,7 +247,7 @@ func ListGroupRoleByGroup(t *testing.T, accessToken, groupRecID string) {
 func ListGroupRoleByRole(t *testing.T, accessToken, roleRecID string) {
 	t.Log("Testing List Group-Role by Role")
 	recorder := httptest.NewRecorder()
-	createRequest := httptest.NewRequest("GET", fmt.Sprintf("/api/v1/management/role/%s/groups?page_no=1&page_size=10&order_by=GROUP_NAME&sort=ASC", roleRecID), nil)
+	createRequest := httptest.NewRequest("GET", fmt.Sprintf("%s/management/role/%s/groups?page_no=1&page_size=10&order_by=GROUP_NAME&sort=ASC", apiPrefix, roleRecID), nil)
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, createRequest)
 	if recorder.Code != http.StatusOK {
@@ -260,7 +261,7 @@ func ListGroupRoleByRole(t *testing.T, accessToken, roleRecID string) {
 func CreateUserRoleTesting(t *testing.T, accessToken, userRecID, roleRecID string) {
 	t.Log("Testing Create New UserRole")
 	recorder := httptest.NewRecorder()
-	createRequest := httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/management/user/%s/role/%s", userRecID, roleRecID), nil)
+	createRequest := httptest.NewRequest("PUT", fmt.Sprintf("%s/management/user/%s/role/%s", apiPrefix, userRecID, roleRecID), nil)
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, createRequest)
 	if recorder.Code != http.StatusOK {
@@ -273,7 +274,7 @@ func CreateUserRoleTesting(t *testing.T, accessToken, userRecID, roleRecID strin
 func CreateRoleUserTesting(t *testing.T, accessToken, roleRecID, userRecID string) {
 	t.Log("Testing Create New RoleUser")
 	recorder := httptest.NewRecorder()
-	createRequest := httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/management/role/%s/user/%s", roleRecID, userRecID), nil)
+	createRequest := httptest.NewRequest("PUT", fmt.Sprintf("%s/management/role/%s/user/%s", apiPrefix, roleRecID, userRecID), nil)
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, createRequest)
 	if recorder.Code != http.StatusOK {
@@ -287,7 +288,7 @@ func CreateRoleUserTesting(t *testing.T, accessToken, roleRecID, userRecID strin
 func CreateGroupRoleTesting(t *testing.T, accessToken, groupRecID, roleRecID string) {
 	t.Log("Testing Create New GroupRole")
 	recorder := httptest.NewRecorder()
-	createRequest := httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/management/group/%s/role/%s", groupRecID, roleRecID), nil)
+	createRequest := httptest.NewRequest("PUT", fmt.Sprintf("%s/management/group/%s/role/%s", apiPrefix, groupRecID, roleRecID), nil)
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, createRequest)
 	if recorder.Code != http.StatusOK {
@@ -301,7 +302,7 @@ func CreateGroupRoleTesting(t *testing.T, accessToken, groupRecID, roleRecID str
 func CreateRoleGroupTesting(t *testing.T, accessToken, roleRecID, groupRecID string) {
 	t.Log("Testing Create New RoleGroup")
 	recorder := httptest.NewRecorder()
-	createRequest := httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/management/role/%s/group/%s", roleRecID, groupRecID), nil)
+	createRequest := httptest.NewRequest("PUT", fmt.Sprintf("%s/management/role/%s/group/%s", apiPrefix, roleRecID, groupRecID), nil)
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, createRequest)
 	if recorder.Code != http.StatusOK {
@@ -314,7 +315,7 @@ func CreateRoleGroupTesting(t *testing.T, accessToken, roleRecID, groupRecID str
 func CreateUserGroupTesting(t *testing.T, accessToken, userRecID, groupRecID string) {
 	t.Log("Testing Create New UserGroup")
 	recorder := httptest.NewRecorder()
-	createRequest := httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/management/user/%s/group/%s", userRecID, groupRecID), nil)
+	createRequest := httptest.NewRequest("PUT", fmt.Sprintf("%s/management/user/%s/group/%s", apiPrefix, userRecID, groupRecID), nil)
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, createRequest)
 	if recorder.Code != http.StatusOK {
@@ -328,7 +329,7 @@ func CreateUserGroupTesting(t *testing.T, accessToken, userRecID, groupRecID str
 func CreateGroupUserTesting(t *testing.T, accessToken, groupRecID, userRecID string) {
 	t.Log("Testing Create New GroupUser")
 	recorder := httptest.NewRecorder()
-	createRequest := httptest.NewRequest("PUT", fmt.Sprintf("/api/v1/management/group/%s/user/%s", groupRecID, userRecID), nil)
+	createRequest := httptest.NewRequest("PUT", fmt.Sprintf("%s/management/group/%s/user/%s", apiPrefix, groupRecID, userRecID), nil)
 	t.Logf(createRequest.URL.Path)
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, createRequest)
@@ -348,7 +349,7 @@ func CreateNewGroupTesting(t *testing.T, accessToken, groupName string) *connect
 		"description": "passphrase",
 	}
 	sbody, _ := json.Marshal(body)
-	createRequest := httptest.NewRequest("POST", "/api/v1/management/group", bytes.NewReader(sbody))
+	createRequest := httptest.NewRequest("POST", fmt.Sprintf("%s/management/group", apiPrefix), bytes.NewReader(sbody))
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	createRequest.Header.Add("Content-Type", "application/json")
 	Router.ServeHTTP(recorder, createRequest)
@@ -377,7 +378,7 @@ func CreateNewRoleTesting(t *testing.T, accessToken, roleName string) *connector
 		"description": "passphrase",
 	}
 	sbody, _ := json.Marshal(body)
-	createRequest := httptest.NewRequest("POST", "/api/v1/management/role", bytes.NewReader(sbody))
+	createRequest := httptest.NewRequest("POST", fmt.Sprintf("%s/management/role", apiPrefix), bytes.NewReader(sbody))
 	createRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	createRequest.Header.Add("Content-Type", "application/json")
 	Router.ServeHTTP(recorder, createRequest)
@@ -401,7 +402,7 @@ func CreateNewRoleTesting(t *testing.T, accessToken, roleName string) *connector
 func DeleteUserByRecIDTesting(t *testing.T, accessToken, recID string) {
 	t.Log("Testing Delete User by RecID")
 	recorder := httptest.NewRecorder()
-	deleteUserRequest := httptest.NewRequest("DELETE", fmt.Sprintf("/api/v1/management/user/%s", recID), nil)
+	deleteUserRequest := httptest.NewRequest("DELETE", fmt.Sprintf("%s/management/user/%s", apiPrefix, recID), nil)
 	deleteUserRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, deleteUserRequest)
 	if recorder.Code != http.StatusOK {
@@ -413,7 +414,7 @@ func DeleteUserByRecIDTesting(t *testing.T, accessToken, recID string) {
 func GetUserByRecIDTesting(t *testing.T, accessToken, recID string) *SimpleUser {
 	t.Log("Testing Get User by RecID")
 	recorder := httptest.NewRecorder()
-	getUserRequest := httptest.NewRequest("GET", fmt.Sprintf("/api/v1/management/user/%s", recID), nil)
+	getUserRequest := httptest.NewRequest("GET", fmt.Sprintf("%s/management/user/%s", apiPrefix, recID), nil)
 	getUserRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, getUserRequest)
 	if recorder.Code != http.StatusOK {
@@ -442,7 +443,7 @@ func CreateUserTesting(t *testing.T, accessToken, email, passphrase string) {
 		"passphrase": passphrase,
 	}
 	sbody, _ := json.Marshal(body)
-	userCreateRequest := httptest.NewRequest("POST", "/api/v1/management/user", bytes.NewReader(sbody))
+	userCreateRequest := httptest.NewRequest("POST", fmt.Sprintf("%s/management/user", apiPrefix), bytes.NewReader(sbody))
 	userCreateRequest.Header.Add("Content-Type", "application/json")
 	userCreateRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, userCreateRequest)
@@ -481,7 +482,7 @@ type SimpleRole struct {
 func ListGroupsTesting(t *testing.T, accessToken string) []*SimpleGroup {
 	t.Log("Testing Listing Group")
 	recorder := httptest.NewRecorder()
-	userListRequest := httptest.NewRequest("GET", "/api/v1/management/groups?page_no=1&page_size=10&order_by=GROUP_NAME&sort=DESC", nil)
+	userListRequest := httptest.NewRequest("GET", fmt.Sprintf("%s/management/groups?page_no=1&page_size=10&order_by=GROUP_NAME&sort=DESC", apiPrefix), nil)
 	userListRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, userListRequest)
 	if recorder.Code != http.StatusOK {
@@ -509,7 +510,7 @@ func ListGroupsTesting(t *testing.T, accessToken string) []*SimpleGroup {
 func ListRolesTesting(t *testing.T, accessToken string) []*SimpleRole {
 	t.Log("Testing Listing Roles")
 	recorder := httptest.NewRecorder()
-	userListRequest := httptest.NewRequest("GET", "/api/v1/management/roles?page_no=1&page_size=10&order_by=ROLE_NAME&sort=DESC", nil)
+	userListRequest := httptest.NewRequest("GET", fmt.Sprintf("%s/management/roles?page_no=1&page_size=10&order_by=ROLE_NAME&sort=DESC", apiPrefix), nil)
 	userListRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, userListRequest)
 	if recorder.Code != http.StatusOK {
@@ -537,7 +538,7 @@ func ListRolesTesting(t *testing.T, accessToken string) []*SimpleRole {
 func ListUsersTesting(t *testing.T, accessToken string) []*SimpleUser {
 	t.Log("Testing Listing User")
 	recorder := httptest.NewRecorder()
-	userListRequest := httptest.NewRequest("GET", "/api/v1/management/users?page_no=1&page_size=10&order_by=EMAIL&sort=DESC", nil)
+	userListRequest := httptest.NewRequest("GET", fmt.Sprintf("%s/management/users?page_no=1&page_size=10&order_by=EMAIL&sort=DESC", apiPrefix), nil)
 	userListRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", accessToken))
 	Router.ServeHTTP(recorder, userListRequest)
 	if recorder.Code != http.StatusOK {
@@ -587,7 +588,7 @@ func DummyAdminLoginTesting(t *testing.T) (string, string) {
 		"passphrase": "this must be change in the production",
 	}
 	sbody, _ := json.Marshal(body)
-	authenticationRequest := httptest.NewRequest("POST", "/api/v1/auth/authenticate", bytes.NewReader(sbody))
+	authenticationRequest := httptest.NewRequest("POST", fmt.Sprintf("%s/auth/authenticate", apiPrefix), bytes.NewReader(sbody))
 	authenticationRequest.Header.Add("Content-Type", "application/json")
 	Router.ServeHTTP(recorder, authenticationRequest)
 	if recorder.Code != http.StatusOK {
@@ -620,7 +621,7 @@ func DummyAdminLoginTesting(t *testing.T) (string, string) {
 func DummyAdminRefreshTokenTesting(t *testing.T, refreshToken string) string {
 	t.Log("Testing Refreshing access token")
 	recorder := httptest.NewRecorder()
-	refreshRequest := httptest.NewRequest("POST", "/api/v1/auth/refresh", nil)
+	refreshRequest := httptest.NewRequest("POST", fmt.Sprintf("%s/auth/refresh", apiPrefix), nil)
 	refreshRequest.Header.Add("Authorization", fmt.Sprintf("BEARER %s", refreshToken))
 	time.Sleep(2 * time.Second)
 	t.Log("sleep 2 second for time drift")

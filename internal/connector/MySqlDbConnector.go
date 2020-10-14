@@ -5,10 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"regexp"
-	"sort"
-	"time"
 
-	// initialize mysql driver
+	// Initializes mysql driver
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/constants"
@@ -16,6 +14,8 @@ import (
 	"github.com/hyperjumptech/hansip/pkg/totp"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
+	"sort"
+	"time"
 )
 
 const (
@@ -138,7 +138,7 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 		fLog.Infof("Create table HANSIP_USER")
 		_, err := db.instance.ExecContext(ctx, CreateUserSQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_USER Got %s", err.Error())
+			fLog.Errorf("db.instance.ExecContext HANSIP_USER Got %s. SQL = %s", err.Error(), CreateUserSQL)
 		}
 	}
 
@@ -151,7 +151,7 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 		fLog.Infof("Create table HANSIP_GROUP")
 		_, err := db.instance.ExecContext(ctx, CreateGroupSQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_GROUP Got %s", err.Error())
+			fLog.Errorf("db.instance.ExecContext HANSIP_GROUP Got %s. SQL = %s", err.Error(), CreateGroupSQL)
 		}
 	}
 
@@ -164,7 +164,7 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 		fLog.Infof("Create table HANSIP_ROLE")
 		_, err := db.instance.ExecContext(ctx, CreateRoleSQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_ROLE Got %s", err.Error())
+			fLog.Errorf("db.instance.ExecContext HANSIP_ROLE Got %s. SQL = %s", err.Error(), CreateRoleSQL)
 		} else {
 			adminRole := config.Get("user.role.admin")
 			userRole := config.Get("user.role.user")
@@ -173,7 +173,7 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 			if err != nil {
 				fLog.Errorf("db.CreateRole Got %s", err.Error())
 			}
-			_, err = db.CreateRole(ctx, userRole, "Administrator role")
+			_, err = db.CreateRole(ctx, userRole, "User role")
 			if err != nil {
 				fLog.Errorf("db.CreateRole Got %s", err.Error())
 			}
@@ -189,7 +189,7 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 		fLog.Infof("Create table HANSIP_USER_ROLE")
 		_, err := db.instance.ExecContext(ctx, CreateUserRoleSQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_USER_ROLE Got %s", err.Error())
+			fLog.Errorf("db.instance.ExecContext HANSIP_USER_ROLE Got %s. SQL = %s", err.Error(), CreateUserRoleSQL)
 		}
 	}
 
@@ -202,7 +202,7 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 		fLog.Infof("Create table HANSIP_USER_GROUP")
 		_, err := db.instance.ExecContext(ctx, CreateUserGroupSQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_USER_GROUP Got %s", err.Error())
+			fLog.Errorf("db.instance.ExecContext HANSIP_USER_GROUP Got %s. SQL = %s", err.Error(), CreateUserGroupSQL)
 		}
 	}
 
@@ -215,7 +215,7 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 		fLog.Infof("Create table HANSIP_GROUP_ROLE")
 		_, err := db.instance.ExecContext(ctx, CreateGroupRoleSQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s", err.Error())
+			fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s. SQL = %s", err.Error(), CreateGroupRoleSQL)
 		}
 	}
 
@@ -228,7 +228,7 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 		fLog.Infof("Create table HANSIP_TOTP_RECOVERY_CODES")
 		_, err := db.instance.ExecContext(ctx, CreateTOTPRecoveryCodeSQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_TOTP_RECOVERY_CODES Got %s", err.Error())
+			fLog.Errorf("db.instance.ExecContext HANSIP_TOTP_RECOVERY_CODES Got %s. SQL = %s", err.Error(), CreateTOTPRecoveryCodeSQL)
 		}
 	}
 
@@ -237,9 +237,10 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 
 func (db *MySQLDB) isTableExist(ctx context.Context, tableName string) (bool, error) {
 	fLog := mysqlLog.WithField("func", "isTableExist")
-	rows, err := db.instance.QueryContext(ctx, "select COUNT(*) AS CNT from INFORMATION_SCHEMA.TABLES where TABLE_NAME=?", tableName)
+	q := "select COUNT(*) AS CNT from INFORMATION_SCHEMA.TABLES where TABLE_NAME=?"
+	rows, err := db.instance.QueryContext(ctx, q, tableName)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 	}
 	if rows.Next() {
 		count := 0
@@ -254,7 +255,7 @@ func (db *MySQLDB) isTableExist(ctx context.Context, tableName string) (bool, er
 func (db *MySQLDB) DropAllTables(ctx context.Context) error {
 	_, err := db.instance.ExecContext(ctx, DropAllSQL)
 	if err != nil {
-		mysqlLog.WithField("func", "DropAllTables").WithField("RequestID", ctx.Value(constants.RequestID)).Errorf("got %s", err.Error())
+		mysqlLog.WithField("func", "DropAllTables").WithField("RequestID", ctx.Value(constants.RequestID)).Errorf("got %s, SQL = %s", err.Error(), DropAllSQL)
 	}
 	return err
 }
@@ -262,45 +263,43 @@ func (db *MySQLDB) DropAllTables(ctx context.Context) error {
 // CreateAllTable creates all table used by Hansip
 func (db *MySQLDB) CreateAllTable(ctx context.Context) error {
 	fLog := mysqlLog.WithField("func", "CreateAllTable").WithField("RequestID", ctx.Value(constants.RequestID))
-
 	adminRole := config.Get("user.role.admin")
 	userRole := config.Get("user.role.user")
-
 	_, err := db.instance.ExecContext(ctx, CreateUserSQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_USER Got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext HANSIP_USER Got %s. SQL = %s", err.Error(), CreateUserSQL)
 	}
 	_, err = db.instance.ExecContext(ctx, CreateGroupSQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP Got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP Got %s. SQL = %s", err.Error(), CreateGroupSQL)
 	}
 	_, err = db.instance.ExecContext(ctx, CreateRoleSQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_ROLE Got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext HANSIP_ROLE Got %s. SQL = %s", err.Error(), CreateRoleSQL)
 	}
 	_, err = db.instance.ExecContext(ctx, CreateUserRoleSQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_USER_ROLE Got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext HANSIP_USER_ROLE Got %s. SQL = %s", err.Error(), CreateUserRoleSQL)
 	}
 	_, err = db.instance.ExecContext(ctx, CreateUserGroupSQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_USER_GROUP Got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext HANSIP_USER_GROUP Got %s. SQL = %s", err.Error(), CreateUserGroupSQL)
 	}
 	_, err = db.instance.ExecContext(ctx, CreateGroupRoleSQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s. SQL = %s", err.Error(), CreateGroupRoleSQL)
 	}
 	_, err = db.instance.ExecContext(ctx, CreateTOTPRecoveryCodeSQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_TOTP_RECOVERY_CODES Got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext HANSIP_TOTP_RECOVERY_CODES Got %s. SQL = %s", err.Error(), CreateTOTPRecoveryCodeSQL)
 	}
 	_, err = db.CreateRole(ctx, adminRole, "Administrator role")
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s", err.Error())
+		fLog.Errorf("db.CreateRole Got %s", err.Error())
 	}
-	_, err = db.CreateRole(ctx, userRole, "User role")
+	_, err = db.CreateRole(ctx, userRole, "Administrator role")
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s", err.Error())
+		fLog.Errorf("db.CreateRole Got %s", err.Error())
 	}
 	return err
 }
@@ -354,12 +353,14 @@ func (db *MySQLDB) CreateUserRecord(ctx context.Context, email, passphrase strin
 		RecoveryCode:      helper.MakeRandomString(6, true, false, false, false),
 	}
 
-	_, err = db.instance.ExecContext(ctx, "INSERT INTO HANSIP_USER(REC_ID,EMAIL,HASHED_PASSPHRASE,ENABLED, SUSPENDED,LAST_SEEN,LAST_LOGIN,FAIL_COUNT,ACTIVATION_CODE,ACTIVATION_DATE,TOTP_KEY,ENABLE_2FE,TOKEN_2FE,RECOVERY_CODE) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+	q := "INSERT INTO HANSIP_USER(REC_ID,EMAIL,HASHED_PASSPHRASE,ENABLED, SUSPENDED,LAST_SEEN,LAST_LOGIN,FAIL_COUNT,ACTIVATION_CODE,ACTIVATION_DATE,TOTP_KEY,ENABLE_2FE,TOKEN_2FE,RECOVERY_CODE) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+
+	_, err = db.instance.ExecContext(ctx, q,
 		user.RecID, user.Email, user.HashedPassphrase, 0, 0, user.LastSeen, user.LastLogin, user.FailCount, user.ActivationCode,
 		user.ActivationDate, user.UserTotpSecretKey, user.Enable2FactorAuth, user.Token2FA, user.RecoveryCode)
 
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 		return nil, err
 	}
 
@@ -371,9 +372,10 @@ func (db *MySQLDB) GetTOTPRecoveryCodes(ctx context.Context, user *User) ([]stri
 	fLog := mysqlLog.WithField("func", "GetTOTPRecoveryCodes").WithField("RequestID", ctx.Value(constants.RequestID))
 
 	ret := make([]string, 0)
-	rows, err := db.instance.QueryContext(ctx, "SELECT RECOVERY_CODE FROM HANSIP_TOTP_RECOVERY_CODES WHERE USER_REC_ID = ? && USED_FLAG = ?", user.RecID, 0)
+	q := "SELECT RECOVERY_CODE FROM HANSIP_TOTP_RECOVERY_CODES WHERE USER_REC_ID = ? && USED_FLAG = ?"
+	rows, err := db.instance.QueryContext(ctx, q, user.RecID, 0)
 	if err != nil {
-		fLog.Errorf("db.instance.QueryContext got %s", err.Error())
+		fLog.Errorf("db.instance.QueryContext got %s. SQL = %s", err.Error(), q)
 		return nil, err
 	}
 	for rows.Next() {
@@ -393,9 +395,10 @@ func (db *MySQLDB) RecreateTOTPRecoveryCodes(ctx context.Context, user *User) ([
 	fLog := mysqlLog.WithField("func", "RecreateTOTPRecoveryCodes").WithField("RequestID", ctx.Value(constants.RequestID))
 
 	// first we clear out all existing codes.
-	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_TOTP_RECOVERY_CODES WHERE USER_REC_ID = ?", user.RecID)
+	q := "DELETE FROM HANSIP_TOTP_RECOVERY_CODES WHERE USER_REC_ID = ?"
+	_, err := db.instance.ExecContext(ctx, q, user.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 		return nil, err
 	}
 
@@ -404,9 +407,10 @@ func (db *MySQLDB) RecreateTOTPRecoveryCodes(ctx context.Context, user *User) ([
 	for i := 0; i < 16; i++ {
 		recID := helper.MakeRandomString(10, true, true, true, false)
 		code := helper.MakeRandomString(8, true, false, true, false)
-		_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_TOTP_RECOVERY_CODES(REC_ID, RECOVERY_CODE, USED_FLAG, USER_REC_ID) VALUES (?,?,?,?)", recID, code, 0, user.RecID)
+		q = "INSERT INTO HANSIP_TOTP_RECOVERY_CODES(REC_ID, RECOVERY_CODE, USED_FLAG, USER_REC_ID) VALUES (?,?,?,?)"
+		_, err := db.instance.ExecContext(ctx, q, recID, code, 0, user.RecID)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+			fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 		} else {
 			ret = append(ret, code)
 		}
@@ -420,9 +424,10 @@ func (db *MySQLDB) MarkTOTPRecoveryCodeUsed(ctx context.Context, user *User, cod
 
 	rexp := regexp.MustCompile(`^[A-Z0-9]{8}$`)
 	if rexp.Match([]byte(code)) {
-		_, err := db.instance.ExecContext(ctx, "UPDATE HANSIP_TOTP_RECOVERY_CODES SET USED_FLAG = ? WHERE USER_REC_ID = ? AND RECOVERY_CODE=?", 1, user.RecID, code)
+		q := "UPDATE HANSIP_TOTP_RECOVERY_CODES SET USED_FLAG = ? WHERE USER_REC_ID = ? AND RECOVERY_CODE=?"
+		_, err := db.instance.ExecContext(ctx, q, 1, user.RecID, code)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+			fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 		}
 		return err
 	}
@@ -505,9 +510,10 @@ func (db *MySQLDB) GetUserByRecoveryToken(ctx context.Context, token string) (*U
 // DeleteUser delete a user
 func (db *MySQLDB) DeleteUser(ctx context.Context, user *User) error {
 	fLog := mysqlLog.WithField("func", "DeleteUser").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_USER WHERE REC_ID=?", user.RecID)
+	q := "DELETE FROM HANSIP_USER WHERE REC_ID=?"
+	_, err := db.instance.ExecContext(ctx, q, user.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }
@@ -515,9 +521,12 @@ func (db *MySQLDB) DeleteUser(ctx context.Context, user *User) error {
 // IsUserRecIDExist check if a specific user recId is exist in database
 func (db *MySQLDB) IsUserRecIDExist(ctx context.Context, recID string) (bool, error) {
 	fLog := mysqlLog.WithField("func", "IsUserRecIDExist").WithField("RequestID", ctx.Value(constants.RequestID))
-	rows, err := db.instance.QueryContext(ctx, "SELECT COUNT(*) AS CNT FROM HANSIP_USER WHERE REC_ID=?", recID)
+
+	q := "SELECT COUNT(*) AS CNT FROM HANSIP_USER WHERE REC_ID=?"
+
+	rows, err := db.instance.QueryContext(ctx, q, recID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 	}
 	if rows.Next() {
 		count := 0
@@ -550,20 +559,22 @@ func (db *MySQLDB) SaveOrUpdate(ctx context.Context, user *User) error {
 	}
 	if !updating {
 		fLog.Infof("Creating user %s", user.Email)
-		_, err = db.instance.ExecContext(ctx, "INSERT INTO HANSIP_USER(REC_ID,EMAIL,HASHED_PASSPHRASE,ENABLED, SUSPENDED,LAST_SEEN,LAST_LOGIN,FAIL_COUNT,ACTIVATION_CODE,ACTIVATION_DATE,TOTP_KEY,ENABLE_2FE,TOKEN_2FE,RECOVERY_CODE) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+		q := "INSERT INTO HANSIP_USER(REC_ID,EMAIL,HASHED_PASSPHRASE,ENABLED, SUSPENDED,LAST_SEEN,LAST_LOGIN,FAIL_COUNT,ACTIVATION_CODE,ACTIVATION_DATE,TOTP_KEY,ENABLE_2FE,TOKEN_2FE,RECOVERY_CODE) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+		_, err = db.instance.ExecContext(ctx, q,
 			user.RecID, user.Email, user.HashedPassphrase, enabled, suspended, user.LastSeen, user.LastLogin, user.FailCount, user.ActivationCode,
 			user.ActivationDate, user.UserTotpSecretKey, enable2fa, user.Token2FA, user.RecoveryCode)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+			fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 		}
 		return err
 	}
+	q := "UPDATE HANSIP_USER SET EMAIL=?,HASHED_PASSPHRASE=?,ENABLED=?, SUSPENDED=?,LAST_SEEN=?,LAST_LOGIN=?,FAIL_COUNT=?,ACTIVATION_CODE=?,ACTIVATION_DATE=?,TOTP_KEY=?,ENABLE_2FE=?,TOKEN_2FE=?,RECOVERY_CODE=? WHERE REC_ID=?"
 	fLog.Infof("Updating user %s", user.Email)
-	_, err = db.instance.ExecContext(ctx, "UPDATE HANSIP_USER SET EMAIL=?,HASHED_PASSPHRASE=?,ENABLED=?, SUSPENDED=?,LAST_SEEN=?,LAST_LOGIN=?,FAIL_COUNT=?,ACTIVATION_CODE=?,ACTIVATION_DATE=?,TOTP_KEY=?,ENABLE_2FE=?,TOKEN_2FE=?,RECOVERY_CODE=? WHERE REC_ID=?",
+	_, err = db.instance.ExecContext(ctx, q,
 		user.Email, user.HashedPassphrase, enabled, suspended, user.LastSeen, user.LastLogin, user.FailCount, user.ActivationCode,
 		user.ActivationDate, user.UserTotpSecretKey, enable2fa, user.Token2FA, user.RecoveryCode, user.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }
@@ -581,7 +592,7 @@ func (db *MySQLDB) ListUser(ctx context.Context, request *helper.PageRequest) ([
 	q := fmt.Sprintf("SELECT REC_ID, EMAIL,HASHED_PASSPHRASE,ENABLED, SUSPENDED,LAST_SEEN,LAST_LOGIN,FAIL_COUNT,ACTIVATION_CODE,ACTIVATION_DATE,TOTP_KEY,ENABLE_2FE,TOKEN_2FE,RECOVERY_CODE FROM HANSIP_USER ORDER BY EMAIL %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	rows, err := db.instance.QueryContext(ctx, q)
 	if err != nil {
-		fLog.Errorf("db.instance.QueryContext got %s", err.Error())
+		fLog.Errorf("db.instance.QueryContext got %s. SQL = %s", err.Error(), q)
 		return nil, nil, err
 	}
 	for rows.Next() {
@@ -623,9 +634,10 @@ func (db *MySQLDB) Count(ctx context.Context) (int, error) {
 func (db *MySQLDB) ListAllUserRoles(ctx context.Context, user *User, request *helper.PageRequest) ([]*Role, *helper.Page, error) {
 	fLog := mysqlLog.WithField("func", "ListAllUserRoles").WithField("RequestID", ctx.Value(constants.RequestID))
 	roleMap := make(map[string]*Role)
-	rows, err := db.instance.QueryContext(ctx, "SELECT R.REC_ID, R.ROLE_NAME, R.DESCRIPTION FROM HANSIP_ROLE R, HANSIP_USER_ROLE UR WHERE R.REC_ID = UR.ROLE_REC_ID AND UR.USER_REC_ID = ?", user.RecID)
+	q := "SELECT R.REC_ID, R.ROLE_NAME, R.DESCRIPTION FROM HANSIP_ROLE R, HANSIP_USER_ROLE UR WHERE R.REC_ID = UR.ROLE_REC_ID AND UR.USER_REC_ID = ?"
+	rows, err := db.instance.QueryContext(ctx, q, user.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.QueryContext got  %s", err.Error())
+		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
 		return nil, nil, err
 	}
 	for rows.Next() {
@@ -637,9 +649,10 @@ func (db *MySQLDB) ListAllUserRoles(ctx context.Context, user *User, request *he
 			roleMap[r.RecID] = r
 		}
 	}
-	rows, err = db.instance.QueryContext(ctx, "SELECT DISTINCT R.REC_ID, R.ROLE_NAME, R.DESCRIPTION FROM HANSIP_ROLE R, HANSIP_GROUP_ROLE GR, HANSIP_USER_GROUP UG WHERE R.REC_ID = GR.ROLE_REC_ID AND GR.GROUP_REC_ID = UG.GROUP_REC_ID AND UG.USER_REC_ID = ?", user.RecID)
+	q = "SELECT DISTINCT R.REC_ID, R.ROLE_NAME, R.DESCRIPTION FROM HANSIP_ROLE R, HANSIP_GROUP_ROLE GR, HANSIP_USER_GROUP UG WHERE R.REC_ID = GR.ROLE_REC_ID AND GR.GROUP_REC_ID = UG.GROUP_REC_ID AND UG.USER_REC_ID = ?"
+	rows, err = db.instance.QueryContext(ctx, q, user.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.QueryContext got  %s", err.Error())
+		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
 		return nil, nil, err
 	}
 	for rows.Next() {
@@ -690,9 +703,10 @@ func (db *MySQLDB) GetUserRole(ctx context.Context, user *User, role *Role) (*Us
 // CreateUserRole assign a role to a user.
 func (db *MySQLDB) CreateUserRole(ctx context.Context, user *User, role *Role) (*UserRole, error) {
 	fLog := mysqlLog.WithField("func", "CreateUserRole").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_USER_ROLE(USER_REC_ID, ROLE_REC_ID) VALUES (?,?)", user.RecID, role.RecID)
+	q := "INSERT INTO HANSIP_USER_ROLE(USER_REC_ID, ROLE_REC_ID) VALUES (?,?)"
+	_, err := db.instance.ExecContext(ctx, q, user.RecID, role.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 		return nil, err
 	}
 	return &UserRole{
@@ -716,7 +730,7 @@ func (db *MySQLDB) ListUserRoleByUser(ctx context.Context, user *User, request *
 	ret := make([]*Role, 0)
 	rows, err := db.instance.QueryContext(ctx, q, user.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.QueryContext got  %s", err.Error())
+		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
 		return nil, nil, err
 	}
 	for rows.Next() {
@@ -746,7 +760,7 @@ func (db *MySQLDB) ListUserRoleByRole(ctx context.Context, role *Role, request *
 	ret := make([]*User, 0)
 	rows, err := db.instance.QueryContext(ctx, q, role.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.QueryContext got  %s", err.Error())
+		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
 		return nil, nil, err
 	}
 	for rows.Next() {
@@ -775,9 +789,10 @@ func (db *MySQLDB) ListUserRoleByRole(ctx context.Context, role *Role, request *
 // DeleteUserRole remove a role from user's assigment
 func (db *MySQLDB) DeleteUserRole(ctx context.Context, userRole *UserRole) error {
 	fLog := mysqlLog.WithField("func", "DeleteUserRole").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_USER_ROLE WHERE USER_REC_ID=? AND ROLE_REC_ID=?", userRole.UserRecID, userRole.RoleRecID)
+	q := "DELETE FROM HANSIP_USER_ROLE WHERE USER_REC_ID=? AND ROLE_REC_ID=?"
+	_, err := db.instance.ExecContext(ctx, q, userRole.UserRecID, userRole.RoleRecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }
@@ -785,9 +800,10 @@ func (db *MySQLDB) DeleteUserRole(ctx context.Context, userRole *UserRole) error
 // DeleteUserRoleByUser remove ALL role assigment of a user
 func (db *MySQLDB) DeleteUserRoleByUser(ctx context.Context, user *User) error {
 	fLog := mysqlLog.WithField("func", "DeleteUserRoleByUser").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_USER_ROLE WHERE USER_REC_ID=?", user.RecID)
+	q := "DELETE FROM HANSIP_USER_ROLE WHERE USER_REC_ID=?"
+	_, err := db.instance.ExecContext(ctx, q, user.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }
@@ -795,9 +811,10 @@ func (db *MySQLDB) DeleteUserRoleByUser(ctx context.Context, user *User) error {
 // DeleteUserRoleByRole remove all user-role assigment to a role
 func (db *MySQLDB) DeleteUserRoleByRole(ctx context.Context, role *Role) error {
 	fLog := mysqlLog.WithField("func", "DeleteUserRoleByRole").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_USER_ROLE WHERE ROLE_REC_ID=?", role.RecID)
+	q := "DELETE FROM HANSIP_USER_ROLE WHERE ROLE_REC_ID=?"
+	_, err := db.instance.ExecContext(ctx, q, role.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }
@@ -805,7 +822,8 @@ func (db *MySQLDB) DeleteUserRoleByRole(ctx context.Context, role *Role) error {
 // GetRoleByRecID return a role with speciffic recID
 func (db *MySQLDB) GetRoleByRecID(ctx context.Context, recID string) (*Role, error) {
 	fLog := mysqlLog.WithField("func", "GetRoleByRecID").WithField("RequestID", ctx.Value(constants.RequestID))
-	row := db.instance.QueryRowContext(ctx, "SELECT REC_ID, ROLE_NAME, DESCRIPTION FROM HANSIP_ROLE WHERE REC_ID=?", recID)
+	q := "SELECT REC_ID, ROLE_NAME, DESCRIPTION FROM HANSIP_ROLE WHERE REC_ID=?"
+	row := db.instance.QueryRowContext(ctx, q, recID)
 	r := &Role{}
 	err := row.Scan(&r.RecID, &r.RoleName, &r.Description)
 	if err != nil {
@@ -817,7 +835,8 @@ func (db *MySQLDB) GetRoleByRecID(ctx context.Context, recID string) (*Role, err
 // GetRoleByName return a role record
 func (db *MySQLDB) GetRoleByName(ctx context.Context, roleName string) (*Role, error) {
 	fLog := mysqlLog.WithField("func", "GetRoleByName").WithField("RequestID", ctx.Value(constants.RequestID))
-	row := db.instance.QueryRowContext(ctx, "SELECT REC_ID, ROLE_NAME, DESCRIPTION FROM HANSIP_ROLE WHERE ROLE_NAME=?", roleName)
+	q := "SELECT REC_ID, ROLE_NAME, DESCRIPTION FROM HANSIP_ROLE WHERE ROLE_NAME=?"
+	row := db.instance.QueryRowContext(ctx, q, roleName)
 	r := &Role{}
 	err := row.Scan(&r.RecID, &r.RoleName, &r.Description)
 	if err != nil {
@@ -834,9 +853,10 @@ func (db *MySQLDB) CreateRole(ctx context.Context, roleName, description string)
 		RoleName:    roleName,
 		Description: description,
 	}
-	_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_ROLE(REC_ID, ROLE_NAME, DESCRIPTION) VALUES (?,?,?)", r.RecID, roleName, description)
+	q := "INSERT INTO HANSIP_ROLE(REC_ID, ROLE_NAME, DESCRIPTION) VALUES (?,?,?)"
+	_, err := db.instance.ExecContext(ctx, q, r.RecID, roleName, description)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 	}
 	return r, err
 }
@@ -856,7 +876,7 @@ func (db *MySQLDB) ListRoles(ctx context.Context, request *helper.PageRequest) (
 	ret := make([]*Role, 0)
 	rows, err := db.instance.QueryContext(ctx, q)
 	if err != nil {
-		fLog.Errorf("db.instance.QueryContext got  %s", err.Error())
+		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
 		return nil, nil, err
 	}
 	for rows.Next() {
@@ -874,9 +894,10 @@ func (db *MySQLDB) ListRoles(ctx context.Context, request *helper.PageRequest) (
 // DeleteRole delete a specific role from this server
 func (db *MySQLDB) DeleteRole(ctx context.Context, role *Role) error {
 	fLog := mysqlLog.WithField("func", "DeleteRole").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_ROLE WHERE REC_ID=?", role.RecID)
+	q := "DELETE FROM HANSIP_ROLE WHERE REC_ID=?"
+	_, err := db.instance.ExecContext(ctx, q, role.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }
@@ -884,9 +905,10 @@ func (db *MySQLDB) DeleteRole(ctx context.Context, role *Role) error {
 // IsRoleRecIDExist check if a speciffic role recId is exist in database
 func (db *MySQLDB) IsRoleRecIDExist(ctx context.Context, recID string) (bool, error) {
 	fLog := mysqlLog.WithField("func", "IsUserRecIDExist").WithField("RequestID", ctx.Value(constants.RequestID))
-	rows, err := db.instance.QueryContext(ctx, "SELECT COUNT(*) AS CNT FROM HANSIP_ROLE WHERE REC_ID=?", recID)
+	q := "SELECT COUNT(*) AS CNT FROM HANSIP_ROLE WHERE REC_ID=?"
+	rows, err := db.instance.QueryContext(ctx, q, recID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 	}
 	if rows.Next() {
 		count := 0
@@ -912,22 +934,24 @@ func (db *MySQLDB) SaveOrUpdateRole(ctx context.Context, role *Role) error {
 		updating = update
 	}
 	if updating {
-		_, err := db.instance.ExecContext(ctx, "UPDATE HANSIP_ROLE SET ROLE_NAME=?, DESCRIPTION=? WHERE REC_ID=?",
+		q := "UPDATE HANSIP_ROLE SET ROLE_NAME=?, DESCRIPTION=? WHERE REC_ID=?"
+		_, err := db.instance.ExecContext(ctx, q,
 			role.RoleName, role.Description, role.RecID)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
+			fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 		}
 		return err
 	}
-	_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_ROLE(REC_ID,ROLE_NAME,DESCRIPTION) VALUES(?,?,?)",
+	q := "INSERT INTO HANSIP_ROLE(REC_ID,ROLE_NAME,DESCRIPTION) VALUES(?,?,?)"
+	_, err := db.instance.ExecContext(ctx, q,
 		role.RecID, role.RoleName, role.Description)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }
 
-// GetGroupByRecID return a Group data by its RecID
+// GetGroupByRecID return a Group data by its RedID
 func (db *MySQLDB) GetGroupByRecID(ctx context.Context, recID string) (*Group, error) {
 	fLog := mysqlLog.WithField("func", "GetGroupByRecID").WithField("RequestID", ctx.Value(constants.RequestID))
 	row := db.instance.QueryRowContext(ctx, "SELECT REC_ID, GROUP_NAME, DESCRIPTION FROM HANSIP_GROUP WHERE REC_ID=?", recID)
@@ -939,7 +963,6 @@ func (db *MySQLDB) GetGroupByRecID(ctx context.Context, recID string) (*Group, e
 	return r, err
 }
 
-// GetGroupByName return group by its Name
 func (db *MySQLDB) GetGroupByName(ctx context.Context, groupName string) (*Group, error) {
 	fLog := mysqlLog.WithField("func", "GetGroupByName").WithField("RequestID", ctx.Value(constants.RequestID))
 	row := db.instance.QueryRowContext(ctx, "SELECT REC_ID, GROUP_NAME, DESCRIPTION FROM HANSIP_GROUP WHERE GROUP_NAME=?", groupName)
@@ -959,9 +982,10 @@ func (db *MySQLDB) CreateGroup(ctx context.Context, groupName, description strin
 		GroupName:   groupName,
 		Description: description,
 	}
-	_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_GROUP(REC_ID, GROUP_NAME, DESCRIPTION) VALUES (?,?,?)", r.RecID, groupName, description)
+	q := "INSERT INTO HANSIP_GROUP(REC_ID, GROUP_NAME, DESCRIPTION) VALUES (?,?,?)"
+	_, err := db.instance.ExecContext(ctx, q, r.RecID, groupName, description)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 	}
 	return r, err
 }
@@ -981,7 +1005,7 @@ func (db *MySQLDB) ListGroups(ctx context.Context, request *helper.PageRequest) 
 	ret := make([]*Group, 0)
 	rows, err := db.instance.QueryContext(ctx, q)
 	if err != nil {
-		fLog.Errorf("db.instance.QueryContext got  %s", err.Error())
+		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
 		return nil, nil, err
 	}
 	for rows.Next() {
@@ -999,9 +1023,10 @@ func (db *MySQLDB) ListGroups(ctx context.Context, request *helper.PageRequest) 
 // DeleteGroup delete one speciffic group
 func (db *MySQLDB) DeleteGroup(ctx context.Context, group *Group) error {
 	fLog := mysqlLog.WithField("func", "DeleteGroup").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_GROUP WHERE REC_ID=?", group.RecID)
+	q := "DELETE FROM HANSIP_GROUP WHERE REC_ID=?"
+	_, err := db.instance.ExecContext(ctx, q, group.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }
@@ -1009,9 +1034,10 @@ func (db *MySQLDB) DeleteGroup(ctx context.Context, group *Group) error {
 // IsGroupRecIDExist check if a speciffic group recId is exist in database
 func (db *MySQLDB) IsGroupRecIDExist(ctx context.Context, recID string) (bool, error) {
 	fLog := mysqlLog.WithField("func", "IsGroupRecIDExist").WithField("RequestID", ctx.Value(constants.RequestID))
-	rows, err := db.instance.QueryContext(ctx, "SELECT COUNT(*) AS CNT FROM HANSIP_GROUP WHERE REC_ID=?", recID)
+	q := "SELECT COUNT(*) AS CNT FROM HANSIP_GROUP WHERE REC_ID=?"
+	rows, err := db.instance.QueryContext(ctx, q, recID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 	}
 	if rows.Next() {
 		count := 0
@@ -1037,17 +1063,19 @@ func (db *MySQLDB) SaveOrUpdateGroup(ctx context.Context, group *Group) error {
 		updating = update
 	}
 	if updating {
-		_, err := db.instance.ExecContext(ctx, "UPDATE HANSIP_GROUP SET GROUP_NAME=?, DESCRIPTION=? WHERE REC_ID=?",
+		q := "UPDATE HANSIP_GROUP SET GROUP_NAME=?, DESCRIPTION=? WHERE REC_ID=?"
+		_, err := db.instance.ExecContext(ctx, q,
 			group.GroupName, group.Description, group.RecID)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
+			fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 		}
 		return err
 	}
-	_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_GROUP(REC_ID,GROUP_NAME,DESCRIPTION) VALUES(?,?,?)",
+	q := "INSERT INTO HANSIP_GROUP(REC_ID,GROUP_NAME,DESCRIPTION) VALUES(?,?,?)"
+	_, err := db.instance.ExecContext(ctx, q,
 		group.RecID, group.GroupName, group.Description)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }
@@ -1071,9 +1099,10 @@ func (db *MySQLDB) GetGroupRole(ctx context.Context, group *Group, role *Role) (
 // CreateGroupRole create new Group and Role relation
 func (db *MySQLDB) CreateGroupRole(ctx context.Context, group *Group, role *Role) (*GroupRole, error) {
 	fLog := mysqlLog.WithField("func", "CreateGroupRole").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_GROUP_ROLE(GROUP_REC_ID, ROLE_REC_ID) VALUES (?,?)", group.RecID, role.RecID)
+	q := "INSERT INTO HANSIP_GROUP_ROLE(GROUP_REC_ID, ROLE_REC_ID) VALUES (?,?)"
+	_, err := db.instance.ExecContext(ctx, q, group.RecID, role.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 		return nil, err
 	}
 	return &GroupRole{
@@ -1097,7 +1126,7 @@ func (db *MySQLDB) ListGroupRoleByGroup(ctx context.Context, group *Group, reque
 	ret := make([]*Role, 0)
 	rows, err := db.instance.QueryContext(ctx, q, group.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.QueryContext got %s", err.Error())
+		fLog.Errorf("db.instance.QueryContext got %s. SQL = %s", err.Error(), q)
 		return nil, nil, err
 	}
 	for rows.Next() {
@@ -1127,7 +1156,7 @@ func (db *MySQLDB) ListGroupRoleByRole(ctx context.Context, role *Role, request 
 	ret := make([]*Group, 0)
 	rows, err := db.instance.QueryContext(ctx, q, role.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.QueryContext got  %s", err.Error())
+		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
 		return nil, nil, err
 	}
 	for rows.Next() {
@@ -1145,9 +1174,10 @@ func (db *MySQLDB) ListGroupRoleByRole(ctx context.Context, role *Role, request 
 // DeleteGroupRole delete a group-role relation
 func (db *MySQLDB) DeleteGroupRole(ctx context.Context, groupRole *GroupRole) error {
 	fLog := mysqlLog.WithField("func", "DeleteGroupRole").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_GROUP_ROLE WHERE GROUP_REC_ID=? AND ROLE_REC_ID=?", groupRole.GroupRecID, groupRole.RoleRecID)
+	q := "DELETE FROM HANSIP_GROUP_ROLE WHERE GROUP_REC_ID=? AND ROLE_REC_ID=?"
+	_, err := db.instance.ExecContext(ctx, q, groupRole.GroupRecID, groupRole.RoleRecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }
@@ -1155,9 +1185,10 @@ func (db *MySQLDB) DeleteGroupRole(ctx context.Context, groupRole *GroupRole) er
 // DeleteGroupRoleByGroup deletes group-role relation by the group
 func (db *MySQLDB) DeleteGroupRoleByGroup(ctx context.Context, group *Group) error {
 	fLog := mysqlLog.WithField("func", "DeleteGroupRoleByGroup").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_GROUP_ROLE WHERE GROUP_REC_ID=?", group.RecID)
+	q := "DELETE FROM HANSIP_GROUP_ROLE WHERE GROUP_REC_ID=?"
+	_, err := db.instance.ExecContext(ctx, q, group.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }
@@ -1165,7 +1196,8 @@ func (db *MySQLDB) DeleteGroupRoleByGroup(ctx context.Context, group *Group) err
 // DeleteGroupRoleByRole deletes grou[-role relation by the role
 func (db *MySQLDB) DeleteGroupRoleByRole(ctx context.Context, role *Role) error {
 	fLog := mysqlLog.WithField("func", "DeleteGroupRoleByRole").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_GROUP_ROLE WHERE ROLE_REC_ID=?", role.RecID)
+	q := "DELETE FROM HANSIP_GROUP_ROLE WHERE ROLE_REC_ID=?"
+	_, err := db.instance.ExecContext(ctx, q, role.RecID)
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext got  %s", err.Error())
 	}
@@ -1175,11 +1207,12 @@ func (db *MySQLDB) DeleteGroupRoleByRole(ctx context.Context, role *Role) error 
 // GetUserGroup list all user-group relation
 func (db *MySQLDB) GetUserGroup(ctx context.Context, user *User, group *Group) (*UserGroup, error) {
 	fLog := mysqlLog.WithField("func", "GetUserGroup").WithField("RequestID", ctx.Value(constants.RequestID))
-	row := db.instance.QueryRowContext(ctx, "SELECT COUNT(*) CNT FROM HANSIP_USER_GROUP WHERE USER_REC_ID=? AND GROUP_REC_ID=?", user.RecID, group.RecID)
+	q := "SELECT COUNT(*) CNT FROM HANSIP_USER_GROUP WHERE USER_REC_ID=? AND GROUP_REC_ID=?"
+	row := db.instance.QueryRowContext(ctx, q, user.RecID, group.RecID)
 	count := 0
 	err := row.Scan(&count)
 	if err != nil {
-		fLog.Errorf("row.Scan got  %s", err.Error())
+		fLog.Errorf("row.Scan got  %s. SQL = %s", err.Error(), q)
 		return nil, err
 	}
 	return &UserGroup{
@@ -1191,9 +1224,10 @@ func (db *MySQLDB) GetUserGroup(ctx context.Context, user *User, group *Group) (
 // CreateUserGroup create new relation between user and group
 func (db *MySQLDB) CreateUserGroup(ctx context.Context, user *User, group *Group) (*UserGroup, error) {
 	fLog := mysqlLog.WithField("func", "CreateUserGroup").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "INSERT INTO HANSIP_USER_GROUP(USER_REC_ID, GROUP_REC_ID) VALUES (?,?)", user.RecID, group.RecID)
+	q := "INSERT INTO HANSIP_USER_GROUP(USER_REC_ID, GROUP_REC_ID) VALUES (?,?)"
+	_, err := db.instance.ExecContext(ctx, q, user.RecID, group.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 		return nil, err
 	}
 	return &UserGroup{
@@ -1217,7 +1251,7 @@ func (db *MySQLDB) ListUserGroupByUser(ctx context.Context, user *User, request 
 	ret := make([]*Group, 0)
 	rows, err := db.instance.QueryContext(ctx, q, user.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.QueryContext got  %s", err.Error())
+		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
 		return nil, nil, err
 	}
 	for rows.Next() {
@@ -1247,7 +1281,7 @@ func (db *MySQLDB) ListUserGroupByGroup(ctx context.Context, group *Group, reque
 	ret := make([]*User, 0)
 	rows, err := db.instance.QueryContext(ctx, q, group.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.QueryContext got  %s", err.Error())
+		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
 		return nil, nil, err
 	}
 	for rows.Next() {
@@ -1276,9 +1310,10 @@ func (db *MySQLDB) ListUserGroupByGroup(ctx context.Context, group *Group, reque
 // DeleteUserGroup will delete a user-group
 func (db *MySQLDB) DeleteUserGroup(ctx context.Context, userGroup *UserGroup) error {
 	fLog := mysqlLog.WithField("func", "DeleteUserGroup").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_USER_GROUP WHERE GROUP_REC_ID=? AND USER_REC_ID=?", userGroup.GroupRecID, userGroup.UserRecID)
+	q := "DELETE FROM HANSIP_USER_GROUP WHERE GROUP_REC_ID=? AND USER_REC_ID=?"
+	_, err := db.instance.ExecContext(ctx, q, userGroup.GroupRecID, userGroup.UserRecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }
@@ -1286,9 +1321,10 @@ func (db *MySQLDB) DeleteUserGroup(ctx context.Context, userGroup *UserGroup) er
 // DeleteUserGroupByUser will delete a user-group relation by a user
 func (db *MySQLDB) DeleteUserGroupByUser(ctx context.Context, user *User) error {
 	fLog := mysqlLog.WithField("func", "DeleteUserGroupByUser").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_USER_GROUP WHERE USER_REC_ID=?", user.RecID)
+	q := "DELETE FROM HANSIP_USER_GROUP WHERE USER_REC_ID=?"
+	_, err := db.instance.ExecContext(ctx, q, user.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }
@@ -1296,9 +1332,10 @@ func (db *MySQLDB) DeleteUserGroupByUser(ctx context.Context, user *User) error 
 // DeleteUserGroupByGroup will delete user-group relation by a group
 func (db *MySQLDB) DeleteUserGroupByGroup(ctx context.Context, group *Group) error {
 	fLog := mysqlLog.WithField("func", "DeleteUserGroupByGroup").WithField("RequestID", ctx.Value(constants.RequestID))
-	_, err := db.instance.ExecContext(ctx, "DELETE FROM HANSIP_USER_GROUP WHERE GROUP_REC_ID=?", group.RecID)
+	q := "DELETE FROM HANSIP_USER_GROUP WHERE GROUP_REC_ID=?"
+	_, err := db.instance.ExecContext(ctx, q, group.RecID)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext got %s", err.Error())
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 	}
 	return err
 }

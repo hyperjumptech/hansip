@@ -1,6 +1,15 @@
 package api
 
-import "net/http"
+import (
+	"fmt"
+	"github.com/hyperjumptech/hansip/internal/config"
+	"net/http"
+	"strings"
+)
+
+var (
+	apiPrefix = config.Get("api.path.prefix")
+)
 
 func NewStaticFilter() *StaticFilter {
 	resMap, mimMap := GetStaticResource()
@@ -21,9 +30,21 @@ func (filter *StaticFilter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/docs/index.html", 301)
 	} else {
 		if binary, ok := filter.StaticResources[r.URL.Path]; ok {
-			w.Header().Add("Content-Type", filter.MimeTypes[r.URL.Path])
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write(binary)
+			if r.URL.Path == "/docs/spec/hansip-api.json" {
+				data := strings.ReplaceAll(string(binary), `"basePath": "/api/v1/",`, fmt.Sprintf(`"basePath": "%s",`, apiPrefix))
+				w.Header().Add("Content-Type", filter.MimeTypes[r.URL.Path])
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(data))
+			} else if r.URL.Path == "/docs/spec/hansip-api.yml" {
+				data := strings.ReplaceAll(string(binary), `basePath: "/api/v1/"`, fmt.Sprintf(`basePath: "%s"`, apiPrefix))
+				w.Header().Add("Content-Type", filter.MimeTypes[r.URL.Path])
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(data))
+			} else {
+				w.Header().Add("Content-Type", filter.MimeTypes[r.URL.Path])
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(binary)
+			}
 		} else {
 			w.WriteHeader(http.StatusNotFound)
 		}
