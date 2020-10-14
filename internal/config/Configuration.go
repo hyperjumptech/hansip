@@ -55,6 +55,9 @@ func initialize() {
 	defCfg["db.mysql.maxidle"] = "3"
 	defCfg["db.mysql.maxopen"] = "10"
 
+	defCfg["user.role.admin"] = "admin@aaa"
+	defCfg["user.role.user"] = "user@aaa"
+
 	defCfg["security.passphrase.minchars"] = "8"
 	defCfg["security.passphrase.minwords"] = "3"
 	defCfg["security.passphrase.mincharsinword"] = "3"

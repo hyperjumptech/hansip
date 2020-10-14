@@ -166,12 +166,14 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 		if err != nil {
 			fLog.Errorf("db.instance.ExecContext HANSIP_ROLE Got %s", err.Error())
 		} else {
+			adminRole := config.Get("user.role.admin")
+			userRole := config.Get("user.role.user")
 			fLog.Infof("Create Roles")
-			_, err = db.CreateRole(ctx, "admin@aaa", "Administrator role")
+			_, err = db.CreateRole(ctx, adminRole, "Administrator role")
 			if err != nil {
 				fLog.Errorf("db.CreateRole Got %s", err.Error())
 			}
-			_, err = db.CreateRole(ctx, "user@aaa", "Administrator role")
+			_, err = db.CreateRole(ctx, userRole, "Administrator role")
 			if err != nil {
 				fLog.Errorf("db.CreateRole Got %s", err.Error())
 			}
@@ -260,6 +262,10 @@ func (db *MySQLDB) DropAllTables(ctx context.Context) error {
 // CreateAllTable creates all table used by Hansip
 func (db *MySQLDB) CreateAllTable(ctx context.Context) error {
 	fLog := mysqlLog.WithField("func", "CreateAllTable").WithField("RequestID", ctx.Value(constants.RequestID))
+
+	adminRole := config.Get("user.role.admin")
+	userRole := config.Get("user.role.user")
+
 	_, err := db.instance.ExecContext(ctx, CreateUserSQL)
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext HANSIP_USER Got %s", err.Error())
@@ -288,11 +294,11 @@ func (db *MySQLDB) CreateAllTable(ctx context.Context) error {
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext HANSIP_TOTP_RECOVERY_CODES Got %s", err.Error())
 	}
-	_, err = db.CreateRole(ctx, "admin@aaa", "Administrator role")
+	_, err = db.CreateRole(ctx, adminRole, "Administrator role")
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s", err.Error())
 	}
-	_, err = db.CreateRole(ctx, "user@aaa", "Administrator role")
+	_, err = db.CreateRole(ctx, userRole, "User role")
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s", err.Error())
 	}
