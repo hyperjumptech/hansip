@@ -302,7 +302,7 @@ func Authentication2FA(w http.ResponseWriter, r *http.Request) {
 	for k, v := range userRoles {
 		r, err := roleRepo.GetRoleByRecID(r.Context(), v.RecID)
 		if err == nil {
-			roles[k] = r.RoleName
+			roles[k] = fmt.Sprintf("%s@%s", r.RoleName, r.RoleDomain)
 		}
 	}
 

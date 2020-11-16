@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 // SimpleGroup hold basic data of group
@@ -180,6 +181,7 @@ func ListAllGroup(w http.ResponseWriter, r *http.Request) {
 // CreateGroupRequest hold model for Create new Group.
 type CreateGroupRequest struct {
 	GroupName   string `json:"group_name"`
+	GroupDomain string `json:"group_domain"`
 	Description string `json:"description"`
 }
 
@@ -199,7 +201,12 @@ func CreateNewGroup(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 		return
 	}
-	group, err := GroupRepo.CreateGroup(r.Context(), req.GroupName, req.Description)
+	if strings.Contains(req.GroupName, "@") || strings.Contains(req.GroupDomain, "@") {
+		fLog.Errorf("RoleName or RoleDomain contains @")
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "RoleName or RoleDomain contains @", nil, nil)
+		return
+	}
+	group, err := GroupRepo.CreateGroup(r.Context(), req.GroupName, req.GroupDomain, req.Description)
 	if err != nil {
 		fLog.Errorf("GroupRepo.CreateGroup got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
@@ -254,9 +261,10 @@ func UpdateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	group.GroupName = req.GroupName
+	group.GroupDomain = req.GroupDomain
 	group.Description = req.Description
 
-	exGroup, err := GroupRepo.GetGroupByName(r.Context(), req.GroupName)
+	exGroup, err := GroupRepo.GetGroupByName(r.Context(), req.GroupName, req.GroupDomain)
 	if err == nil && exGroup.GroupName == req.GroupName && exGroup.RecID != params["groupRecId"] {
 		fLog.Errorf("Duplicate group name. group %s already exist", req.GroupName)
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)

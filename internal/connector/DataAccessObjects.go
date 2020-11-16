@@ -15,6 +15,27 @@ type DBUtil interface {
 	CreateAllTable(ctx context.Context) error
 }
 
+// TenantRepository manage tenant table
+type TenantRepository interface {
+	// GetTenantByDomain return a tenant record
+	GetTenantByDomain(ctx context.Context, tenantDomain string) (*Tenant, error)
+
+	// GetTenantByRecID return a tenant record
+	GetTenantByRecID(ctx context.Context, recID string) (*Tenant, error)
+
+	// CreateTenantRecord Create new tenant
+	CreateTenantRecord(ctx context.Context, tenantName, tenantDomain, description string) (*Tenant, error)
+
+	// DeleteTenant removes a tenant entity from table
+	DeleteTenant(ctx context.Context, tenant *Tenant) error
+
+	// SaveOrUpdate a tenant entity into table tenant
+	SaveOrUpdateTenant(ctx context.Context, tenant *Tenant) error
+
+	// ListTenant from database with pagination
+	ListTenant(ctx context.Context, request *helper.PageRequest) ([]*Tenant, *helper.Page, error)
+}
+
 // UserRepository manage User table
 type UserRepository interface {
 	// GetUserByRecID return a user record
@@ -63,10 +84,10 @@ type GroupRepository interface {
 	GetGroupByRecID(ctx context.Context, recID string) (*Group, error)
 
 	// GetGroupByName return a group record
-	GetGroupByName(ctx context.Context, groupName string) (*Group, error)
+	GetGroupByName(ctx context.Context, groupName, groupDomain string) (*Group, error)
 
 	// CreateGroup into the Group table
-	CreateGroup(ctx context.Context, groupName, description string) (*Group, error)
+	CreateGroup(ctx context.Context, groupName, groupDomain, description string) (*Group, error)
 
 	// ListGroup from the Group table
 	ListGroups(ctx context.Context, request *helper.PageRequest) ([]*Group, *helper.Page, error)
@@ -157,10 +178,10 @@ type RoleRepository interface {
 	GetRoleByRecID(ctx context.Context, recID string) (*Role, error)
 
 	// GetRoleByName return a role record
-	GetRoleByName(ctx context.Context, roleName string) (*Role, error)
+	GetRoleByName(ctx context.Context, roleName, roleDomain string) (*Role, error)
 
 	// CreateRole into Role table
-	CreateRole(ctx context.Context, roleName, description string) (*Role, error)
+	CreateRole(ctx context.Context, roleName, roleDomain, description string) (*Role, error)
 
 	// ListRoles from Role table
 	ListRoles(ctx context.Context, request *helper.PageRequest) ([]*Role, *helper.Page, error)
@@ -170,6 +191,21 @@ type RoleRepository interface {
 
 	// SaveOrUpdateRole into Role table
 	SaveOrUpdateRole(ctx context.Context, role *Role) error
+}
+
+// Tenant record entity
+type Tenant struct {
+	// RecID. Primary key
+	RecID string `json:"rec_id"`
+
+	// TenantName is the tenant name
+	Name string `json:"name"`
+
+	// Description of the group
+	Description string `json:"description"`
+
+	// TenantAdminRole role needed to manage users under this tenant
+	Domain string `json:"domain"`
 }
 
 // User record entity
@@ -215,6 +251,9 @@ type User struct {
 
 	// RecoveryCode used to recover lost passphrase
 	RecoveryCode string `json:"recovery_code"`
+
+	// The tenant owner
+	TenantRecId string `json:"tenant_rec_id"`
 }
 
 // TOTPRecoveryCode used to login the user if the user lost his TOTP code due to lost of 2FE token device.
@@ -240,8 +279,14 @@ type Group struct {
 	// GroupName of the group, Primary Key
 	GroupName string `json:"group_name"`
 
+	// GroupDomain domain of the group, Primary Key
+	GroupDomain string `json:"group_domain"`
+
 	// Description of the group
 	Description string `json:"description"`
+
+	// The tenant owner
+	TenantRecId string `json:"tenant_rec_id"`
 }
 
 // UserGroup record entity
@@ -279,6 +324,12 @@ type Role struct {
 	// RoleName of the role, Unique
 	RoleName string `json:"role_name"`
 
+	// RoleDomain domain of the role, Unique
+	RoleDomain string `json:"role_domain"`
+
 	// Description of the role
 	Description string `json:"description"`
+
+	// The tenant owner
+	TenantRecId string `json:"tenant_rec_id"`
 }

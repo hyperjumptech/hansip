@@ -144,21 +144,21 @@ func JwtMiddleware(next http.Handler) http.Handler {
 					}
 					// Get the token, validate and parse it.
 					tok := strings.TrimSpace(authHeader[7:])
-					issuer, subject, audience, _, _, _, additional, err := TokenFactory.ReadToken(tok)
+					hToken, err := TokenFactory.ReadToken(tok)
 					if err != nil {
 						fLog.Warnf(fmt.Sprintf("Token validation error. got %s", err.Error()))
 						helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, fmt.Sprintf("Forbidden. Got %s ", err.Error()), nil, nil)
 						return
 					}
 					// Makesure the issuer is the same
-					if issuer != config.Get("token.issuer") {
-						fLog.Warnf(fmt.Sprintf("Invalid issuer. Expect %s but %s. got %s", config.Get("token.issuer"), issuer, err.Error()))
-						helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, fmt.Sprintf("Forbidden. Not accepting token from issuer %s ", issuer), nil, nil)
+					if hToken.Issuer != config.Get("token.issuer") {
+						fLog.Warnf(fmt.Sprintf("Invalid issuer. Expect %s but %s. got %s", config.Get("token.issuer"), hToken.Issuer, err.Error()))
+						helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, fmt.Sprintf("Forbidden. Not accepting token from issuer %s ", hToken.Issuer), nil, nil)
 						return
 					}
 					allowed := false
 					for _, allowedAud := range acl.AllowedAudiences {
-						if helper.StringArrayContainString(audience, allowedAud) {
+						if helper.StringArrayContainString(hToken.Audiences, allowedAud) {
 							allowed = true
 							break
 						}
@@ -166,9 +166,9 @@ func JwtMiddleware(next http.Handler) http.Handler {
 					if allowed {
 						hansipContext := &hansipcontext.AuthenticationContext{
 							Token:     tok,
-							Subject:   subject,
-							Audience:  audience,
-							TokenType: additional["type"].(string),
+							Subject:   hToken.Subject,
+							Audience:  hToken.Audiences,
+							TokenType: hToken.Additional["type"].(string),
 						}
 						tokenCtx := context.WithValue(r.Context(), constants.HansipAuthentication, hansipContext)
 						next.ServeHTTP(w, r.WithContext(tokenCtx))

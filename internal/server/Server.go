@@ -8,6 +8,7 @@ import (
 	"github.com/hyperjumptech/hansip/internal/auth"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/connector"
+	"github.com/hyperjumptech/hansip/internal/gzip"
 	"github.com/hyperjumptech/hansip/internal/mailer"
 	"github.com/hyperjumptech/hansip/internal/mgmnt"
 	"github.com/hyperjumptech/hansip/internal/middlewares"
@@ -93,20 +94,14 @@ func InitializeRouter() {
 		c := cors.New(options)
 		Router.Use(c.Handler)
 		Router.Use(middlewares.CorsMiddleware)
+		gzipFilter := gzip.NewGzipEncoderFilter(true, 300)
+		Router.Use(gzipFilter.DoFilter)
 	}
 
 	Router.Use(middlewares.ClientIPResolverMiddleware, middlewares.TransactionIDMiddleware, middlewares.JwtMiddleware)
 	Router.HandleFunc("/health", health).Methods("GET")
 
-	if config.Get("db.type") == "INMEMORY" {
-		log.Warnf("Using INMEMORY")
-		mgmnt.UserRepo = connector.GetInMemoryDbInstance()
-		mgmnt.GroupRepo = connector.GetInMemoryDbInstance()
-		mgmnt.RoleRepo = connector.GetInMemoryDbInstance()
-		mgmnt.UserGroupRepo = connector.GetInMemoryDbInstance()
-		mgmnt.UserRoleRepo = connector.GetInMemoryDbInstance()
-		mgmnt.GroupRoleRepo = connector.GetInMemoryDbInstance()
-	} else if config.Get("db.type") == "MYSQL" {
+	if config.Get("db.type") == "MYSQL" {
 		log.Warnf("Using MYSQL")
 		mgmnt.UserRepo = connector.GetMySQLDBInstance()
 		mgmnt.GroupRepo = connector.GetMySQLDBInstance()

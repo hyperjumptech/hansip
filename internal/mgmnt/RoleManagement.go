@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 var (
@@ -175,6 +176,7 @@ func ListAllRole(w http.ResponseWriter, r *http.Request) {
 // CreateRoleRequest hold dta model for requesting to create new role
 type CreateRoleRequest struct {
 	RoleName    string `json:"role_name"`
+	RoleDomain  string `json:"role_domain"`
 	Description string `json:"description"`
 }
 
@@ -194,7 +196,12 @@ func CreateRole(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 		return
 	}
-	role, err := RoleRepo.CreateRole(r.Context(), req.RoleName, req.Description)
+	if strings.Contains(req.RoleName, "@") || strings.Contains(req.RoleDomain, "@") {
+		fLog.Errorf("RoleName or RoleDomain contains @")
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, "RoleName or RoleDomain contains @", nil, nil)
+		return
+	}
+	role, err := RoleRepo.CreateRole(r.Context(), req.RoleName, req.RoleDomain, req.Description)
 	if err != nil {
 		fLog.Errorf("RoleRepo.CreateRole got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
@@ -232,9 +239,10 @@ func UpdateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	role.RoleName = req.RoleName
+	role.RoleDomain = req.RoleDomain
 	role.Description = req.Description
 
-	exRole, err := RoleRepo.GetRoleByName(r.Context(), req.RoleName)
+	exRole, err := RoleRepo.GetRoleByName(r.Context(), req.RoleName, req.RoleDomain)
 	if err == nil && exRole.RoleName == req.RoleName && exRole.RecID != params["roleRecId"] {
 		fLog.Errorf("Duplicate role name. role %s already exist", req.RoleName)
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)

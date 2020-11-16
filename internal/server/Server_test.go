@@ -55,11 +55,7 @@ func TestAll(t *testing.T) {
 	go mailer.Start()
 	defer mailer.Stop()
 
-	if config.Get("db.type") == "INMEMORY" {
-		dbUtil = connector.GetInMemoryDbInstance()
-	} else {
-		dbUtil = connector.GetMySQLDBInstance()
-	}
+	dbUtil = connector.GetMySQLDBInstance()
 
 	err := dbUtil.DropAllTables(context.Background())
 	if err != nil {

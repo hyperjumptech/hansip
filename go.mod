@@ -14,6 +14,7 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/spf13/viper v1.7.1
+	github.com/stretchr/testify v1.3.0
 	golang.org/x/crypto v0.0.0-20200930160638-afb6bcd081ae
 	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f // indirect
 )

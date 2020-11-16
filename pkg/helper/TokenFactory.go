@@ -10,10 +10,20 @@ import (
 	"github.com/SermoDigital/jose/jws"
 )
 
+type HansipToken struct {
+	Issuer     string
+	Subject    string
+	Audiences  []string
+	Expire     time.Time
+	NotBefore  time.Time
+	IssuedAt   time.Time
+	Additional map[string]interface{}
+}
+
 // TokenFactory defines a token factory function to implement
 type TokenFactory interface {
 	CreateTokenPair(subject string, audience []string, additional map[string]interface{}) (string, string, error)
-	ReadToken(token string) (string, string, []string, time.Time, time.Time, time.Time, map[string]interface{}, error)
+	ReadToken(token string) (*HansipToken, error)
 	RefreshToken(refreshToken string) (string, error)
 }
 
@@ -68,34 +78,43 @@ func (tf *DefaultTokenFactory) CreateTokenPair(subject string, audience []string
 }
 
 // ReadToken read a token string, validate and extract its content.
-func (tf *DefaultTokenFactory) ReadToken(token string) (string, string, []string, time.Time, time.Time, time.Time, map[string]interface{}, error) {
+func (tf *DefaultTokenFactory) ReadToken(token string) (*HansipToken, error) {
 	issuer, subject, audience, issuedAt, notBefore, expire, additional, err := ReadJWTStringToken(true, tf.SignKey, tf.SignMethod, token)
-	if issuer != tf.Issuer {
-		return "", "", nil, time.Now(), time.Now(), time.Now(), nil, fmt.Errorf("invalid issuer %s", issuer)
+	htoken := &HansipToken{
+		Issuer:     issuer,
+		Subject:    subject,
+		Audiences:  audience,
+		Expire:     expire,
+		NotBefore:  notBefore,
+		IssuedAt:   issuedAt,
+		Additional: additional,
 	}
-	return issuer, subject, audience, issuedAt, notBefore, expire, additional, err
+	if issuer != tf.Issuer {
+		return htoken, fmt.Errorf("invalid issuer %s", issuer)
+	}
+	return htoken, err
 }
 
 // RefreshToken generate new Access token by specifying its refresh token
 func (tf *DefaultTokenFactory) RefreshToken(refreshToken string) (string, error) {
 	tf.mutex.Lock()
 	defer tf.mutex.Unlock()
-	issuer, subject, audience, issuedAt, notBefore, _, additional, err := tf.ReadToken(refreshToken)
+	hToken, err := tf.ReadToken(refreshToken)
 	if err != nil {
 		return "", err
 	}
-	if issuer != tf.Issuer {
+	if hToken.Issuer != tf.Issuer {
 		return "", fmt.Errorf("invalid issuer")
 	}
-	if typ, ok := additional["type"]; ok {
+	if typ, ok := hToken.Additional["type"]; ok {
 		if typ != "refresh" {
 			return "", fmt.Errorf("not refresh token")
 		}
 	} else {
 		return "", fmt.Errorf("unknown token type")
 	}
-	additional["type"] = "access"
-	access, err := CreateJWTStringToken(tf.SignKey, tf.SignMethod, tf.Issuer, subject, audience, issuedAt, notBefore, time.Now().Add(tf.AccessTokenDuration), additional)
+	hToken.Additional["type"] = "access"
+	access, err := CreateJWTStringToken(tf.SignKey, tf.SignMethod, tf.Issuer, hToken.Subject, hToken.Audiences, hToken.IssuedAt, hToken.NotBefore, time.Now().Add(tf.AccessTokenDuration), hToken.Additional)
 	if err != nil {
 		return "", err
 	}

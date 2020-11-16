@@ -24,6 +24,10 @@
       "description": "Recovery process, lost password or lost 2FA secret"
     },
     {
+      "name": "management-tenant",
+      "description": "Tenant management, create, update, delete Tenant, All user membership to tenant, and group and role under the tenant"
+    },
+    {
       "name": "management-user",
       "description": "User management, create, update, delete User, User's Group membership and User's Role"
     },
@@ -290,6 +294,253 @@
           },
           "404": {
             "description": "Passphrase reset token not found"
+          }
+        }
+      }
+    },
+    "/manajement/tenants": {
+      "get": {
+        "tags": [
+          "management-tenant"
+        ],
+        "summary": "List all tenants in the database",
+        "description": "Get tenant list. Paginated.",
+        "operationId": "ListAllTenant",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_no",
+            "type": "number",
+            "description": "Page number to fetch. 1st page is 1"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "page_size",
+            "type": "number",
+            "description": "Number of items per page"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "order_by",
+            "type": "string",
+            "description": "Field name for sorting"
+          },
+          {
+            "in": "query",
+            "required": true,
+            "name": "sort",
+            "type": "string",
+            "description": "Sort ordering",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all user paginated",
+            "schema": {
+              "$ref": "#/definitions/ListAllTenantResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      }
+    },
+    "/manajement/tenant": {
+      "post": {
+        "tags": [
+          "management-tenant"
+        ],
+        "summary": "Create a new tenant",
+        "description": "Create a new tenant.",
+        "operationId": "CreateNewTenant",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "required": true,
+            "name": "tenant",
+            "description": "Body contains tenant information",
+            "schema": {
+              "$ref": "#/definitions/NewTenant"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Passphrase success reset",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "400": {
+            "description": "Passphrase rule not met"
+          },
+          "404": {
+            "description": "Passphrase reset token not found"
+          }
+        }
+      }
+    },
+    "/manajement/tenant/{tenantRecId}": {
+      "get": {
+        "tags": [
+          "management-tenant"
+        ],
+        "summary": "Get tenant detail",
+        "description": "Get tenant detailed information.",
+        "operationId": "GetTenantDetail",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "tenantRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success fetching user detail",
+            "schema": {
+              "$ref": "#/definitions/TenantDetailResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "management-tenant"
+        ],
+        "summary": "Modify tenant information",
+        "description": "Change tenant information.",
+        "operationId": "UpdateTenantDetail",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "tenantRecId",
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "required": true,
+            "name": "New tenant detail",
+            "description": "Create new user information",
+            "schema": {
+              "$ref": "#/definitions/NewTenant"
+            }
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success updating user detail",
+            "schema": {
+              "$ref": "#/definitions/UserDetailResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "management-tenant"
+        ],
+        "summary": "Delete a tenant",
+        "description": "Delete a speciffic tenant.",
+        "operationId": "DeleteTenant",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "tenantRecId",
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully remove",
+            "schema": {
+              "$ref": "#/definitions/BaseResponse"
+            }
+          },
+          "401": {
+            "description": "You are not authorized"
+          },
+          "403": {
+            "description": "Forbidden, your Authorization is not valid or sufficient"
+          },
+          "404": {
+            "description": "Not found"
           }
         }
       }
@@ -1592,6 +1843,9 @@
                 "group_name": {
                   "type": "string"
                 },
+                "group_domain": {
+                  "type": "string"
+                },
                 "description": {
                   "type": "string"
                 }
@@ -2230,6 +2484,13 @@
         "parameters": [
           {
             "in": "query",
+            "name": "domains",
+            "description": "A comma separated list of domains",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "query",
             "required": true,
             "name": "page_no",
             "type": "number",
@@ -2401,6 +2662,9 @@
               "type": "object",
               "properties": {
                 "role_name": {
+                  "type": "string"
+                },
+                "role_domain": {
                   "type": "string"
                 },
                 "description": {
@@ -3149,6 +3413,9 @@
         },
         "role_name": {
           "type": "string"
+        },
+        "role_domain": {
+          "type": "string"
         }
       }
     },
@@ -3172,6 +3439,9 @@
           "type": "string"
         },
         "group_name": {
+          "type": "string"
+        },
+        "group_domain": {
           "type": "string"
         }
       }
@@ -3344,6 +3614,75 @@
         }
       }
     },
+    "NewTenant": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "Tenant": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/NewTenant"
+        }
+      ],
+      "properties": {
+        "rec_id": {
+          "type": "string"
+        }
+      }
+    },
+    "ListAllTenantResponse": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "tenants": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Tenant"
+              }
+            },
+            "page": {
+              "$ref": "#/definitions/Page"
+            }
+          }
+        }
+      }
+    },
+    "TenantDetailResponse": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "$ref": "#/definitions/Tenant"
+            }
+          }
+        }
+      }
+    },
     "RequestPassphraseRecover": {
       "type": "object",
       "required": [
@@ -3459,6 +3798,9 @@
         "role_name": {
           "type": "string"
         },
+        "role_domain": {
+          "type": "string"
+        },
         "description": {
           "type": "string"
         }
@@ -3508,6 +3850,9 @@
       ],
       "properties": {
         "group_name": {
+          "type": "string"
+        },
+        "group_domain": {
           "type": "string"
         },
         "description": {
