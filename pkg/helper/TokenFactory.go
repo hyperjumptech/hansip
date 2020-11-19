@@ -18,6 +18,7 @@ type HansipToken struct {
 	NotBefore  time.Time
 	IssuedAt   time.Time
 	Additional map[string]interface{}
+	Token      string
 }
 
 // TokenFactory defines a token factory function to implement
@@ -88,6 +89,7 @@ func (tf *DefaultTokenFactory) ReadToken(token string) (*HansipToken, error) {
 		NotBefore:  notBefore,
 		IssuedAt:   issuedAt,
 		Additional: additional,
+		Token:      token,
 	}
 	if issuer != tf.Issuer {
 		return htoken, fmt.Errorf("invalid issuer %s", issuer)

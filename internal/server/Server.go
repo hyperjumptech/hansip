@@ -4,14 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/hyperjumptech/hansip/api"
-	"github.com/hyperjumptech/hansip/internal/auth"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/connector"
+	"github.com/hyperjumptech/hansip/internal/endpoint"
 	"github.com/hyperjumptech/hansip/internal/gzip"
 	"github.com/hyperjumptech/hansip/internal/mailer"
-	"github.com/hyperjumptech/hansip/internal/mgmnt"
-	"github.com/hyperjumptech/hansip/internal/middlewares"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	"github.com/hyperjumptech/jiffy"
 	"github.com/rs/cors"
@@ -27,21 +24,9 @@ var (
 	// Router instance of gorilla mux.Router
 	Router *mux.Router
 
-	// StaticFilter intercept static content page and return them.
-	StaticFilter *api.StaticFilter
-
 	// TokenFactory will handle token creation and validation
 	TokenFactory helper.TokenFactory
 )
-
-// health serve health check request
-func health(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("cache-control", "no-cache")
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	hc := &helper.HealthCheck{}
-	_, _ = w.Write([]byte(hc.String()))
-}
 
 // GetJwtTokenFactory return an instance of JWT TokenFactory.
 func GetJwtTokenFactory() helper.TokenFactory {
@@ -68,10 +53,6 @@ func GetJwtTokenFactory() helper.TokenFactory {
 func InitializeRouter() {
 	log.Info("Initializing server")
 	Router = mux.NewRouter()
-	StaticFilter = api.NewStaticFilter()
-	Router.PathPrefix("/docs").Handler(StaticFilter)
-	address := fmt.Sprintf("%s:%s", config.Get("server.host"), config.Get("server.port"))
-	log.Infof("Swagger-UI now alive at http://%s/docs/", address)
 
 	if config.GetBoolean("server.http.cors.enable") {
 		log.Info("CORS handling is enabled")
@@ -93,49 +74,47 @@ func InitializeRouter() {
 		log.Infof("    MaxAge : %d", options.MaxAge)
 		c := cors.New(options)
 		Router.Use(c.Handler)
-		Router.Use(middlewares.CorsMiddleware)
+		Router.Use(endpoint.CorsMiddleware)
 		gzipFilter := gzip.NewGzipEncoderFilter(true, 300)
 		Router.Use(gzipFilter.DoFilter)
 	}
 
-	Router.Use(middlewares.ClientIPResolverMiddleware, middlewares.TransactionIDMiddleware, middlewares.JwtMiddleware)
-	Router.HandleFunc("/health", health).Methods("GET")
+	Router.Use(endpoint.ClientIPResolverMiddleware, endpoint.TransactionIDMiddleware, endpoint.JwtMiddleware)
 
 	if config.Get("db.type") == "MYSQL" {
 		log.Warnf("Using MYSQL")
-		mgmnt.UserRepo = connector.GetMySQLDBInstance()
-		mgmnt.GroupRepo = connector.GetMySQLDBInstance()
-		mgmnt.RoleRepo = connector.GetMySQLDBInstance()
-		mgmnt.UserGroupRepo = connector.GetMySQLDBInstance()
-		mgmnt.UserRoleRepo = connector.GetMySQLDBInstance()
-		mgmnt.GroupRoleRepo = connector.GetMySQLDBInstance()
+		endpoint.UserRepo = connector.GetMySQLDBInstance()
+		endpoint.GroupRepo = connector.GetMySQLDBInstance()
+		endpoint.RoleRepo = connector.GetMySQLDBInstance()
+		endpoint.UserGroupRepo = connector.GetMySQLDBInstance()
+		endpoint.UserRoleRepo = connector.GetMySQLDBInstance()
+		endpoint.GroupRoleRepo = connector.GetMySQLDBInstance()
 	} else {
 		panic(fmt.Sprintf("unknown database type %s. Correct your configuration 'db.type' or env-var 'AAA_DB_TYPE'. allowed values are INMEMORY or MYSQL", config.Get("db.type")))
 	}
 
 	if config.Get("mailer.type") == "DUMMY" {
-		mgmnt.EmailSender = &connector.DummyMailSender{}
+		endpoint.EmailSender = &connector.DummyMailSender{}
 	} else if config.Get("mailer.type") == "SENDMAIL" {
-		mgmnt.EmailSender = &connector.SendMailSender{
+		endpoint.EmailSender = &connector.SendMailSender{
 			Host:     config.Get("mailer.sendmail.host"),
 			Port:     config.GetInt("mailer.sendmail.port"),
 			User:     config.Get("mailer.sendmail.user"),
 			Password: config.Get("mailer.sendmail.password"),
 		}
 	} else if config.Get("mailer.type") == "SENDGRID" {
-		mgmnt.EmailSender = &connector.SendGridSender{
+		endpoint.EmailSender = &connector.SendGridSender{
 			Token: config.Get("mailer.sendgrid.token"),
 		}
 	} else {
 		panic(fmt.Sprintf("unknown mailer type %s. Correct your configuration 'mailer.type' or env-var 'AAA_MAILER_TYPE'. allowed values are DUMMY, SENDMAIL or SENDGRID", config.Get("mailer.type")))
 	}
-	mailer.Sender = mgmnt.EmailSender
+	mailer.Sender = endpoint.EmailSender
 
 	TokenFactory = GetJwtTokenFactory()
-	middlewares.TokenFactory = TokenFactory
-	auth.TokenFactory = TokenFactory
-	auth.InitializeAuthRouter(Router)
-	mgmnt.InitializeRouter(Router)
+	endpoint.TokenFactory = TokenFactory
+	endpoint.TokenFactory = TokenFactory
+	endpoint.InitializeRouter(Router)
 	Walk()
 }
 
