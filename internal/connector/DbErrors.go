@@ -81,3 +81,12 @@ type ErrGroupAndRoleDomainIncompatible struct {
 func (err *ErrGroupAndRoleDomainIncompatible) Error() string {
 	return fmt.Sprintf("Can not create group role with between incompatible domain Group: %s@%s to Role: %s@%s", err.GroupName, err.GroupDomain, err.RoleName, err.RoleDomain)
 }
+
+type ErrDBNoResult struct {
+	Message string
+	SQL     string
+}
+
+func (err *ErrDBNoResult) Error() string {
+	return err.Message
+}

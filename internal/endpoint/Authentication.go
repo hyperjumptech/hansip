@@ -3,8 +3,6 @@ package endpoint
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/hyperjumptech/hansip/internal/config"
-	"github.com/hyperjumptech/hansip/internal/connector"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	"github.com/hyperjumptech/hansip/pkg/totp"
 	"golang.org/x/crypto/bcrypt"
@@ -315,40 +313,16 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user *connector.User
-
-	if config.GetBoolean("setup.admin.enable") {
-		if authReq.Email == config.Get("setup.admin.email") && authReq.Passphrase == config.Get("setup.admin.passphrase") {
-			bytes, _ := bcrypt.GenerateFromPassword([]byte(authReq.Passphrase), 14)
-			user = &connector.User{
-				RecID:             helper.MakeRandomString(10, true, true, true, false),
-				Email:             config.Get("setup.admin.email"),
-				HashedPassphrase:  string(bytes),
-				Enabled:           true,
-				Suspended:         false,
-				LastSeen:          time.Time{},
-				LastLogin:         time.Time{},
-				FailCount:         0,
-				ActivationCode:    "",
-				ActivationDate:    time.Time{},
-				UserTotpSecretKey: totp.MakeSecret().Base32(),
-				Enable2FactorAuth: false,
-			}
-		}
+	// Get user by said email
+	user, err := UserRepo.GetUserByEmail(r.Context(), authReq.Email)
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized), nil, nil)
+		return
 	}
+	user.LastLogin = time.Now()
 
-	if user == nil {
-		// Get user by said email
-		user, err = UserRepo.GetUserByEmail(r.Context(), authReq.Email)
-		if err != nil {
-			helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized), nil, nil)
-			return
-		}
-		user.LastLogin = time.Now()
-
-		// Make sure chages to this user are saved.
-		defer UserRepo.SaveOrUpdate(r.Context(), user)
-	}
+	// Make sure chages to this user are saved.
+	defer UserRepo.SaveOrUpdate(r.Context(), user)
 
 	// Make sure the user is enabled
 	if !user.Enabled {
@@ -386,28 +360,24 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 
 	var roles []string
 
-	if config.GetBoolean("setup.admin.enable") && authReq.Email == config.Get("setup.admin.email") && authReq.Passphrase == config.Get("setup.admin.passphrase") {
-		roles = []string{"admin@aaa", "user@aaa"}
-	} else {
-		// Add user's role from direct UserRole relation.
-		userRoles, _, err := UserRepo.ListAllUserRoles(r.Context(), user, &helper.PageRequest{
-			No:       1,
-			PageSize: 1000,
-			OrderBy:  "ROLE_NAME",
-			Sort:     "ASC",
-		})
-		if err != nil {
-			helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
-			return
-		}
+	// Add user's role from direct UserRole relation.
+	userRoles, _, err := UserRepo.ListAllUserRoles(r.Context(), user, &helper.PageRequest{
+		No:       1,
+		PageSize: 1000,
+		OrderBy:  "ROLE_NAME",
+		Sort:     "ASC",
+	})
+	if err != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		return
+	}
 
-		// Add user's role into Token audiences info.
-		roles = make([]string, len(userRoles))
-		for k, v := range userRoles {
-			r, err := RoleRepo.GetRoleByRecID(r.Context(), v.RecID)
-			if err == nil {
-				roles[k] = r.RoleName
-			}
+	// Add user's role into Token audiences info.
+	roles = make([]string, len(userRoles))
+	for k, v := range userRoles {
+		r, err := RoleRepo.GetRoleByRecID(r.Context(), v.RecID)
+		if err == nil {
+			roles[k] = fmt.Sprintf("%s@%s", r.RoleName, r.RoleDomain)
 		}
 	}
 

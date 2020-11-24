@@ -37,10 +37,6 @@ func initialize() {
 	defCfg["server.http.cors.optionpassthrough"] = "true"
 	defCfg["server.http.cors.maxage"] = "300"
 
-	defCfg["setup.admin.enable"] = "false"
-	defCfg["setup.admin.email"] = "admin@hansip"
-	defCfg["setup.admin.passphrase"] = "this must be change in the production"
-
 	defCfg["token.issuer"] = "aaa.domain.com"
 	defCfg["token.access.duration"] = "5 minutes"
 	defCfg["token.refresh.duration"] = "1 year"
@@ -48,7 +44,7 @@ func initialize() {
 	defCfg["token.crypt.key"] = "th15mustb3CH@ngedINprodUCT10N"
 	defCfg["token.crypt.method"] = "HS512"
 
-	defCfg["db.type"] = "INMEMORY" // INMEMORY, MYSQL
+	defCfg["db.type"] = "MYSQL" // INMEMORY, MYSQL
 	defCfg["db.mysql.host"] = "localhost"
 	defCfg["db.mysql.port"] = "3306"
 	defCfg["db.mysql.user"] = "devuser"
@@ -57,7 +53,8 @@ func initialize() {
 	defCfg["db.mysql.maxidle"] = "3"
 	defCfg["db.mysql.maxopen"] = "10"
 
-	defCfg["user.role.admin"] = "admin"
+	defCfg["hansip.domain"] = "hansip"
+	defCfg["hansip.admin"] = "admin"
 
 	defCfg["security.passphrase.minchars"] = "8"
 	defCfg["security.passphrase.minwords"] = "3"

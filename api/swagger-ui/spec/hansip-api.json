@@ -1653,7 +1653,7 @@
         }
       }
     },
-    "/management/groups": {
+    "/management/tenant/{tenantRecId}/groups": {
       "get": {
         "tags": [
           "management-group"
@@ -1668,6 +1668,12 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "tenantRecId",
+            "type": "string"
+          },
           {
             "in": "query",
             "required": true,
@@ -2467,7 +2473,7 @@
         }
       }
     },
-    "/management/roles": {
+    "/management/tenant/{tenantRecId}/roles": {
       "get": {
         "tags": [
           "management-role"
@@ -2482,6 +2488,12 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "in": "path",
+            "required": true,
+            "name": "tenantRecId",
+            "type": "string"
+          },
           {
             "in": "query",
             "name": "domains",

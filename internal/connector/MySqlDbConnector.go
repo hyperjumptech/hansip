@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/hyperjumptech/hansip/pkg/store/cache"
 	"regexp"
 
 	// Initializes mysql driver
@@ -20,7 +21,7 @@ import (
 
 const (
 	// DropAllSQL contains SQL to drop all existing table for hansip
-	DropAllSQL = `DROP TABLE IF EXISTS HANSIP_USER_GROUP, HANSIP_USER_ROLE, HANSIP_GROUP_ROLE, HANSIP_USER, HANSIP_GROUP, HANSIP_ROLE, HANSIP_TENANT;`
+	DropAllSQL = `DROP TABLE IF EXISTS HANSIP_TOTP_RECOVERY_CODES, HANSIP_USER_GROUP, HANSIP_USER_ROLE, HANSIP_GROUP_ROLE, HANSIP_USER, HANSIP_GROUP, HANSIP_ROLE, HANSIP_TENANT;`
 
 	// CreateTenantSQL contains SQL to create HANSIP_ROLE table
 	CreateTenantSQL = `CREATE TABLE IF NOT EXISTS HANSIP_TENANT (
@@ -54,19 +55,21 @@ const (
 	// CreateGroupSQL contains SQL to  create HANSIP_GROUP
 	CreateGroupSQL = `CREATE TABLE IF NOT EXISTS HANSIP_GROUP (
     REC_ID VARCHAR(32) NOT NULL UNIQUE,
-    GROUP_NAME VARCHAR(128) NOT NULL UNIQUE,
-    GROUP_DOMAIN VARCHAR(128) NOT NULL UNIQUE,
+    GROUP_NAME VARCHAR(128) NOT NULL,
+    GROUP_DOMAIN VARCHAR(128) NOT NULL,
     DESCRIPTION VARCHAR(255),
-    INDEX (REC_ID, GROUP_NAME),
+    INDEX (REC_ID, GROUP_NAME, GROUP_DOMAIN),
+    UNIQUE (GROUP_NAME, GROUP_DOMAIN),
     PRIMARY KEY (REC_ID)
 ) ENGINE=INNODB;`
 	// CreateRoleSQL contains SQL to create HANSIP_ROLE table
 	CreateRoleSQL = `CREATE TABLE IF NOT EXISTS HANSIP_ROLE (
     REC_ID VARCHAR(32) NOT NULL UNIQUE,
-    ROLE_NAME VARCHAR(128) NOT NULL UNIQUE,
-    ROLE_DOMAIN VARCHAR(128) NOT NULL UNIQUE,
+    ROLE_NAME VARCHAR(128) NOT NULL,
+    ROLE_DOMAIN VARCHAR(128) NOT NULL,
     DESCRIPTION VARCHAR(255),
     INDEX (REC_ID, ROLE_NAME),
+    UNIQUE (ROLE_NAME, ROLE_DOMAIN),
     PRIMARY KEY (REC_ID)
 ) ENGINE=INNODB;`
 	// CreateUserRoleSQL contains SQL to create HANSIP_USER_ROLE table
@@ -106,6 +109,8 @@ const (
 var (
 	mysqlLog        = log.WithField("go", "MySqlDbConnector")
 	mySQLDBInstance *MySQLDB
+	oCache          cache.ObjectCache
+	ErrNotFound     = fmt.Errorf("data not found error")
 )
 
 // GetMySQLDBInstance will obtain the singleton instance to MySQLDB
@@ -155,11 +160,6 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 		_, err := db.instance.ExecContext(ctx, CreateTenantSQL)
 		if err != nil {
 			fLog.Errorf("db.instance.ExecContext HANSIP_TENANT Got %s. SQL = %s", err.Error(), CreateTenantSQL)
-		} else {
-			_, err = db.CreateTenantRecord(ctx, "Hansip System", "hansip", "Hansip built in tenant")
-			if err != nil {
-				fLog.Errorf("db.CreateRole Got %s", err.Error())
-			}
 		}
 	}
 
@@ -199,13 +199,6 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 		_, err := db.instance.ExecContext(ctx, CreateRoleSQL)
 		if err != nil {
 			fLog.Errorf("db.instance.ExecContext HANSIP_ROLE Got %s. SQL = %s", err.Error(), CreateRoleSQL)
-		} else {
-			adminRole := config.Get("user.role.admin")
-			fLog.Infof("Create Roles")
-			_, err = db.CreateRole(ctx, adminRole, "hansip", "Administrator role")
-			if err != nil {
-				fLog.Errorf("db.CreateRole Got %s", err.Error())
-			}
 		}
 	}
 
@@ -261,6 +254,84 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 		}
 	}
 
+	hansipDomain := config.Get("hansip.domain")
+	handipAdmin := config.Get("hansip.admin")
+
+	// Create built-in tenant.
+	fLog.Infof("Checking built-in tenant")
+	_, err = db.GetTenantByDomain(ctx, hansipDomain)
+	if err != nil {
+		fLog.Infof("Creating built-in tenant")
+		_, err = db.CreateTenantRecord(ctx, "Hansip System", "hansip", "Hansip built in tenant")
+		if err != nil {
+			fLog.Errorf("db.CreateTenantRecord Got %s", err.Error())
+		}
+	}
+
+	// Create built-in group
+	fLog.Infof("Checking built-in group")
+	group, err := db.GetGroupByName(ctx, "admins", hansipDomain)
+	if err != nil {
+		fLog.Infof("Creating built-in group")
+		group, err = db.CreateGroup(ctx, "admins", hansipDomain, "Hansip built in group")
+		if err != nil {
+			fLog.Errorf(" db.CreateGroup Got %s", err.Error())
+		}
+	}
+
+	// Create built-in roles
+	fLog.Infof("Checking built-in roles")
+	role, err := db.GetRoleByName(ctx, handipAdmin, hansipDomain)
+	if err != nil {
+		fLog.Infof("Create built-in roles")
+		role, err = db.CreateRole(ctx, handipAdmin, hansipDomain, "Hansip admin role")
+		if err != nil {
+			fLog.Errorf("db.CreateRole Got %s", err.Error())
+		}
+	}
+
+	// Adding role into group
+	fLog.Infof("Making sure built-in group contains built-in role")
+	gr, err := db.GetGroupRole(ctx, group, role)
+	if err != nil || gr == nil {
+		fLog.Infof("Adding built-in role to built-in group")
+		_, err := db.CreateGroupRole(ctx, group, role)
+		if err != nil {
+			fLog.Errorf("db.CreateGroupRole Got %s", err.Error())
+		}
+	}
+
+	// Create setup user
+	fLog.Infof("Checking setup user")
+	user, err := db.GetUserByEmail(ctx, "setup@hansip")
+	if err != nil {
+		fLog.Warnf("Creating setup user. This setup user must be disabled in production. Setup user passphrase is `this user must be disabled on production`")
+		user, err = db.CreateUserRecord(ctx, "setup@hansip", "this user must be disabled on production")
+		if err != nil {
+			fLog.Errorf("db.CreateRole Got %s", err.Error())
+		} else {
+			if !user.Enabled {
+				fLog.Infof("Enabling setup user")
+				user.Enabled = true
+				err = db.SaveOrUpdate(ctx, user)
+				if err != nil {
+					fLog.Errorf("db.SaveOrUpdate Got %s", err.Error())
+				}
+			}
+		}
+	}
+
+	// Create setup user
+	fLog.Infof("Make sure that setup user is in built-in group")
+	ug, err := db.GetUserGroup(ctx, user, group)
+	if err != nil || ug == nil {
+		fLog.Infof("Adding steup user to built-in group")
+		_, err = db.CreateUserGroup(ctx, user, group)
+		if err != nil {
+			fLog.Errorf("db.CreateUserGroup Got %s", err.Error())
+		}
+	}
+
 	return nil
 }
 
@@ -308,8 +379,10 @@ func (db *MySQLDB) DropAllTables(ctx context.Context) error {
 // CreateAllTable creates all table used by Hansip
 func (db *MySQLDB) CreateAllTable(ctx context.Context) error {
 	fLog := mysqlLog.WithField("func", "CreateAllTable").WithField("RequestID", ctx.Value(constants.RequestID))
-	adminRole := config.Get("user.role.admin")
-	userRole := config.Get("user.role.user")
+
+	hansipDomain := config.Get("hansip.domain")
+	hansipAdmin := config.Get("hansip.admin")
+
 	_, err := db.instance.ExecContext(ctx, CreateTenantSQL)
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext HANSIP_TENANT Got %s. SQL = %s", err.Error(), CreateTenantSQL)
@@ -387,12 +460,7 @@ func (db *MySQLDB) CreateAllTable(ctx context.Context) error {
 			SQL:     CreateTOTPRecoveryCodeSQL,
 		}
 	}
-	_, err = db.CreateRole(ctx, adminRole, "hansip", "Administrator role")
-	if err != nil {
-		fLog.Errorf("db.CreateRole Got %s", err.Error())
-		return err
-	}
-	_, err = db.CreateRole(ctx, userRole, "hansip", "Administrator role")
+	_, err = db.CreateRole(ctx, hansipAdmin, hansipDomain, "Administrator role")
 	if err != nil {
 		fLog.Errorf("db.CreateRole Got %s", err.Error())
 		return err
@@ -408,6 +476,12 @@ func (db *MySQLDB) GetTenantByDomain(ctx context.Context, tenantDomain string) (
 	row := db.instance.QueryRowContext(ctx, q, tenantDomain)
 	err := row.Scan(&tenant.RecID, &tenant.Name, &tenant.Domain, &tenant.Description)
 	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return nil, &ErrDBNoResult{
+				Message: "GetTenantByDomain returns no result",
+				SQL:     q,
+			}
+		}
 		fLog.Errorf("row.Scan got %s", err.Error())
 		return nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1106,6 +1180,12 @@ func (db *MySQLDB) GetUserRole(ctx context.Context, user *User, role *Role) (*Us
 			SQL:     q,
 		}
 	}
+	if count == 0 {
+		return nil, &ErrDBNoResult{
+			Message: fmt.Sprintf("role %s is not owned by user %s", role.RoleName, user.Email),
+			SQL:     q,
+		}
+	}
 	return &UserRole{
 		UserRecID: user.RecID,
 		RoleRecID: role.RecID,
@@ -1323,7 +1403,7 @@ func (db *MySQLDB) CreateRole(ctx context.Context, roleName, roleDomain, descrip
 		RoleDomain:  roleDomain,
 		Description: description,
 	}
-	q := "INSERT INTO HANSIP_ROLE(REC_ID, ROLE_NAME,ROLE_DOMAIN, DESCRIPTION) VALUES (?,?,?)"
+	q := "INSERT INTO HANSIP_ROLE(REC_ID, ROLE_NAME,ROLE_DOMAIN, DESCRIPTION) VALUES (?,?,?,?)"
 	_, err := db.instance.ExecContext(ctx, q, r.RecID, roleName, roleDomain, description)
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
@@ -1337,7 +1417,7 @@ func (db *MySQLDB) CreateRole(ctx context.Context, roleName, roleDomain, descrip
 }
 
 // ListRoles list all roles in this server
-func (db *MySQLDB) ListRoles(ctx context.Context, request *helper.PageRequest) ([]*Role, *helper.Page, error) {
+func (db *MySQLDB) ListRoles(ctx context.Context, tenant *Tenant, request *helper.PageRequest) ([]*Role, *helper.Page, error) {
 	fLog := mysqlLog.WithField("func", "ListRoles").WithField("RequestID", ctx.Value(constants.RequestID))
 	q := "SELECT COUNT(*) AS CNT FROM HANSIP_ROLE"
 	row := db.instance.QueryRowContext(ctx, q)
@@ -1352,9 +1432,9 @@ func (db *MySQLDB) ListRoles(ctx context.Context, request *helper.PageRequest) (
 		}
 	}
 	page := helper.NewPage(request, uint(count))
-	q = fmt.Sprintf("SELECT REC_ID, ROLE_NAME,ROLE_DOMAIN, DESCRIPTION FROM HANSIP_ROLE ORDER BY ROLE_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
+	q = fmt.Sprintf("SELECT REC_ID, ROLE_NAME,ROLE_DOMAIN, DESCRIPTION FROM HANSIP_ROLE WHERE ROLE_DOMAIN=? ORDER BY ROLE_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	ret := make([]*Role, 0)
-	rows, err := db.instance.QueryContext(ctx, q)
+	rows, err := db.instance.QueryContext(ctx, q, tenant.Domain)
 	if err != nil {
 		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
 		return nil, nil, &ErrDBQueryError{
@@ -1525,7 +1605,7 @@ func (db *MySQLDB) CreateGroup(ctx context.Context, groupName, groupDomain, desc
 }
 
 // ListGroups list all groups in this server
-func (db *MySQLDB) ListGroups(ctx context.Context, request *helper.PageRequest) ([]*Group, *helper.Page, error) {
+func (db *MySQLDB) ListGroups(ctx context.Context, tenant *Tenant, request *helper.PageRequest) ([]*Group, *helper.Page, error) {
 	fLog := mysqlLog.WithField("func", "ListGroups").WithField("RequestID", ctx.Value(constants.RequestID))
 	q := "SELECT COUNT(*) AS CNT FROM HANSIP_GROUP"
 	row := db.instance.QueryRowContext(ctx, q)
@@ -1540,9 +1620,9 @@ func (db *MySQLDB) ListGroups(ctx context.Context, request *helper.PageRequest) 
 		}
 	}
 	page := helper.NewPage(request, uint(count))
-	q = fmt.Sprintf("SELECT REC_ID, GROUP_NAME, DESCRIPTION FROM HANSIP_GROUP ORDER BY GROUP_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
+	q = fmt.Sprintf("SELECT REC_ID, GROUP_NAME, GROUP_DOMAIN, DESCRIPTION FROM HANSIP_GROUP WHERE GROUP_DOMAIN=? ORDER BY GROUP_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	ret := make([]*Group, 0)
-	rows, err := db.instance.QueryContext(ctx, q)
+	rows, err := db.instance.QueryContext(ctx, q, tenant.Domain)
 	if err != nil {
 		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
 		return nil, nil, &ErrDBQueryError{
@@ -1553,7 +1633,7 @@ func (db *MySQLDB) ListGroups(ctx context.Context, request *helper.PageRequest) 
 	}
 	for rows.Next() {
 		r := &Group{}
-		err := rows.Scan(&r.RecID, &r.GroupName, &r.Description)
+		err := rows.Scan(&r.RecID, &r.GroupName, &r.GroupDomain, &r.Description)
 		if err != nil {
 			fLog.Warnf("row.Scan got  %s", err.Error())
 			return nil, nil, &ErrDBScanError{
@@ -1667,6 +1747,12 @@ func (db *MySQLDB) GetGroupRole(ctx context.Context, group *Group, role *Role) (
 		return nil, &ErrDBScanError{
 			Wrapped: err,
 			Message: "Error GetGroupRole",
+			SQL:     q,
+		}
+	}
+	if count == 0 {
+		return nil, &ErrDBNoResult{
+			Message: fmt.Sprintf("role %s is not in group %s", role.RoleName, group.GroupName),
 			SQL:     q,
 		}
 	}
@@ -1852,6 +1938,12 @@ func (db *MySQLDB) GetUserGroup(ctx context.Context, user *User, group *Group) (
 		return nil, &ErrDBScanError{
 			Wrapped: err,
 			Message: "Error GetUserGroup",
+			SQL:     q,
+		}
+	}
+	if count == 0 {
+		return nil, &ErrDBNoResult{
+			Message: fmt.Sprintf("user %s is not in group %s", user.Email, group.GroupName),
 			SQL:     q,
 		}
 	}

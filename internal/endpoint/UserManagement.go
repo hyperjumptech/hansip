@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hyperjumptech/hansip/internal/config"
+	"github.com/hyperjumptech/hansip/internal/connector"
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/internal/hansipcontext"
 	"github.com/hyperjumptech/hansip/internal/mailer"
@@ -23,6 +24,13 @@ var (
 
 func SetUserRoles(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "SetUserRoles").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+
+	iauthctx := r.Context().Value(constants.HansipAuthentication)
+	if iauthctx != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
+		return
+	}
+
 	params, err := helper.ParsePathParams(fmt.Sprintf("%s/management/user/{userRecId}/roles", apiPrefix), r.URL.Path)
 	if err != nil {
 		panic(err)
@@ -46,6 +54,20 @@ func SetUserRoles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rolesToAdd := make([]*connector.Role, 0)
+	for _, roleId := range roleIds {
+		role, err := RoleRepo.GetRoleByRecID(r.Context(), roleId)
+		if err != nil {
+			fLog.Warnf("RoleRepo.GetRoleByRecID got %s, this role %s will not be added to user %s role", err.Error(), roleId, user.RecID)
+		}
+		authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
+		if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+			helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access role with the specified domain", nil, nil)
+			return
+		}
+		rolesToAdd = append(rolesToAdd, role)
+	}
+
 	err = UserRoleRepo.DeleteUserRoleByUser(r.Context(), user)
 	if err != nil {
 		fLog.Errorf("UserRoleRepo.DeleteUserRoleByUser got %s", err.Error())
@@ -54,17 +76,12 @@ func SetUserRoles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	counter := 0
-	for _, roleId := range roleIds {
-		role, err := RoleRepo.GetRoleByRecID(r.Context(), roleId)
+	for _, role := range rolesToAdd {
+		_, err := UserRoleRepo.CreateUserRole(r.Context(), user, role)
 		if err != nil {
-			fLog.Warnf("RoleRepo.GetRoleByRecID got %s, this role %s will not be added to user %s role", err.Error(), roleId, user.RecID)
+			fLog.Warnf("UserRoleRepo.CreateUserRole got %s, this role %s will not be added to user %s role", err.Error(), role.RecID, user.RecID)
 		} else {
-			_, err := UserRoleRepo.CreateUserRole(r.Context(), user, role)
-			if err != nil {
-				fLog.Warnf("UserRoleRepo.CreateUserRole got %s, this role %s will not be added to user %s role", err.Error(), roleId, user.RecID)
-			} else {
-				counter++
-			}
+			counter++
 		}
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d roles added into user", counter), nil, nil)
@@ -215,6 +232,13 @@ func ListAllUsers(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	fLog := userMgmtLogger.WithField("func", "ListAllUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+
+	iauthctx := r.Context().Value(constants.HansipAuthentication)
+	if iauthctx != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
+		return
+	}
+
 	fLog.Trace("Listing Users")
 	pageRequest, err := helper.NewPageRequestFromRequest(r)
 	if err != nil {
@@ -263,6 +287,13 @@ type CreateNewUserResponse struct {
 // CreateNewUser handles request to create new user
 func CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "CreateNewUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+
+	iauthctx := r.Context().Value(constants.HansipAuthentication)
+	if iauthctx != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
+		return
+	}
+
 	fLog.Trace("Creating new user")
 	req := &CreateNewUserRequest{}
 	body, err := ioutil.ReadAll(r.Body)
@@ -736,8 +767,9 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 // SimpleRole define structure or request body used to list role
 type SimpleRole struct {
-	RecID    string `json:"rec_id"`
-	RoleName string `json:"role_name"`
+	RecID      string `json:"rec_id"`
+	RoleName   string `json:"role_name"`
+	RoleDomain string `json:"role_domain"`
 }
 
 // ListUserRole serve listing all role that directly owned by user
@@ -766,8 +798,9 @@ func ListUserRole(w http.ResponseWriter, r *http.Request) {
 	sroles := make([]*SimpleRole, len(roles))
 	for k, v := range roles {
 		sroles[k] = &SimpleRole{
-			RecID:    v.RecID,
-			RoleName: v.RoleName,
+			RecID:      v.RecID,
+			RoleName:   v.RoleName,
+			RoleDomain: v.RoleDomain,
 		}
 	}
 	ret := make(map[string]interface{})
@@ -815,22 +848,38 @@ func ListAllUserRole(w http.ResponseWriter, r *http.Request) {
 // CreateUserRole serve a user-role relation
 func CreateUserRole(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "CreateUserRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+
+	iauthctx := r.Context().Value(constants.HansipAuthentication)
+	if iauthctx != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
+		return
+	}
+
 	params, err := helper.ParsePathParams(fmt.Sprintf("%s/management/user/{userRecId}/role/{roleRecId}", apiPrefix), r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
-	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
-		return
-	}
+
 	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
 		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
+
+	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
+	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access role with the specified domain", nil, nil)
+		return
+	}
+
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
+	if err != nil {
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		return
+	}
+
 	_, err = UserRoleRepo.CreateUserRole(r.Context(), user, role)
 	if err != nil {
 		fLog.Errorf("UserRoleRepo.CreateUserRole got %s", err.Error())
@@ -843,22 +892,38 @@ func CreateUserRole(w http.ResponseWriter, r *http.Request) {
 // DeleteUserRole serve the user deletion
 func DeleteUserRole(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "DeleteUserRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+
+	iauthctx := r.Context().Value(constants.HansipAuthentication)
+	if iauthctx != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
+		return
+	}
+
 	params, err := helper.ParsePathParams(fmt.Sprintf("%s/management/user/{userRecId}/role/{roleRecId}", apiPrefix), r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
-	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
-		return
-	}
+
 	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
 		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
+
+	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
+	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access role with the specified domain", nil, nil)
+		return
+	}
+
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
+	if err != nil {
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		return
+	}
+
 	userRole, err := UserRoleRepo.GetUserRole(r.Context(), user, role)
 	if err != nil {
 		fLog.Errorf("UserRoleRepo.GetUserRole got %s", err.Error())
@@ -877,6 +942,13 @@ func DeleteUserRole(w http.ResponseWriter, r *http.Request) {
 // ListUserGroup serve a user-group listing
 func ListUserGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "ListUserGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+
+	iauthctx := r.Context().Value(constants.HansipAuthentication)
+	if iauthctx != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
+		return
+	}
+
 	params, err := helper.ParsePathParams(fmt.Sprintf("%s/management/user/{userRecId}/groups", apiPrefix), r.URL.Path)
 	if err != nil {
 		panic(err)
@@ -913,22 +985,38 @@ func ListUserGroup(w http.ResponseWriter, r *http.Request) {
 // CreateUserGroup serve creation of user-group relation
 func CreateUserGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "CreateUserGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+
+	iauthctx := r.Context().Value(constants.HansipAuthentication)
+	if iauthctx != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
+		return
+	}
+
 	params, err := helper.ParsePathParams(fmt.Sprintf("%s/management/user/{userRecId}/group/{groupRecId}", apiPrefix), r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
-	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
-		return
-	}
+
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
 		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
+
+	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
+	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
+		return
+	}
+
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
+	if err != nil {
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		return
+	}
+
 	_, err = UserGroupRepo.CreateUserGroup(r.Context(), user, group)
 	if err != nil {
 		fLog.Errorf("UserGroupRepo.CreateUserGroup got %s", err.Error())
@@ -941,22 +1029,38 @@ func CreateUserGroup(w http.ResponseWriter, r *http.Request) {
 // DeleteUserGroup serve deleting a user-group relation
 func DeleteUserGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "DeleteUserGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
+
+	iauthctx := r.Context().Value(constants.HansipAuthentication)
+	if iauthctx != nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
+		return
+	}
+
 	params, err := helper.ParsePathParams(fmt.Sprintf("%s/management/user/{userRecId}/group/{groupRecId}", apiPrefix), r.URL.Path)
 	if err != nil {
 		panic(err)
 	}
-	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
-	if err != nil {
-		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
-		return
-	}
+
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
 		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
+
+	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
+	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
+		return
+	}
+
+	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
+	if err != nil {
+		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		return
+	}
+
 	ug, err := UserGroupRepo.GetUserGroup(r.Context(), user, group)
 	if err != nil {
 		fLog.Errorf("UserGroupRepo.GetUserGroup got %s", err.Error())

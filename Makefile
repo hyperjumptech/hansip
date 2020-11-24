@@ -41,7 +41,6 @@ run: build
 	export AAA_SERVER_HTTP_CORS_IGNOREOPTION=false; \
 	export AAA_SERVER_HTTP_CORS_OPTIONSTATUS=200; \
 	export AAA_TOKEN_ISSUER=aaa.hansip.go.id; \
-	export AAA_DB_TYPE=INMEMORY; \
 	export AAA_MAILER_TYPE=DUMMY; \
 	export AAA_MAILER_FROM=aaa@hansip.go.id; \
 	export AAA_MAILER_SENDMAIL_HOST=hansip.go.id; \

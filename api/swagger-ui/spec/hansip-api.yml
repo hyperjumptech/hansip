@@ -1064,7 +1064,7 @@ paths:
           description: "You are not authorized"
         403:
           description: "Forbidden, your Authorization is not valid or sufficient"
-  /management/groups:
+  /management/tenant/{tenantRecId}/groups:
     get:
       tags:
         - "management-group"
@@ -1076,6 +1076,10 @@ paths:
       produces:
         - "application/json"
       parameters:
+        - in: path
+          required: true
+          name: "tenantRecId"
+          type: "string"
         - in: "query"
           required: true
           name: "page_no"
@@ -1588,7 +1592,7 @@ paths:
           description: "You are not authorized"
         403:
           description: "Forbidden, your Authorization is not valid or sufficient"
-  /management/roles:
+  /management/tenant/{tenantRecId}/roles:
     get:
       tags:
         - "management-role"
@@ -1600,6 +1604,10 @@ paths:
       produces:
         - "application/json"
       parameters:
+        - in: path
+          required: true
+          name: "tenantRecId"
+          type: "string"
         - in: "query"
           name: "domains"
           description: "A comma separated list of domains"

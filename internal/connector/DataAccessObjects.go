@@ -90,7 +90,7 @@ type GroupRepository interface {
 	CreateGroup(ctx context.Context, groupName, groupDomain, description string) (*Group, error)
 
 	// ListGroup from the Group table
-	ListGroups(ctx context.Context, request *helper.PageRequest) ([]*Group, *helper.Page, error)
+	ListGroups(ctx context.Context, tenant *Tenant, request *helper.PageRequest) ([]*Group, *helper.Page, error)
 
 	// DeleteGroup from Group table
 	DeleteGroup(ctx context.Context, group *Group) error
@@ -184,7 +184,7 @@ type RoleRepository interface {
 	CreateRole(ctx context.Context, roleName, roleDomain, description string) (*Role, error)
 
 	// ListRoles from Role table
-	ListRoles(ctx context.Context, request *helper.PageRequest) ([]*Role, *helper.Page, error)
+	ListRoles(ctx context.Context, tenant *Tenant, request *helper.PageRequest) ([]*Role, *helper.Page, error)
 
 	// DeleteRole from Role table
 	DeleteRole(ctx context.Context, role *Role) error
