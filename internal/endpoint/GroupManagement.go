@@ -26,7 +26,7 @@ func SetGroupUsers(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "SetGroupUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -88,7 +88,7 @@ func DeleteGroupUsers(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "DeleteGroupUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -121,7 +121,7 @@ func SetGroupRoles(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "SetGroupRoles").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -184,7 +184,7 @@ func DeleteGroupRoles(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "DeleteGroupRoles").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -219,7 +219,7 @@ func ListAllGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "ListAllGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -272,7 +272,7 @@ func CreateNewGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "CreateNewGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -324,7 +324,7 @@ func GetGroupDetail(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "GetGroupDetail").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -354,7 +354,7 @@ func UpdateGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "UpdateGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -402,7 +402,7 @@ func UpdateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = GroupRepo.SaveOrUpdateGroup(r.Context(), group)
+	err = GroupRepo.UpdateGroup(r.Context(), group)
 	if err != nil {
 		fLog.Errorf("GroupRepo.SaveOrUpdateGroupe got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
@@ -417,7 +417,7 @@ func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "DeleteGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -448,7 +448,7 @@ func ListGroupUser(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "ListGroupUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -500,7 +500,7 @@ func CreateGroupUser(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "CreateGroupUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -542,7 +542,7 @@ func DeleteGroupUser(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "DeleteGroupUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -590,7 +590,7 @@ func ListGroupRole(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "ListGroupRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -640,7 +640,7 @@ func CreateGroupRole(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "CreateGroupRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -688,7 +688,7 @@ func DeleteGroupRole(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "DeleteGroupRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}

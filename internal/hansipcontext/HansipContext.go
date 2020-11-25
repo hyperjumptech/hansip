@@ -16,8 +16,9 @@ type AuthenticationContext struct {
 // HasIsAdminOfDomain validate if the user have an admin account of a domain
 func (c *AuthenticationContext) HasIsAdminOfDomain(domain string) bool {
 	lookFor := fmt.Sprintf("%s@%s", config.Get("hansip.admin"), domain)
+	hansipRole := fmt.Sprintf("%s@%s", config.Get("hansip.admin"), config.Get("hansip.domain"))
 	for _, aud := range c.Audience {
-		if aud == lookFor {
+		if aud == lookFor || aud == hansipRole {
 			return true
 		}
 	}

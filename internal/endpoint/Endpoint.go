@@ -132,10 +132,10 @@ func (e *Endpoint) canAccess(path string, method uint8, audience []string) error
 	if e.IsPublic {
 		return nil
 	}
-	if e.WhiteListAudiences == nil || len(e.WhiteListAudiences) == 0 || !isRoleMatch(e.WhiteListAudiences, audience) {
-		return &hansiperrors.ErrAudienceNotAllowed{Audiences: audience}
+	if isRoleMatch(e.WhiteListAudiences, audience) {
+		return nil
 	}
-	return nil
+	return &hansiperrors.ErrAudienceNotAllowed{Audiences: audience}
 }
 
 func FlagToListMethod(flags uint8) []string {
@@ -166,7 +166,13 @@ func FlagToListMethod(flags uint8) []string {
 
 func isRoleMatch(needs, supplies []string) bool {
 	for _, need := range needs {
+		if need == "*@*" {
+			return true
+		}
 		for _, supply := range supplies {
+			if supply == "*@*" {
+				return true
+			}
 			if strings.Contains(need, "*") && strings.Contains(supply, "*") {
 				continue
 			} else if strings.Contains(need, "*") {

@@ -21,12 +21,14 @@ var (
 func ListAllTenants(w http.ResponseWriter, r *http.Request) {
 	fLog := tenantMgmtLog.WithField("func", "ListAllTenans").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
+		fLog.Tracef("Missing authentication context")
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
 	if !authCtx.HasIsAdminOfDomain(config.Get("hansip.domain")) {
+		fLog.Tracef("Missing right")
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access this resource", nil, nil)
 		return
 	}
@@ -59,7 +61,7 @@ type CreateTenantRequest struct {
 func CreateNewTenant(w http.ResponseWriter, r *http.Request) {
 	fLog := tenantMgmtLog.WithField("func", "CreateNewTenant").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -101,7 +103,7 @@ func CreateNewTenant(w http.ResponseWriter, r *http.Request) {
 func GetTenantDetail(w http.ResponseWriter, r *http.Request) {
 	fLog := tenantMgmtLog.WithField("func", "GetTenantDetail").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -128,7 +130,7 @@ func GetTenantDetail(w http.ResponseWriter, r *http.Request) {
 func UpdateTenantDetail(w http.ResponseWriter, r *http.Request) {
 	fLog := tenantMgmtLog.WithField("func", "UpdateTenantDetail").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -174,14 +176,12 @@ func UpdateTenantDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = TenantRepo.SaveOrUpdateTenant(r.Context(), tenant)
+	err = TenantRepo.UpdateTenant(r.Context(), tenant)
 	if err != nil {
-		fLog.Errorf("TenantRepo.SaveOrUpdateTenant got %s", err.Error())
+		fLog.Errorf("TenantRepo.UpdateTenant got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
-
-	// todo Update all role and group that have the same domain.
 
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Tenant updated", nil, tenant)
 
@@ -191,7 +191,7 @@ func UpdateTenantDetail(w http.ResponseWriter, r *http.Request) {
 func DeleteTenant(w http.ResponseWriter, r *http.Request) {
 	fLog := tenantMgmtLog.WithField("func", "DeleteTenant").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}

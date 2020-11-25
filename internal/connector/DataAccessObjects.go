@@ -30,7 +30,7 @@ type TenantRepository interface {
 	DeleteTenant(ctx context.Context, tenant *Tenant) error
 
 	// SaveOrUpdate a tenant entity into table tenant
-	SaveOrUpdateTenant(ctx context.Context, tenant *Tenant) error
+	UpdateTenant(ctx context.Context, tenant *Tenant) error
 
 	// ListTenant from database with pagination
 	ListTenant(ctx context.Context, request *helper.PageRequest) ([]*Tenant, *helper.Page, error)
@@ -57,7 +57,7 @@ type UserRepository interface {
 	DeleteUser(ctx context.Context, user *User) error
 
 	// SaveOrUpdate a user entity into table user
-	SaveOrUpdate(ctx context.Context, user *User) error
+	UpdateUser(ctx context.Context, user *User) error
 
 	// ListUser from database with pagination
 	ListUser(ctx context.Context, request *helper.PageRequest) ([]*User, *helper.Page, error)
@@ -96,7 +96,7 @@ type GroupRepository interface {
 	DeleteGroup(ctx context.Context, group *Group) error
 
 	// CreateUserGroup into Group table
-	SaveOrUpdateGroup(ctx context.Context, group *Group) error
+	UpdateGroup(ctx context.Context, group *Group) error
 }
 
 // UserGroupRepository manage UserGroup table
@@ -190,7 +190,7 @@ type RoleRepository interface {
 	DeleteRole(ctx context.Context, role *Role) error
 
 	// SaveOrUpdateRole into Role table
-	SaveOrUpdateRole(ctx context.Context, role *Role) error
+	UpdateRole(ctx context.Context, role *Role) error
 }
 
 // Tenant record entity

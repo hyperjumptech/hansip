@@ -26,7 +26,7 @@ func SetUserRoles(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "SetUserRoles").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -188,7 +188,7 @@ func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.UserTotpSecretKey = totp.MakeSecret().Base32()
-	err = UserRepo.SaveOrUpdate(r.Context(), user)
+	err = UserRepo.UpdateUser(r.Context(), user)
 	if err != nil {
 		fLog.Errorf("UserRepo.SaveOrUpdate got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
@@ -234,7 +234,7 @@ func ListAllUsers(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "ListAllUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -289,7 +289,7 @@ func CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "CreateNewUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -399,7 +399,7 @@ func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.HashedPassphrase = string(newHashed)
-	err = UserRepo.SaveOrUpdate(r.Context(), user)
+	err = UserRepo.UpdateUser(r.Context(), user)
 	if err != nil {
 		fLog.Errorf("UserRepo.SaveOrUpdate got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
@@ -495,7 +495,7 @@ func Activate2FA(w http.ResponseWriter, r *http.Request) {
 		Codes: codes,
 	}
 	user.Enable2FactorAuth = true
-	err = UserRepo.SaveOrUpdate(r.Context(), user)
+	err = UserRepo.UpdateUser(r.Context(), user)
 	if err != nil {
 		fLog.Errorf("UserRepo.SaveOrUpdate got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
@@ -621,7 +621,7 @@ func ActivateUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		user.HashedPassphrase = string(newHashed)
-		err = UserRepo.SaveOrUpdate(r.Context(), user)
+		err = UserRepo.UpdateUser(r.Context(), user)
 		if err != nil {
 			fLog.Errorf("UserRepo.SaveOrUpdate got %s", err.Error())
 			helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
@@ -716,7 +716,7 @@ func UpdateUserDetail(w http.ResponseWriter, r *http.Request) {
 	user.Enabled = req.Enabled
 	user.Suspended = req.Suspended
 
-	err = UserRepo.SaveOrUpdate(r.Context(), user)
+	err = UserRepo.UpdateUser(r.Context(), user)
 	if err != nil {
 		fLog.Errorf("UserRepo.SaveOrUpdate got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
@@ -850,7 +850,7 @@ func CreateUserRole(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "CreateUserRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -894,7 +894,7 @@ func DeleteUserRole(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "DeleteUserRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -944,7 +944,7 @@ func ListUserGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "ListUserGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -987,7 +987,7 @@ func CreateUserGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "CreateUserGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -1031,7 +1031,7 @@ func DeleteUserGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "DeleteUserGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}

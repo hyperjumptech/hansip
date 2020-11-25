@@ -313,9 +313,9 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 			if !user.Enabled {
 				fLog.Infof("Enabling setup user")
 				user.Enabled = true
-				err = db.SaveOrUpdate(ctx, user)
+				err = db.UpdateUser(ctx, user)
 				if err != nil {
-					fLog.Errorf("db.SaveOrUpdate Got %s", err.Error())
+					fLog.Errorf("db.UpdateUser Got %s", err.Error())
 				}
 			}
 		}
@@ -553,50 +553,32 @@ func (db *MySQLDB) DeleteTenant(ctx context.Context, tenant *Tenant) error {
 	return err
 }
 
-// SaveOrUpdate a tenant entity into table tenant
-func (db *MySQLDB) SaveOrUpdateTenant(ctx context.Context, tenant *Tenant) error {
-	fLog := mysqlLog.WithField("func", "SaveOrUpdate").WithField("RequestID", ctx.Value(constants.RequestID))
+// UpdateTenant a tenant entity into table tenant
+func (db *MySQLDB) UpdateTenant(ctx context.Context, tenant *Tenant) error {
+	fLog := mysqlLog.WithField("func", "UpdateTenant").WithField("RequestID", ctx.Value(constants.RequestID))
 
-	updating := false
-	if len(tenant.RecID) == 0 {
-		tenant.RecID = helper.MakeRandomString(10, true, true, true, false)
-		updating = false
-	} else {
-		update, err := db.IsTenantRecIDExist(ctx, tenant.RecID)
-		if err != nil {
-			return err
-		}
-		updating = update
+	exist, err := db.IsTenantRecIDExist(ctx, tenant.RecID)
+	if err != nil {
+		return err
 	}
-	if updating {
-		q := "UPDATE HANSIP_TENANT SET TENANT_NAME=?, TENANT_DOMAIN=?, DESCRIPTION=? WHERE REC_ID=?"
-		_, err := db.instance.ExecContext(ctx, q,
-			tenant.Name, tenant.Domain, tenant.Description, tenant.RecID)
-		if err != nil {
-			fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
-			return &ErrDBExecuteError{
-				Wrapped: err,
-				Message: "Error SaveOrUpdateTenant",
-				SQL:     q,
-			}
-		}
-
-		// todo If domain name changed Change the role name
-		// todo If domain name changed Change the group name
-
-		return nil
+	if !exist {
+		return ErrNotFound
 	}
-	q := "INSERT INTO HANSIP_TENANT(REC_ID,TENANT_NAME,TENANT_DOMAIN,DESCRIPTION) VALUES(?,?,?,?)"
-	_, err := db.instance.ExecContext(ctx, q,
-		tenant.RecID, tenant.Name, tenant.Domain, tenant.Description)
+	q := "UPDATE HANSIP_TENANT SET TENANT_NAME=?, TENANT_DOMAIN=?, DESCRIPTION=? WHERE REC_ID=?"
+	_, err = db.instance.ExecContext(ctx, q,
+		tenant.Name, tenant.Domain, tenant.Description, tenant.RecID)
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 		return &ErrDBExecuteError{
 			Wrapped: err,
-			Message: "Error SaveOrUpdateTenant",
+			Message: "Error UpdateTenant",
 			SQL:     q,
 		}
 	}
+
+	// todo If domain name changed Change the role name
+	// todo If domain name changed Change the group name
+
 	return nil
 }
 
@@ -976,13 +958,16 @@ func (db *MySQLDB) IsUserRecIDExist(ctx context.Context, recID string) (bool, er
 	return false, nil
 }
 
-// SaveOrUpdate save or update a user data
-func (db *MySQLDB) SaveOrUpdate(ctx context.Context, user *User) error {
-	fLog := mysqlLog.WithField("func", "SaveOrUpdate").WithField("RequestID", ctx.Value(constants.RequestID))
-	updating, err := db.IsUserRecIDExist(ctx, user.RecID)
+// UpdateUser save or update a user data
+func (db *MySQLDB) UpdateUser(ctx context.Context, user *User) error {
+	fLog := mysqlLog.WithField("func", "UpdateUser").WithField("RequestID", ctx.Value(constants.RequestID))
+	exist, err := db.IsUserRecIDExist(ctx, user.RecID)
 	if err != nil {
 		fLog.Errorf("db.IsUserRecIDExist got %s", err.Error())
 		return err
+	}
+	if !exist {
+		return ErrNotFound
 	}
 	enabled := 0
 	suspended := 0
@@ -996,22 +981,6 @@ func (db *MySQLDB) SaveOrUpdate(ctx context.Context, user *User) error {
 	if user.Enable2FactorAuth {
 		enable2fa = 1
 	}
-	if !updating {
-		fLog.Infof("Creating user %s", user.Email)
-		q := "INSERT INTO HANSIP_USER(REC_ID,EMAIL,HASHED_PASSPHRASE,ENABLED, SUSPENDED,LAST_SEEN,LAST_LOGIN,FAIL_COUNT,ACTIVATION_CODE,ACTIVATION_DATE,TOTP_KEY,ENABLE_2FE,TOKEN_2FE,RECOVERY_CODE) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-		_, err = db.instance.ExecContext(ctx, q,
-			user.RecID, user.Email, user.HashedPassphrase, enabled, suspended, user.LastSeen, user.LastLogin, user.FailCount, user.ActivationCode,
-			user.ActivationDate, user.UserTotpSecretKey, enable2fa, user.Token2FA, user.RecoveryCode)
-		if err != nil {
-			fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
-			return &ErrDBExecuteError{
-				Wrapped: err,
-				Message: "Error SaveOrUpdate",
-				SQL:     q,
-			}
-		}
-		return nil
-	}
 	q := "UPDATE HANSIP_USER SET EMAIL=?,HASHED_PASSPHRASE=?,ENABLED=?, SUSPENDED=?,LAST_SEEN=?,LAST_LOGIN=?,FAIL_COUNT=?,ACTIVATION_CODE=?,ACTIVATION_DATE=?,TOTP_KEY=?,ENABLE_2FE=?,TOKEN_2FE=?,RECOVERY_CODE=? WHERE REC_ID=?"
 	fLog.Infof("Updating user %s", user.Email)
 	_, err = db.instance.ExecContext(ctx, q,
@@ -1021,7 +990,7 @@ func (db *MySQLDB) SaveOrUpdate(ctx context.Context, user *User) error {
 		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 		return &ErrDBExecuteError{
 			Wrapped: err,
-			Message: "Error SaveOrUpdate",
+			Message: "Error UpdateUser",
 			SQL:     q,
 		}
 	}
@@ -1505,42 +1474,24 @@ func (db *MySQLDB) IsRoleRecIDExist(ctx context.Context, recID string) (bool, er
 	return false, nil
 }
 
-// SaveOrUpdateRole save or update a role record
-func (db *MySQLDB) SaveOrUpdateRole(ctx context.Context, role *Role) error {
-	fLog := mysqlLog.WithField("func", "SaveOrUpdateRole").WithField("RequestID", ctx.Value(constants.RequestID))
-	updating := false
-	if len(role.RecID) == 0 {
-		role.RecID = helper.MakeRandomString(10, true, true, true, false)
-		updating = false
-	} else {
-		update, err := db.IsRoleRecIDExist(ctx, role.RecID)
-		if err != nil {
-			return err
-		}
-		updating = update
+// UpdateRole save or update a role record
+func (db *MySQLDB) UpdateRole(ctx context.Context, role *Role) error {
+	fLog := mysqlLog.WithField("func", "UpdateRole").WithField("RequestID", ctx.Value(constants.RequestID))
+	exist, err := db.IsRoleRecIDExist(ctx, role.RecID)
+	if err != nil {
+		return err
 	}
-	if updating {
-		q := "UPDATE HANSIP_ROLE SET ROLE_NAME=?, ROLE_DOMAIN=?, DESCRIPTION=? WHERE REC_ID=?"
-		_, err := db.instance.ExecContext(ctx, q,
-			role.RoleName, role.RoleDomain, role.Description, role.RecID)
-		if err != nil {
-			fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
-			return &ErrDBExecuteError{
-				Wrapped: err,
-				Message: "Error SaveOrUpdateRole",
-				SQL:     q,
-			}
-		}
-		return nil
+	if !exist {
+		return ErrNotFound
 	}
-	q := "INSERT INTO HANSIP_ROLE(REC_ID,ROLE_NAME,ROLE_DOMAIN,DESCRIPTION) VALUES(?,?,?)"
-	_, err := db.instance.ExecContext(ctx, q,
-		role.RecID, role.RoleName, role.RoleDomain, role.Description)
+	q := "UPDATE HANSIP_ROLE SET ROLE_NAME=?, ROLE_DOMAIN=?, DESCRIPTION=? WHERE REC_ID=?"
+	_, err = db.instance.ExecContext(ctx, q,
+		role.RoleName, role.RoleDomain, role.Description, role.RecID)
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 		return &ErrDBExecuteError{
 			Wrapped: err,
-			Message: "Error SaveOrUpdateRole",
+			Message: "Error UpdateRole",
 			SQL:     q,
 		}
 	}
@@ -1693,42 +1644,24 @@ func (db *MySQLDB) IsGroupRecIDExist(ctx context.Context, recID string) (bool, e
 	return false, nil
 }
 
-// SaveOrUpdateGroup delete one specific group
-func (db *MySQLDB) SaveOrUpdateGroup(ctx context.Context, group *Group) error {
-	fLog := mysqlLog.WithField("func", "SaveOrUpdateGroup").WithField("RequestID", ctx.Value(constants.RequestID))
-	updating := false
-	if len(group.RecID) == 0 {
-		group.RecID = helper.MakeRandomString(10, true, true, true, false)
-		updating = false
-	} else {
-		update, err := db.IsGroupRecIDExist(ctx, group.RecID)
-		if err != nil {
-			return err
-		}
-		updating = update
+// UpdateGroup delete one specific group
+func (db *MySQLDB) UpdateGroup(ctx context.Context, group *Group) error {
+	fLog := mysqlLog.WithField("func", "UpdateGroup").WithField("RequestID", ctx.Value(constants.RequestID))
+	exist, err := db.IsGroupRecIDExist(ctx, group.RecID)
+	if err != nil {
+		return err
 	}
-	if updating {
-		q := "UPDATE HANSIP_GROUP SET GROUP_NAME=?, GROUP_DOMAIN=?, DESCRIPTION=? WHERE REC_ID=?"
-		_, err := db.instance.ExecContext(ctx, q,
-			group.GroupName, group.GroupDomain, group.Description, group.RecID)
-		if err != nil {
-			fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
-			return &ErrDBExecuteError{
-				Wrapped: err,
-				Message: "Error SaveOrUpdateGroup",
-				SQL:     q,
-			}
-		}
-		return nil
+	if !exist {
+		return ErrNotFound
 	}
-	q := "INSERT INTO HANSIP_GROUP(REC_ID,GROUP_NAME, GROUP_DOMAIN, DESCRIPTION) VALUES(?,?,?,?)"
-	_, err := db.instance.ExecContext(ctx, q,
-		group.RecID, group.GroupName, group.GroupDomain, group.Description)
+	q := "UPDATE HANSIP_GROUP SET GROUP_NAME=?, GROUP_DOMAIN=?, DESCRIPTION=? WHERE REC_ID=?"
+	_, err = db.instance.ExecContext(ctx, q,
+		group.GroupName, group.GroupDomain, group.Description, group.RecID)
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
 		return &ErrDBExecuteError{
 			Wrapped: err,
-			Message: "Error SaveOrUpdateGroup",
+			Message: "Error UpdateGroup",
 			SQL:     q,
 		}
 	}

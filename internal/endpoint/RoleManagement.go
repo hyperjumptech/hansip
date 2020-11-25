@@ -20,7 +20,7 @@ func SetRoleUsers(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "SetRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -82,7 +82,7 @@ func SetRoleUsers(w http.ResponseWriter, r *http.Request) {
 func DeleteRoleUsers(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "DeleteRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -115,7 +115,7 @@ func DeleteRoleUsers(w http.ResponseWriter, r *http.Request) {
 func SetRoleGroups(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "SetRoleGroups").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -178,7 +178,7 @@ func DeleteRoleGroups(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "DeleteRoleGroups").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -213,7 +213,7 @@ func ListAllRole(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "ListAllRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -260,7 +260,7 @@ func CreateRole(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "CreateRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -311,7 +311,7 @@ func UpdateRole(w http.ResponseWriter, r *http.Request) {
 	fLog := groupMgmtLog.WithField("func", "UpdateRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -358,7 +358,7 @@ func UpdateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = RoleRepo.SaveOrUpdateRole(r.Context(), role)
+	err = RoleRepo.UpdateRole(r.Context(), role)
 	if err != nil {
 		fLog.Errorf("RoleRepo.SaveOrUpdateRole got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
@@ -372,7 +372,7 @@ func GetRoleDetail(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "GetRoleDetail").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -402,7 +402,7 @@ func DeleteRole(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "DeleteRole").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -433,7 +433,7 @@ func ListRoleUser(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "ListRoleUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -485,7 +485,7 @@ func CreateRoleUser(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "CreateRoleUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -527,7 +527,7 @@ func DeleteRoleUser(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "DeleteRoleUser").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -575,7 +575,7 @@ func ListRoleGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "ListRoleGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -622,7 +622,7 @@ func CreateRoleGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "CreateRoleGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}
@@ -670,7 +670,7 @@ func DeleteRoleGroup(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "DeleteRoleGroup").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
-	if iauthctx != nil {
+	if iauthctx == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "You are not authorized to access this resource", nil, nil)
 		return
 	}

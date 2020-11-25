@@ -103,7 +103,7 @@ func TwoFA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user, err := UserRepo.GetUserBy2FAToken(r.Context(), authReq.Token)
-	if err != nil {
+	if err != nil || user == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
@@ -115,7 +115,7 @@ func TwoFA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defer UserRepo.SaveOrUpdate(r.Context(), user)
+	defer UserRepo.UpdateUser(r.Context(), user)
 
 	if !valid {
 		user.FailCount = user.FailCount + 1
@@ -193,14 +193,14 @@ func Authentication2FA(w http.ResponseWriter, r *http.Request) {
 
 	// Get user by said email
 	user, err := UserRepo.GetUserByEmail(r.Context(), authReq.Email)
-	if err != nil {
+	if err != nil || user == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized), nil, nil)
 		return
 	}
 	user.LastLogin = time.Now()
 
 	// Make sure chages to this user are saved.
-	defer UserRepo.SaveOrUpdate(r.Context(), user)
+	defer UserRepo.UpdateUser(r.Context(), user)
 
 	// Make sure the user is enabled
 	if !user.Enabled {
@@ -315,14 +315,19 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 
 	// Get user by said email
 	user, err := UserRepo.GetUserByEmail(r.Context(), authReq.Email)
-	if err != nil {
+	if err != nil || user == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized), nil, nil)
 		return
 	}
 	user.LastLogin = time.Now()
 
 	// Make sure chages to this user are saved.
-	defer UserRepo.SaveOrUpdate(r.Context(), user)
+	defer func() {
+		err = UserRepo.UpdateUser(r.Context(), user)
+		if err != nil {
+			fmt.Println("Ouch", err.Error())
+		}
+	}()
 
 	// Make sure the user is enabled
 	if !user.Enabled {

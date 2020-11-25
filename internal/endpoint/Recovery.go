@@ -46,8 +46,13 @@ func RecoverPassphrase(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Check your email", nil, nil)
 		return
 	}
+	if user == nil {
+		// send fake success
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Check your email", nil, nil)
+		return
+	}
 	user.RecoveryCode = helper.MakeRandomString(10, true, true, true, false)
-	UserRepo.SaveOrUpdate(r.Context(), user)
+	UserRepo.UpdateUser(r.Context(), user)
 
 	fLog.Warnf("Sending email")
 	mailer.Send(r.Context(), &mailer.Email{
@@ -96,6 +101,12 @@ func ResetPassphrase(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByRecoveryToken(r.Context(), req.ResetToken)
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecoveryToken got %s", err.Error())
+		// send fake response
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Check your email", nil, nil)
+		return
+	}
+	if user == nil {
+		// send fake response
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Check your email", nil, nil)
 		return
 	}
@@ -106,6 +117,6 @@ func ResetPassphrase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.HashedPassphrase = string(pass)
-	UserRepo.SaveOrUpdate(r.Context(), user)
+	UserRepo.UpdateUser(r.Context(), user)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Passphrase changed", nil, nil)
 }
