@@ -192,7 +192,7 @@ paths:
           description: "Passphrase rule not met"
         404:
           description: "Passphrase reset token not found"
-  /manajement/tenants:
+  /management/tenants:
     get:
       tags:
         - "management-tenant"
@@ -238,7 +238,7 @@ paths:
           description: "You are not authorized"
         403:
           description: "Forbidden, your Authorization is not valid or sufficient"
-  /manajement/tenant:
+  /management/tenant:
     post:
       tags:
         - "management-tenant"
@@ -265,7 +265,7 @@ paths:
           description: "Passphrase rule not met"
         404:
           description: "Passphrase reset token not found"
-  /manajement/tenant/{tenantRecId}:
+  /management/tenant/{tenantRecId}:
     get:
       tags:
         - "management-tenant"

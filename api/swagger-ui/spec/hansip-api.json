@@ -298,7 +298,7 @@
         }
       }
     },
-    "/manajement/tenants": {
+    "/management/tenants": {
       "get": {
         "tags": [
           "management-tenant"
@@ -367,7 +367,7 @@
         }
       }
     },
-    "/manajement/tenant": {
+    "/management/tenant": {
       "post": {
         "tags": [
           "management-tenant"
@@ -408,7 +408,7 @@
         }
       }
     },
-    "/manajement/tenant/{tenantRecId}": {
+    "/management/tenant/{tenantRecId}": {
       "get": {
         "tags": [
           "management-tenant"
