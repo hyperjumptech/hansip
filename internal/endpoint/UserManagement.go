@@ -428,15 +428,17 @@ type WhoAmIResponse struct {
 
 // RoleSummary hold role information summay
 type RoleSummary struct {
-	RecordID string `json:"rec_id"`
-	RoleName string `json:"role_name"`
+	RecordID   string `json:"rec_id"`
+	RoleName   string `json:"role_name"`
+	RoleDomain string `json:"role_domain"`
 }
 
 // GroupSummary hold group information summay
 type GroupSummary struct {
-	RecordID  string         `json:"rec_id"`
-	GroupName string         `json:"group_name"`
-	Roles     []*RoleSummary `json:"roles"`
+	RecordID    string         `json:"rec_id"`
+	GroupName   string         `json:"group_name"`
+	GroupDomain string         `json:"group_domain"`
+	Roles       []*RoleSummary `json:"roles"`
 }
 
 // Activate2FARequest hold request structure for activating the 2FA request
@@ -536,8 +538,9 @@ func WhoAmI(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, r := range roles {
 		whoami.Roles = append(whoami.Roles, &RoleSummary{
-			RecordID: r.RecID,
-			RoleName: r.RoleName,
+			RecordID:   r.RecID,
+			RoleName:   r.RoleName,
+			RoleDomain: r.RoleDomain,
 		})
 	}
 
@@ -554,9 +557,10 @@ func WhoAmI(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, g := range groups {
 		groupSummary := &GroupSummary{
-			RecordID:  g.RecID,
-			GroupName: g.GroupName,
-			Roles:     make([]*RoleSummary, 0),
+			RecordID:    g.RecID,
+			GroupName:   g.GroupName,
+			GroupDomain: g.GroupDomain,
+			Roles:       make([]*RoleSummary, 0),
 		}
 		groupRole, _, err := GroupRoleRepo.ListGroupRoleByGroup(r.Context(), g, &helper.PageRequest{
 			No:       1,
@@ -571,8 +575,9 @@ func WhoAmI(w http.ResponseWriter, r *http.Request) {
 		}
 		for _, gr := range groupRole {
 			groupSummary.Roles = append(groupSummary.Roles, &RoleSummary{
-				RecordID: gr.RecID,
-				RoleName: gr.RoleName,
+				RecordID:   gr.RecID,
+				RoleName:   gr.RoleName,
+				RoleDomain: gr.RoleDomain,
 			})
 		}
 		whoami.Groups = append(whoami.Groups, groupSummary)

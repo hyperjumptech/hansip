@@ -2,6 +2,7 @@ package helper
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"strings"
 	"sync"
 	"time"
@@ -125,6 +126,10 @@ func (tf *DefaultTokenFactory) RefreshToken(refreshToken string) (string, error)
 
 // ReadJWTStringToken takes a token string , keys, signMethod and returns its content.
 func ReadJWTStringToken(validate bool, signKey, signMethod, tokenString string) (string, string, []string, time.Time, time.Time, time.Time, map[string]interface{}, error) {
+	if signKey == "th15mustb3CH@ngedINprodUCT10N" {
+		logrus.Warnf("Using default CryptKey for JWT Token, This key is visible from the source tree and to be used in development only. YOU MUST CHANGE THIS IN PRODUCTION or TO REMOVE THIS LOG FROM APPEARING")
+	}
+
 	jwt, err := jws.ParseJWT([]byte(tokenString))
 	if err != nil {
 		return "", "", nil, time.Now(), time.Now(), time.Now(), nil, fmt.Errorf("malformed jwt token")
@@ -169,6 +174,10 @@ func ReadJWTStringToken(validate bool, signKey, signMethod, tokenString string) 
 
 // CreateJWTStringToken create JWT String token based on arguments
 func CreateJWTStringToken(signKey, signMethod, issuer, subject string, audience []string, issuedAt, notBefore, expiration time.Time, additional map[string]interface{}) (string, error) {
+	if signKey == "th15mustb3CH@ngedINprodUCT10N" {
+		logrus.Warnf("Using default CryptKey for JWT Token, This key is visible from the source tree and to be used in development only. YOU MUST CHANGE THIS IN PRODUCTION or TO REMOVE THIS LOG FROM APPEARING")
+	}
+
 	claims := jws.Claims{}
 	claims.SetIssuer(issuer)
 	claims.SetSubject(subject)
