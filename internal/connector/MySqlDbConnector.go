@@ -550,6 +550,69 @@ func (db *MySQLDB) DeleteTenant(ctx context.Context, tenant *Tenant) error {
 			SQL:     q,
 		}
 	}
+
+	domainToDelete := tenant.Domain
+
+	// delete all user-roles ...
+	q = "DELETE FROM HANSIP_USER_ROLE WHERE HANSIP_USER_ROLE.ROLE_REC_ID = HANSIP_ROLE.REC_ID AND HANSIP_ROLE.ROLE_DOMAIN = ?"
+	_, err = db.instance.ExecContext(ctx, q, domainToDelete)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
+		return &ErrDBExecuteError{
+			Wrapped: err,
+			Message: "Error DeleteTenant",
+			SQL:     q,
+		}
+	}
+
+	// delete all group-roles ...
+	q = "DELETE FROM HANSIP_GROUP_ROLE WHERE HANSIP_GROUP_ROLE.GROUP_REC_ID = HANSIP_GROUP.REC_ID AND HANSIP_GROUP.GROUP_DOMAIN = ?"
+	_, err = db.instance.ExecContext(ctx, q, domainToDelete)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
+		return &ErrDBExecuteError{
+			Wrapped: err,
+			Message: "Error DeleteTenant",
+			SQL:     q,
+		}
+	}
+
+	// delete all user-groups ...
+	q = "DELETE FROM HANSIP_USER_GROUP WHERE HANSIP_USER_GROUP.GROUP_REC_ID = HANSIP_GROUP.REC_ID AND HANSIP_GROUP.GROUP_DOMAIN = ?"
+	_, err = db.instance.ExecContext(ctx, q, domainToDelete)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
+		return &ErrDBExecuteError{
+			Wrapped: err,
+			Message: "Error DeleteTenant",
+			SQL:     q,
+		}
+	}
+
+	// delete all groups ...
+	q = "DELETE FROM HANSIP_GROUP WHERE HANSIP_GROUP.GROUP_DOMAIN = ?"
+	_, err = db.instance.ExecContext(ctx, q, domainToDelete)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
+		return &ErrDBExecuteError{
+			Wrapped: err,
+			Message: "Error DeleteTenant",
+			SQL:     q,
+		}
+	}
+
+	// delete all roles ...
+	q = "DELETE FROM HANSIP_ROLE WHERE HANSIP_ROLE.ROLE_DOMAIN = ?"
+	_, err = db.instance.ExecContext(ctx, q, domainToDelete)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
+		return &ErrDBExecuteError{
+			Wrapped: err,
+			Message: "Error DeleteTenant",
+			SQL:     q,
+		}
+	}
+
 	return err
 }
 

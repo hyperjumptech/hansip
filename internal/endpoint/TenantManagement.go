@@ -205,15 +205,13 @@ func DeleteTenant(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	tenant, err := TenantRepo.GetTenantByRecID(r.Context(), params["groupRecId"])
+	tenant, err := TenantRepo.GetTenantByRecID(r.Context(), params["tenantRecId"])
 	if err != nil {
 		fLog.Errorf("TenantRepo.GetTenantByRecID got %s", err.Error())
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
 	TenantRepo.DeleteTenant(r.Context(), tenant)
-
-	// todo delete all role and group that have the same domain name
 
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Group deleted", nil, nil)
 }
