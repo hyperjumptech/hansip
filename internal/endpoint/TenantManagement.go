@@ -211,7 +211,11 @@ func DeleteTenant(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
-	TenantRepo.DeleteTenant(r.Context(), tenant)
-
+	err = TenantRepo.DeleteTenant(r.Context(), tenant)
+	if err != nil {
+		fLog.Errorf("TenantRepo.DeleteTenant got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Group deleted", nil, nil)
 }

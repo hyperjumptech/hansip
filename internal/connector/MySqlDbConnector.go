@@ -627,6 +627,13 @@ func (db *MySQLDB) UpdateTenant(ctx context.Context, tenant *Tenant) error {
 	if !exist {
 		return ErrNotFound
 	}
+
+	origin, err := db.GetTenantByRecID(ctx, tenant.RecID)
+	if err != nil {
+		return err
+	}
+	domainChanged := origin.Domain != tenant.Domain
+
 	q := "UPDATE HANSIP_TENANT SET TENANT_NAME=?, TENANT_DOMAIN=?, DESCRIPTION=? WHERE REC_ID=?"
 	_, err = db.instance.ExecContext(ctx, q,
 		tenant.Name, tenant.Domain, tenant.Description, tenant.RecID)
@@ -639,8 +646,31 @@ func (db *MySQLDB) UpdateTenant(ctx context.Context, tenant *Tenant) error {
 		}
 	}
 
-	// todo If domain name changed Change the role name
-	// todo If domain name changed Change the group name
+	if domainChanged {
+		q = "UPDATE HANSIP_ROLE SET ROLE_DOMAIN=? WHERE ROLE_DOMAIN=?"
+		_, err = db.instance.ExecContext(ctx, q,
+			tenant.Domain, origin.Domain)
+		if err != nil {
+			fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
+			return &ErrDBExecuteError{
+				Wrapped: err,
+				Message: "Error UpdateTenant",
+				SQL:     q,
+			}
+		}
+
+		q = "UPDATE HANSIP_GROUP SET GROUP_DOMAIN=? WHERE GROUP_DOMAIN=?"
+		_, err = db.instance.ExecContext(ctx, q,
+			tenant.Domain, origin.Domain)
+		if err != nil {
+			fLog.Errorf("db.instance.ExecContext got  %s. SQL = %s", err.Error(), q)
+			return &ErrDBExecuteError{
+				Wrapped: err,
+				Message: "Error UpdateTenant",
+				SQL:     q,
+			}
+		}
+	}
 
 	return nil
 }

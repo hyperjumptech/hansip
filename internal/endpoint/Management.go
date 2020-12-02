@@ -50,9 +50,9 @@ func init() {
 		{fmt.Sprintf("%s/auth/2fatest", apiPrefix), OptionMethod | PostMethod, false, []string{anyUser}, TwoFATest},
 		{fmt.Sprintf("%s/auth/authenticate2fa", apiPrefix), OptionMethod | PostMethod, false, nil, Authentication2FA},
 
-		{fmt.Sprintf("%s/management/tenants", apiPrefix), OptionMethod | GetMethod, false, []string{hansipAdmin}, ListAllTenants},
+		{fmt.Sprintf("%s/management/tenants", apiPrefix), OptionMethod | GetMethod, false, []string{adminUser}, ListAllTenants},
 		{fmt.Sprintf("%s/management/tenant", apiPrefix), OptionMethod | PostMethod, false, []string{hansipAdmin}, CreateNewTenant},
-		{fmt.Sprintf("%s/management/tenant/{tenantRecId}", apiPrefix), OptionMethod | GetMethod, false, []string{hansipAdmin}, GetTenantDetail},
+		{fmt.Sprintf("%s/management/tenant/{tenantRecId}", apiPrefix), OptionMethod | GetMethod, false, []string{adminUser}, GetTenantDetail},
 		{fmt.Sprintf("%s/management/tenant/{tenantRecId}", apiPrefix), OptionMethod | PutMethod, false, []string{hansipAdmin}, UpdateTenantDetail},
 		{fmt.Sprintf("%s/management/tenant/{tenantRecId}", apiPrefix), OptionMethod | DeleteMethod, false, []string{hansipAdmin}, DeleteTenant},
 
