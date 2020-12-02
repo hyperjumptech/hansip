@@ -61,7 +61,7 @@ func SetUserRoles(w http.ResponseWriter, r *http.Request) {
 			fLog.Warnf("RoleRepo.GetRoleByRecID got %s, this role %s will not be added to user %s role", err.Error(), roleId, user.RecID)
 		}
 		authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-		if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+		if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 			helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access role with the specified domain", nil, nil)
 			return
 		}
@@ -873,7 +873,7 @@ func CreateUserRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access role with the specified domain", nil, nil)
 		return
 	}
@@ -917,7 +917,7 @@ func DeleteUserRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access role with the specified domain", nil, nil)
 		return
 	}
@@ -1010,7 +1010,7 @@ func CreateUserGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
@@ -1054,7 +1054,7 @@ func DeleteUserGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}

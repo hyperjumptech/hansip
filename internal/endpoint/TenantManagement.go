@@ -27,7 +27,7 @@ func ListAllTenants(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(config.Get("hansip.domain")) {
+	if !authCtx.IsAnAdmin() {
 		fLog.Tracef("Missing right")
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access this resource", nil, nil)
 		return
@@ -66,7 +66,7 @@ func CreateNewTenant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(config.Get("hansip.domain")) {
+	if !authCtx.IsAdminOfDomain(config.Get("hansip.domain")) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access this resource", nil, nil)
 		return
 	}
@@ -108,7 +108,7 @@ func GetTenantDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(config.Get("hansip.domain")) {
+	if !authCtx.IsAnAdmin() {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access this resource", nil, nil)
 		return
 	}
@@ -135,7 +135,7 @@ func UpdateTenantDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(config.Get("hansip.domain")) {
+	if !authCtx.IsAdminOfDomain(config.Get("hansip.domain")) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access this resource", nil, nil)
 		return
 	}
@@ -196,7 +196,7 @@ func DeleteTenant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(config.Get("hansip.domain")) {
+	if !authCtx.IsAdminOfDomain(config.Get("hansip.domain")) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access this resource", nil, nil)
 		return
 	}

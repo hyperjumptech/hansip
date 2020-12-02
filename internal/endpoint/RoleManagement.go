@@ -36,7 +36,7 @@ func SetRoleUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access this resource", nil, nil)
 		return
 	}
@@ -99,7 +99,7 @@ func DeleteRoleUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access this resource", nil, nil)
 		return
 	}
@@ -131,7 +131,7 @@ func SetRoleGroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access this resource", nil, nil)
 		return
 	}
@@ -194,7 +194,7 @@ func DeleteRoleGroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access this resource", nil, nil)
 		return
 	}
@@ -291,7 +291,7 @@ func CreateRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(req.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(req.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to create role with the specified domain", nil, nil)
 		return
 	}
@@ -342,7 +342,7 @@ func UpdateRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !(authCtx.HasIsAdminOfDomain(role.RoleDomain) && authCtx.HasIsAdminOfDomain(req.RoleDomain)) {
+	if !(authCtx.IsAdminOfDomain(role.RoleDomain) && authCtx.IsAdminOfDomain(req.RoleDomain)) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, fmt.Sprintf("forbidden. you are not admin of %s and %s domain", role.RoleDomain, req.RoleDomain), nil, nil)
 		return
 	}
@@ -389,7 +389,7 @@ func GetRoleDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to create role with the specified domain", nil, nil)
 		return
 	}
@@ -419,7 +419,7 @@ func DeleteRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to create role with the specified domain", nil, nil)
 		return
 	}
@@ -450,7 +450,7 @@ func ListRoleUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to create role with the specified domain", nil, nil)
 		return
 	}
@@ -502,7 +502,7 @@ func CreateRoleUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to create role with the specified domain", nil, nil)
 		return
 	}
@@ -544,7 +544,7 @@ func DeleteRoleUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to create role with the specified domain", nil, nil)
 		return
 	}
@@ -592,7 +592,7 @@ func ListRoleGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access role with the specified domain", nil, nil)
 		return
 	}
@@ -639,7 +639,7 @@ func CreateRoleGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to manage role with the specified domain", nil, nil)
 		return
 	}
@@ -687,7 +687,7 @@ func DeleteRoleGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(role.RoleDomain) {
+	if !authCtx.IsAdminOfDomain(role.RoleDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to create role with the specified domain", nil, nil)
 		return
 	}

@@ -42,7 +42,7 @@ func SetGroupUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
@@ -104,7 +104,7 @@ func DeleteGroupUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
@@ -137,7 +137,7 @@ func SetGroupRoles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
@@ -200,7 +200,7 @@ func DeleteGroupRoles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
@@ -237,7 +237,7 @@ func ListAllGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(tenant.Domain) {
+	if !authCtx.IsAdminOfDomain(tenant.Domain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
@@ -304,7 +304,7 @@ func CreateNewGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(req.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(req.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to create group with the specified domain", nil, nil)
 		return
 	}
@@ -341,7 +341,7 @@ func GetGroupDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
@@ -386,7 +386,7 @@ func UpdateGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !(authCtx.HasIsAdminOfDomain(group.GroupDomain) && authCtx.HasIsAdminOfDomain(req.GroupDomain)) {
+	if !(authCtx.IsAdminOfDomain(group.GroupDomain) && authCtx.IsAdminOfDomain(req.GroupDomain)) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, fmt.Sprintf("forbidden. you are not admin of %s and %s domain", group.GroupDomain, req.GroupDomain), nil, nil)
 		return
 	}
@@ -434,7 +434,7 @@ func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
@@ -465,7 +465,7 @@ func ListGroupUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
@@ -517,7 +517,7 @@ func CreateGroupUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
@@ -559,7 +559,7 @@ func DeleteGroupUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
@@ -607,7 +607,7 @@ func ListGroupRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
@@ -657,7 +657,7 @@ func CreateGroupRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
@@ -705,7 +705,7 @@ func DeleteGroupRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
-	if !authCtx.HasIsAdminOfDomain(group.GroupDomain) {
+	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "You don't have the right to access group with the specified domain", nil, nil)
 		return
 	}
