@@ -74,6 +74,7 @@ func SetRoleUsers(w http.ResponseWriter, r *http.Request) {
 			} else {
 				counter++
 			}
+			RevocationRepo.Revoke(r.Context(), user.Email)
 		}
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d users added the role", counter), nil, nil)
@@ -519,6 +520,7 @@ func CreateRoleUser(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 		return
 	}
+	RevocationRepo.Revoke(r.Context(), user.Email)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Role created", nil, nil)
 }
 
@@ -567,6 +569,7 @@ func DeleteRoleUser(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 		return
 	}
+	RevocationRepo.Revoke(r.Context(), user.Email)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Role deleted", nil, nil)
 }
 

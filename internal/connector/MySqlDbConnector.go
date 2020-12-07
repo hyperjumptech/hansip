@@ -21,7 +21,7 @@ import (
 
 const (
 	// DropAllSQL contains SQL to drop all existing table for hansip
-	DropAllSQL = `DROP TABLE IF EXISTS HANSIP_TOTP_RECOVERY_CODES, HANSIP_USER_GROUP, HANSIP_USER_ROLE, HANSIP_GROUP_ROLE, HANSIP_USER, HANSIP_GROUP, HANSIP_ROLE, HANSIP_TENANT;`
+	DropAllSQL = `DROP TABLE IF EXISTS HANSIP_REVOCATION, HANSIP_TOTP_RECOVERY_CODES, HANSIP_USER_GROUP, HANSIP_USER_ROLE, HANSIP_GROUP_ROLE, HANSIP_USER, HANSIP_GROUP, HANSIP_ROLE, HANSIP_TENANT;`
 
 	// CreateTenantSQL contains SQL to create HANSIP_ROLE table
 	CreateTenantSQL = `CREATE TABLE IF NOT EXISTS HANSIP_TENANT (
@@ -102,7 +102,14 @@ const (
     RECOVERY_CODE VARCHAR(8) NOT NULL,
     USED_FLAG TINYINT(1) UNSIGNED DEFAULT 0,
     USER_REC_ID VARCHAR(32) NOT NULL,
+    PRIMARY KEY (REC_ID),
     FOREIGN KEY (USER_REC_ID) REFERENCES HANSIP_USER(REC_ID) ON DELETE CASCADE
+) ENGINE=INNODB;`
+	// CreateRevocationSQL contains SQL to create HANSIP_REVOCATION table
+	CreateRevocationSQL = `CREATE TABLE IF NOT EXISTS HANSIP_REVOCATION (
+    SUBJECT VARCHAR(128) NOT NULL UNIQUE,
+    ACTIVATION_DATE DATETIME,
+    PRIMARY KEY (SUBJECT),
 ) ENGINE=INNODB;`
 )
 
@@ -251,6 +258,19 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 		_, err := db.instance.ExecContext(ctx, CreateTOTPRecoveryCodeSQL)
 		if err != nil {
 			fLog.Errorf("db.instance.ExecContext HANSIP_TOTP_RECOVERY_CODES Got %s. SQL = %s", err.Error(), CreateTOTPRecoveryCodeSQL)
+		}
+	}
+
+	fLog.Infof("Checking table HANSIP_REVOCATION")
+	exist, err = db.isTableExist(ctx, "HANSIP_REVOCATION")
+	if err != nil {
+		return err
+	}
+	if !exist {
+		fLog.Infof("Create table HANSIP_REVOCATION")
+		_, err := db.instance.ExecContext(ctx, CreateRevocationSQL)
+		if err != nil {
+			fLog.Errorf("db.instance.ExecContext HANSIP_REVOCATION Got %s. SQL = %s", err.Error(), CreateRevocationSQL)
 		}
 	}
 
@@ -458,6 +478,15 @@ func (db *MySQLDB) CreateAllTable(ctx context.Context) error {
 			Wrapped: err,
 			Message: "Error while trying to create table HANSIP_TOTP_RECOVERY_CODES",
 			SQL:     CreateTOTPRecoveryCodeSQL,
+		}
+	}
+	_, err = db.instance.ExecContext(ctx, CreateRevocationSQL)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext HANSIP_REVOCATION Got %s. SQL = %s", err.Error(), CreateRevocationSQL)
+		return &ErrDBExecuteError{
+			Wrapped: err,
+			Message: "Error while trying to create table HANSIP_REVOCATION",
+			SQL:     CreateRevocationSQL,
 		}
 	}
 	_, err = db.CreateRole(ctx, hansipAdmin, hansipDomain, "Administrator role")
@@ -2143,4 +2172,80 @@ func (db *MySQLDB) DeleteUserGroupByGroup(ctx context.Context, group *Group) err
 		}
 	}
 	return nil
+}
+
+// Revoke a subject
+func (db *MySQLDB) Revoke(ctx context.Context, subject string) error {
+	fLog := mysqlLog.WithField("func", "Revoke").WithField("RequestID", ctx.Value(constants.RequestID))
+	revoked, err := db.IsRevoked(ctx, subject)
+	if err != nil {
+		return err
+	}
+	if revoked {
+		return nil
+	}
+	q := "INSERT INTO HANSIP_REVOCATION(SUBJECT, ACTIVATION_DATE) VALUES (?,?)"
+	_, err = db.instance.ExecContext(ctx, q, subject, time.Now())
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
+		return &ErrDBExecuteError{
+			Wrapped: err,
+			Message: "Error Revoke",
+			SQL:     q,
+		}
+	}
+	return nil
+}
+
+// UnRevoke a subject
+func (db *MySQLDB) UnRevoke(ctx context.Context, subject string) error {
+	fLog := mysqlLog.WithField("func", "UnRevoke").WithField("RequestID", ctx.Value(constants.RequestID))
+	revoked, err := db.IsRevoked(ctx, subject)
+	if err != nil {
+		return err
+	}
+	if !revoked {
+		return nil
+	}
+	q := "DELETE FROM HANSIP_REVOCATION WHERE SUBJECT=?"
+	_, err = db.instance.ExecContext(ctx, q, subject)
+	if err != nil {
+		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
+		return &ErrDBExecuteError{
+			Wrapped: err,
+			Message: "Error UnRevoke",
+			SQL:     q,
+		}
+	}
+	return nil
+}
+
+// IsRevoked validate if a subject is revoked
+func (db *MySQLDB) IsRevoked(ctx context.Context, subject string) (bool, error) {
+	fLog := mysqlLog.WithField("func", "IsRevoked").WithField("RequestID", ctx.Value(constants.RequestID))
+	q := "SELECT COUNT(*) AS CNT FROM HANSIP_REVOCATION WHERE SUBJECT=?"
+
+	rows, err := db.instance.QueryContext(ctx, q, subject)
+	if err != nil {
+		fLog.Errorf("db.instance.QueryContext got %s. SQL = %s", err.Error(), q)
+		return false, &ErrDBQueryError{
+			Wrapped: err,
+			Message: "Error IsRevoked",
+			SQL:     q,
+		}
+	}
+	if rows.Next() {
+		count := 0
+		err := rows.Scan(&count)
+		if err != nil {
+			fLog.Errorf("db.instance.IsRevoked cant scan")
+			return false, &ErrDBScanError{
+				Wrapped: err,
+				Message: "Error IsRevoked",
+				SQL:     q,
+			}
+		}
+		return count > 0, nil
+	}
+	return false, nil
 }

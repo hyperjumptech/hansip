@@ -90,6 +90,7 @@ func InitializeRouter() {
 		endpoint.UserRoleRepo = connector.GetMySQLDBInstance()
 		endpoint.GroupRoleRepo = connector.GetMySQLDBInstance()
 		endpoint.TenantRepo = connector.GetMySQLDBInstance()
+		endpoint.RevocationRepo = connector.GetMySQLDBInstance()
 	} else {
 		panic(fmt.Sprintf("unknown database type %s. Correct your configuration 'db.type' or env-var 'AAA_DB_TYPE'. allowed values are INMEMORY or MYSQL", config.Get("db.type")))
 	}

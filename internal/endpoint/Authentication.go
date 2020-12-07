@@ -389,6 +389,8 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 	// Set the account email into Token subject.
 	subject := user.Email
 
+	RevocationRepo.UnRevoke(r.Context(), subject)
+
 	// Set the audience
 	audience := roles
 
@@ -407,18 +409,29 @@ func Refresh(w http.ResponseWriter, r *http.Request) {
 	auth := r.Header.Get("Authorization")
 	if len(auth) == 0 {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "missing authentication header", nil, nil)
+		return
 	}
 
 	// bearer
 	if len(auth) < 6 || strings.ToUpper(auth[:6]) != "BEARER" {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "invalid authentication method", nil, nil)
+		return
 	}
 
 	// Token
 	token := strings.TrimSpace(auth[7:])
+
+	ht, err := TokenFactory.ReadToken(token)
+	revoked, err := RevocationRepo.IsRevoked(r.Context(), ht.Subject)
+	if err != nil || revoked {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "your access been revoked, please authenticate again", nil, nil)
+		return
+	}
+
 	access, err := TokenFactory.RefreshToken(token)
 	if err != nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, err.Error(), nil, nil)
+		return
 	}
 
 	resp := &RefreshResponse{AccessToken: access}

@@ -193,6 +193,27 @@ type RoleRepository interface {
 	UpdateRole(ctx context.Context, role *Role) error
 }
 
+// RevocationRepository manage revocation table
+type RevocationRepository interface {
+	// Revoke a subject
+	Revoke(ctx context.Context, subject string) error
+
+	// UnRevoke a subject
+	UnRevoke(ctx context.Context, subject string) error
+
+	// IsRevoked validate if a subject is revoked
+	IsRevoked(ctx context.Context, subject string) (bool, error)
+}
+
+// Revocation record entity
+type Revocation struct {
+	// TenantName is the tenant name
+	Subject string `json:"subject"`
+
+	// RevocationTime is the time of revocation
+	RevocationTime time.Time `json:"revocation_time"`
+}
+
 // Tenant record entity
 type Tenant struct {
 	// RecID. Primary key

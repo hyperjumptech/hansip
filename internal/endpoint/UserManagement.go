@@ -84,6 +84,7 @@ func SetUserRoles(w http.ResponseWriter, r *http.Request) {
 			counter++
 		}
 	}
+	RevocationRepo.Revoke(r.Context(), user.Email)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d roles added into user", counter), nil, nil)
 }
 
@@ -104,6 +105,7 @@ func DeleteUserRoles(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
+	RevocationRepo.Revoke(r.Context(), user.Email)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly removed all roles from user", nil, nil)
 }
 
@@ -153,6 +155,9 @@ func SetUserGroups(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+
+	RevocationRepo.Revoke(r.Context(), user.Email)
+
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d groups joined by user", counter), nil, nil)
 }
 
@@ -173,6 +178,7 @@ func DeleteUserGroups(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
+	RevocationRepo.Revoke(r.Context(), user.Email)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "user successfuly leaves all groups", nil, nil)
 }
 
@@ -767,6 +773,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	UserRepo.DeleteUser(r.Context(), user)
+	RevocationRepo.Revoke(r.Context(), user.Email)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User deleted", nil, nil)
 }
 
@@ -891,6 +898,7 @@ func CreateUserRole(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 		return
 	}
+	RevocationRepo.Revoke(r.Context(), user.Email)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Role created", nil, nil)
 }
 
@@ -941,6 +949,7 @@ func DeleteUserRole(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 		return
 	}
+	RevocationRepo.Revoke(r.Context(), user.Email)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Role deleted", nil, nil)
 }
 
@@ -1028,6 +1037,7 @@ func CreateUserGroup(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 		return
 	}
+	RevocationRepo.Revoke(r.Context(), user.Email)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Group created", nil, nil)
 }
 
@@ -1078,6 +1088,7 @@ func DeleteUserGroup(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
+	RevocationRepo.Revoke(r.Context(), user.Email)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Group deleted", nil, nil)
 
 }

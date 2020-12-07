@@ -23,6 +23,8 @@ var (
 	UserRoleRepo connector.UserRoleRepository
 	// GroupRoleRepo is a group role repository instance
 	GroupRoleRepo connector.GroupRoleRepository
+	// RevocationRepo is a revocation repository instance
+	RevocationRepo connector.RevocationRepository
 	// EmailSender is email sender instance
 	EmailSender connector.EmailSender
 

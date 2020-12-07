@@ -80,6 +80,7 @@ func SetGroupUsers(w http.ResponseWriter, r *http.Request) {
 			} else {
 				counter++
 			}
+			RevocationRepo.Revoke(r.Context(), user.Email)
 		}
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d users added the group", counter), nil, nil)
@@ -534,6 +535,7 @@ func CreateGroupUser(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 		return
 	}
+	RevocationRepo.Revoke(r.Context(), user.Email)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Group created", nil, nil)
 }
 
@@ -582,6 +584,7 @@ func DeleteGroupUser(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 		return
 	}
+	RevocationRepo.Revoke(r.Context(), user.Email)
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "User-Group deleted", nil, nil)
 }
 
