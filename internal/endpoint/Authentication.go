@@ -319,25 +319,34 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized), nil, nil)
 		return
 	}
-	user.LastLogin = time.Now()
+
+	user.LastLogin = time.Unix(time.Now().Unix(), 0)
 
 	// Make sure chages to this user are saved.
-	defer func() {
-		err = UserRepo.UpdateUser(r.Context(), user)
-		if err != nil {
-			fmt.Println("Ouch", err.Error())
-		}
-	}()
+	//defer func() {
+	//	err = UserRepo.UpdateUser(r.Context(), user)
+	//	if err != nil {
+	//		fmt.Println("Ouch", err.Error())
+	//	}
+	//}()
 
 	// Make sure the user is enabled
 	if !user.Enabled {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "account disabled", nil, nil)
+		err = UserRepo.UpdateUser(r.Context(), user)
+		if err != nil {
+			fmt.Println("Ouch", err.Error())
+		}
 		return
 	}
 
 	// Make sure the user is not suspended
 	if user.Suspended {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusForbidden, "account suspended", nil, nil)
+		err = UserRepo.UpdateUser(r.Context(), user)
+		if err != nil {
+			fmt.Println("Ouch", err.Error())
+		}
 		return
 	}
 
@@ -349,6 +358,10 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 			user.Suspended = true
 		}
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, "email or passphrase not match", nil, nil)
+		err = UserRepo.UpdateUser(r.Context(), user)
+		if err != nil {
+			fmt.Println("Ouch", err.Error())
+		}
 		return
 	}
 
@@ -357,6 +370,10 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 		ret := make(map[string]string)
 		ret["2FA_token"] = user.Token2FA
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusAccepted, "2FA needed", nil, ret)
+		err = UserRepo.UpdateUser(r.Context(), user)
+		if err != nil {
+			fmt.Println("Ouch", err.Error())
+		}
 		return
 	}
 
@@ -374,6 +391,10 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		err = UserRepo.UpdateUser(r.Context(), user)
+		if err != nil {
+			fmt.Println("Ouch", err.Error())
+		}
 		return
 	}
 
@@ -402,6 +423,10 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Successful", nil, resp)
+	err = UserRepo.UpdateUser(r.Context(), user)
+	if err != nil {
+		fmt.Println("Ouch", err.Error())
+	}
 }
 
 // Refresh serves token refresh

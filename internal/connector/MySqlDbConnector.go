@@ -1103,11 +1103,21 @@ func (db *MySQLDB) UpdateUser(ctx context.Context, user *User) error {
 	if user.Enable2FactorAuth {
 		enable2fa = 1
 	}
-	q := "UPDATE HANSIP_USER SET EMAIL=?,HASHED_PASSPHRASE=?,ENABLED=?, SUSPENDED=?,LAST_SEEN=?,LAST_LOGIN=?,FAIL_COUNT=?,ACTIVATION_CODE=?,ACTIVATION_DATE=?,TOTP_KEY=?,ENABLE_2FE=?,TOKEN_2FE=?,RECOVERY_CODE=? WHERE REC_ID=?"
+
+	// q := "UPDATE HANSIP_USER SET EMAIL=?,HASHED_PASSPHRASE=?,ENABLED=?, SUSPENDED=?,LAST_SEEN=?,LAST_LOGIN=?,FAIL_COUNT=?,ACTIVATION_CODE=?,ACTIVATION_DATE=?,TOTP_KEY=?,ENABLE_2FE=?,TOKEN_2FE=?,RECOVERY_CODE=? WHERE REC_ID=?"
+
+	q := fmt.Sprintf("UPDATE HANSIP_USER SET EMAIL='%s',HASHED_PASSPHRASE='%s',ENABLED=%d, SUSPENDED=%d,LAST_SEEN='%s',LAST_LOGIN='%s',FAIL_COUNT='%d',ACTIVATION_CODE='%s',ACTIVATION_DATE='%s',TOTP_KEY='%s',ENABLE_2FE=%d,TOKEN_2FE='%s',RECOVERY_CODE='%s' WHERE REC_ID='%s';", user.Email, user.HashedPassphrase, enabled, suspended, user.LastSeen.Format("2006-01-02 15:04:05"), user.LastLogin.Format("2006-01-02 15:04:05"), user.FailCount, user.ActivationCode,
+		user.ActivationDate.Format("2006-01-02 15:04:05"), user.UserTotpSecretKey, enable2fa, user.Token2FA, user.RecoveryCode, user.RecID)
+
 	fLog.Infof("Updating user %s", user.Email)
-	_, err = db.instance.ExecContext(ctx, q,
-		user.Email, user.HashedPassphrase, enabled, suspended, user.LastSeen, user.LastLogin, user.FailCount, user.ActivationCode,
-		user.ActivationDate, user.UserTotpSecretKey, enable2fa, user.Token2FA, user.RecoveryCode, user.RecID)
+	//_, err = db.instance.ExecContext(ctx, q,
+	//	user.Email, user.HashedPassphrase, enabled, suspended, user.LastSeen, user.LastLogin, user.FailCount, user.ActivationCode,
+	//	user.ActivationDate, user.UserTotpSecretKey, enable2fa, user.Token2FA, user.RecoveryCode, user.RecID)
+	_, err = db.instance.ExecContext(ctx, q)
+	//_, err = db.instance.Exec(q)
+	//sParams := fmt.Sprintln(user.Email, user.HashedPassphrase, enabled, suspended, user.LastSeen, user.LastLogin, user.FailCount, user.ActivationCode,
+	//	user.ActivationDate, user.UserTotpSecretKey, enable2fa, user.Token2FA, user.RecoveryCode, user.RecID)
+	//fLog.Warn(sParams)
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 		return &ErrDBExecuteError{
@@ -1830,7 +1840,9 @@ func (db *MySQLDB) CreateGroupRole(ctx context.Context, group *Group, role *Role
 		}
 	}
 	q := "INSERT INTO HANSIP_GROUP_ROLE(GROUP_REC_ID, ROLE_REC_ID) VALUES (?,?)"
-	_, err := db.instance.ExecContext(ctx, q, group.RecID, role.RecID)
+	stmt, err := db.instance.Prepare(q)
+	_, err = stmt.ExecContext(ctx, group.RecID, role.RecID)
+	//_, err := db.instance.ExecContext(ctx, q, group.RecID, role.RecID)
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 		return nil, &ErrDBExecuteError{
