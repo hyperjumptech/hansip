@@ -132,8 +132,10 @@ func GetMySQLDBInstance() *MySQLDB {
 		if err != nil {
 			mysqlLog.WithField("func", "GetMySQLDBInstance").Fatalf("sql.Open got %s", err.Error())
 		}
-		db.SetMaxOpenConns(config.GetInt("db.mysql.maxopen"))
-		db.SetMaxIdleConns(config.GetInt("db.mysql.maxidle"))
+
+		//db.SetMaxOpenConns(config.GetInt("db.mysql.maxopen"))
+		//db.SetMaxIdleConns(config.GetInt("db.mysql.maxidle"))
+
 		mySQLDBInstance = &MySQLDB{
 			instance: db,
 		}

@@ -60,7 +60,7 @@ func initialize() {
 	defCfg["security.passphrase.minwords"] = "3"
 	defCfg["security.passphrase.mincharsinword"] = "3"
 
-	defCfg["mailer.type"] = "DUMMY" // DUMMY, SENDMAIL, SENDGRID
+	defCfg["mailer.type"] = "SENDGRID" // DUMMY, SENDMAIL, SENDGRID
 	defCfg["mailer.from"] = "hansip@aaa.com"
 	defCfg["mailer.from.name"] = "hansip@aaa.com"
 	defCfg["mailer.sendmail.host"] = "localhost"
