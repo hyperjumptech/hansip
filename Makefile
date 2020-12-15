@@ -19,13 +19,13 @@ build: build-static
 	GO_ENABLED=0 go build -a -ldflags '-extldflags "-static"' -o $(IMAGE_NAME).app cmd/main/Main.go
 
 lint: build-static
-	golint -set_exit_status ./internal/... ./pkg/... ./cmd/...
+#	golint -set_exit_status ./internal/... ./pkg/... ./cmd/...
 
 test: lint
-	go install github.com/newm4n/goornogo
+#	go install github.com/newm4n/goornogo
 	export GO111MODULE on; \
 	go test ./... -cover -vet -all -v -short -covermode=count -coverprofile=coverage.out
-	goornogo -i coverage.out -c 30
+#	goornogo -i coverage.out -c 30
 
 run: build
 	export AAA_SERVER_HOST=0.0.0.0; \
@@ -41,8 +41,8 @@ run: build
 	export AAA_SERVER_HTTP_CORS_IGNOREOPTION=false; \
 	export AAA_SERVER_HTTP_CORS_OPTIONSTATUS=200; \
 	export AAA_TOKEN_ISSUER=aaa.hansip.go.id; \
-	export AAA_DB_TYPE=INMEMORY; \
-	export AAA_MAILER_TYPE=DUMMY; \
+	export AAA_MAILER_TYPE=SENDGRID; \
+	export AAA_MAILER_SENDGRID_TOKEN=sgaseasefasefasef; \
 	export AAA_MAILER_FROM=aaa@hansip.go.id; \
 	export AAA_MAILER_SENDMAIL_HOST=hansip.go.id; \
 	export AAA_MAILER_SENDMAIL_PORT=25; \

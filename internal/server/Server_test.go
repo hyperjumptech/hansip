@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/connector"
+	"github.com/hyperjumptech/hansip/internal/endpoint"
 	"github.com/hyperjumptech/hansip/internal/mailer"
-	"github.com/hyperjumptech/hansip/internal/mgmnt"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/http/httptest"
@@ -55,11 +55,7 @@ func TestAll(t *testing.T) {
 	go mailer.Start()
 	defer mailer.Stop()
 
-	if config.Get("db.type") == "INMEMORY" {
-		dbUtil = connector.GetInMemoryDbInstance()
-	} else {
-		dbUtil = connector.GetMySQLDBInstance()
-	}
+	dbUtil = connector.GetMySQLDBInstance()
 
 	err := dbUtil.DropAllTables(context.Background())
 	if err != nil {
@@ -453,7 +449,7 @@ func CreateUserTesting(t *testing.T, accessToken, email, passphrase string) {
 	} else {
 		t.Log(pretifyJSON(recorder.Body.String()))
 		time.Sleep(200 * time.Millisecond)
-		mailer := mgmnt.EmailSender.(*connector.DummyMailSender)
+		mailer := endpoint.EmailSender.(*connector.DummyMailSender)
 		if mailer.LastSentMail == nil || mailer.LastSentMail.To != email {
 			t.Error("Email not sent to ", email)
 		} else {
