@@ -3,21 +3,22 @@ package endpoint
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/internal/hansipcontext"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"net/http"
-	"strings"
 )
 
 var (
 	tenantMgmtLog = log.WithField("go", "TenantManagement")
 )
 
-// ListAllGroup serving the listing of group request
+// ListAllTenants serving the listing of group tenants
 func ListAllTenants(w http.ResponseWriter, r *http.Request) {
 	fLog := tenantMgmtLog.WithField("func", "ListAllTenans").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
@@ -50,14 +51,14 @@ func ListAllTenants(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "List of all tenants paginated", nil, ret)
 }
 
-// CreateGroupRequest hold model for Create new Group.
+// CreateTenantRequest hold model for Create new tenants
 type CreateTenantRequest struct {
 	TenantName   string `json:"name"`
 	TenantDomain string `json:"domain"`
 	Description  string `json:"description"`
 }
 
-// CreateNewGroup serving request to create new Group
+// CreateNewTenant serving request to create new tenant
 func CreateNewTenant(w http.ResponseWriter, r *http.Request) {
 	fLog := tenantMgmtLog.WithField("func", "CreateNewTenant").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
@@ -99,7 +100,7 @@ func CreateNewTenant(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// GetGroupDetail serving request to fetch group detail
+// GetTenantDetail serving request to fetch tenant detail
 func GetTenantDetail(w http.ResponseWriter, r *http.Request) {
 	fLog := tenantMgmtLog.WithField("func", "GetTenantDetail").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
@@ -126,7 +127,7 @@ func GetTenantDetail(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Tenant retrieved", nil, tenant)
 }
 
-// UpdateGroup serving request to update group detail
+// UpdateTenantDetail serving request to update tenant detail
 func UpdateTenantDetail(w http.ResponseWriter, r *http.Request) {
 	fLog := tenantMgmtLog.WithField("func", "UpdateTenantDetail").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
@@ -187,7 +188,7 @@ func UpdateTenantDetail(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// DeleteGroup serving request to delete a group
+// DeleteTenant serving request to delete a tenant
 func DeleteTenant(w http.ResponseWriter, r *http.Request) {
 	fLog := tenantMgmtLog.WithField("func", "DeleteTenant").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)

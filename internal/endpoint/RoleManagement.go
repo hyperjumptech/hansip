@@ -3,19 +3,21 @@ package endpoint
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/internal/hansipcontext"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"net/http"
-	"strings"
 )
 
 var (
 	roleMgmtLogger = log.WithField("go", "RoleManagement")
 )
 
+// SetRoleUsers Assign a Role to User
 func SetRoleUsers(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "SetRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
@@ -63,14 +65,14 @@ func SetRoleUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	counter := 0
-	for _, userId := range userIds {
-		user, err := UserRepo.GetUserByRecID(r.Context(), userId)
+	for _, userID := range userIds {
+		user, err := UserRepo.GetUserByRecID(r.Context(), userID)
 		if err != nil {
-			fLog.Warnf("UserRepo.GetUserByRecID got %s, this user %s will not be added to role %s user", err.Error(), userId, role.RecID)
+			fLog.Warnf("UserRepo.GetUserByRecID got %s, this user %s will not be added to role %s user", err.Error(), userID, role.RecID)
 		} else {
 			_, err := UserRoleRepo.CreateUserRole(r.Context(), user, role)
 			if err != nil {
-				fLog.Warnf("UserRoleRepo.CreateUserRole got %s, this role %s will not be added to user %s role", err.Error(), userId, role.RecID)
+				fLog.Warnf("UserRoleRepo.CreateUserRole got %s, this role %s will not be added to user %s role", err.Error(), userID, role.RecID)
 			} else {
 				counter++
 			}
@@ -80,6 +82,7 @@ func SetRoleUsers(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d users added the role", counter), nil, nil)
 }
 
+// DeleteRoleUsers removes user from roles
 func DeleteRoleUsers(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "DeleteRoleUsers").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
@@ -113,6 +116,8 @@ func DeleteRoleUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly removed role from all user", nil, nil)
 }
+
+// SetRoleGroups assignes a role to groups
 func SetRoleGroups(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "SetRoleGroups").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	iauthctx := r.Context().Value(constants.HansipAuthentication)
@@ -159,14 +164,14 @@ func SetRoleGroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	counter := 0
-	for _, groupId := range groupIds {
-		group, err := GroupRepo.GetGroupByRecID(r.Context(), groupId)
+	for _, groupID := range groupIds {
+		group, err := GroupRepo.GetGroupByRecID(r.Context(), groupID)
 		if err != nil {
-			fLog.Warnf("UserRepo.GetUserByRecID got %s, this group %s will not be added to role %s user", err.Error(), groupId, role.RecID)
+			fLog.Warnf("UserRepo.GetUserByRecID got %s, this group %s will not be added to role %s user", err.Error(), groupID, role.RecID)
 		} else {
 			_, err := GroupRoleRepo.CreateGroupRole(r.Context(), group, role)
 			if err != nil {
-				fLog.Warnf("UserRoleRepo.CreateUserRole got %s, this group %s will not be added to user %s role", err.Error(), groupId, role.RecID)
+				fLog.Warnf("UserRoleRepo.CreateUserRole got %s, this group %s will not be added to user %s role", err.Error(), groupID, role.RecID)
 			} else {
 				counter++
 			}
@@ -175,6 +180,7 @@ func SetRoleGroups(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d groups added the role", counter), nil, nil)
 }
 
+// DeleteRoleGroups deletes role groups
 func DeleteRoleGroups(w http.ResponseWriter, r *http.Request) {
 	fLog := roleMgmtLogger.WithField("func", "DeleteRoleGroups").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 

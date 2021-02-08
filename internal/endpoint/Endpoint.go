@@ -2,22 +2,30 @@ package endpoint
 
 import (
 	"fmt"
-	"github.com/hyperjumptech/hansip/internal/config"
-	"github.com/hyperjumptech/hansip/internal/hansiperrors"
-	"github.com/hyperjumptech/hansip/pkg/helper"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/hyperjumptech/hansip/internal/config"
+	"github.com/hyperjumptech/hansip/internal/hansiperrors"
+	"github.com/hyperjumptech/hansip/pkg/helper"
 )
 
 const (
+	// OptionMethod flag
 	OptionMethod = 0b00000001
-	HeadMethod   = 0b00000010
-	GetMethod    = 0b00000100
-	PostMethod   = 0b00001000
-	PutMethod    = 0b00010000
-	PatchMethod  = 0b00100000
+	// HeadMethod flag
+	HeadMethod = 0b00000010
+	// GetMethod flag
+	GetMethod = 0b00000100
+	// PostMethod flag
+	PostMethod = 0b00001000
+	// PutMethod flag
+	PutMethod = 0b00010000
+	// PatchMethod flag
+	PatchMethod = 0b00100000
+	// DeleteMethod flag
 	DeleteMethod = 0b01000000
 )
 
@@ -25,6 +33,7 @@ var (
 	search = regexp.MustCompile(`\{[a-zA-Z0-9_]+\}`)
 )
 
+// Endpoint struct for the route table
 type Endpoint struct {
 	PathPattern        string
 	AllowedMethodFlag  uint8
@@ -33,6 +42,7 @@ type Endpoint struct {
 	HandleFunction     func(http.ResponseWriter, *http.Request)
 }
 
+// GetMethodFlag decods Method string to Method flag
 func GetMethodFlag(method string) uint8 {
 	switch strings.ToUpper(method) {
 	case "OPTIONS":
@@ -88,6 +98,7 @@ func getHToken(r *http.Request) (*helper.HansipToken, error) {
 	return hToken, err
 }
 
+// AccessValid header tokens
 func (e *Endpoint) AccessValid(r *http.Request, TokenFactory helper.TokenFactory) (*helper.HansipToken, error) {
 	path := r.URL.Path
 	method := GetMethodFlag(r.Method)
@@ -138,6 +149,7 @@ func (e *Endpoint) canAccess(path string, method uint8, audience []string) error
 	return &hansiperrors.ErrAudienceNotAllowed{Audiences: audience}
 }
 
+// FlagToListMethod convert back flags to http methods
 func FlagToListMethod(flags uint8) []string {
 	methods := make([]string, 0)
 	if flags&OptionMethod == OptionMethod {
