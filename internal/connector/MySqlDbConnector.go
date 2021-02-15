@@ -4,10 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/hyperjumptech/hansip/pkg/store/cache"
 	"regexp"
 
+	"github.com/hyperjumptech/hansip/pkg/store/cache"
+
 	// Initializes mysql driver
+	"sort"
+	"time"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/constants"
@@ -15,8 +19,6 @@ import (
 	"github.com/hyperjumptech/hansip/pkg/totp"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
-	"sort"
-	"time"
 )
 
 const (
@@ -109,7 +111,7 @@ const (
 	CreateRevocationSQL = `CREATE TABLE IF NOT EXISTS HANSIP_REVOCATION (
     SUBJECT VARCHAR(128) NOT NULL UNIQUE,
     ACTIVATION_DATE DATETIME,
-    PRIMARY KEY (SUBJECT),
+    PRIMARY KEY (SUBJECT)
 ) ENGINE=INNODB;`
 )
 
