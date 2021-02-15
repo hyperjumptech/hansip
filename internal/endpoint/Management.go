@@ -2,6 +2,7 @@ package endpoint
 
 import (
 	"fmt"
+
 	"github.com/gorilla/mux"
 	"github.com/hyperjumptech/hansip/api"
 	"github.com/hyperjumptech/hansip/internal/config"
@@ -29,7 +30,7 @@ var (
 	EmailSender connector.EmailSender
 
 	apiPrefix = config.Get("api.path.prefix")
-
+	// Endpoints slice of endpoint pointers
 	Endpoints []*Endpoint
 )
 
@@ -119,7 +120,7 @@ func init() {
 
 // InitializeRouter will initialize router to execute management endpoints
 func InitializeRouter(router *mux.Router) {
-	for path, _ := range api.StaticResources {
+	for path := range api.StaticResources {
 		router.HandleFunc(path, api.ServeStatic).Methods("GET")
 	}
 	for _, ep := range Endpoints {

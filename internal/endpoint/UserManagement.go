@@ -3,6 +3,10 @@ package endpoint
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
+
 	"github.com/hyperjumptech/hansip/internal/config"
 	"github.com/hyperjumptech/hansip/internal/connector"
 	"github.com/hyperjumptech/hansip/internal/constants"
@@ -13,15 +17,13 @@ import (
 	"github.com/hyperjumptech/hansip/pkg/totp"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
-	"io/ioutil"
-	"net/http"
-	"time"
 )
 
 var (
 	userMgmtLogger = log.WithField("go", "UserManagement")
 )
 
+// SetUserRoles sets roles to a user
 func SetUserRoles(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "SetUserRoles").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 
@@ -55,10 +57,10 @@ func SetUserRoles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rolesToAdd := make([]*connector.Role, 0)
-	for _, roleId := range roleIds {
-		role, err := RoleRepo.GetRoleByRecID(r.Context(), roleId)
+	for _, roleID := range roleIds {
+		role, err := RoleRepo.GetRoleByRecID(r.Context(), roleID)
 		if err != nil {
-			fLog.Warnf("RoleRepo.GetRoleByRecID got %s, this role %s will not be added to user %s role", err.Error(), roleId, user.RecID)
+			fLog.Warnf("RoleRepo.GetRoleByRecID got %s, this role %s will not be added to user %s role", err.Error(), roleID, user.RecID)
 		}
 		authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
 		if !authCtx.IsAdminOfDomain(role.RoleDomain) {
@@ -88,6 +90,7 @@ func SetUserRoles(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d roles added into user", counter), nil, nil)
 }
 
+// DeleteUserRoles removes
 func DeleteUserRoles(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "DeleteUserRoles").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams(fmt.Sprintf("%s/management/user/{userRecId}/roles", apiPrefix), r.URL.Path)
@@ -109,6 +112,7 @@ func DeleteUserRoles(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "successfuly removed all roles from user", nil, nil)
 }
 
+// SetUserGroups assigns groups to a single user
 func SetUserGroups(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "SetUserGroups").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams(fmt.Sprintf("%s/management/user/{userRecId}/groups", apiPrefix), r.URL.Path)
@@ -142,14 +146,14 @@ func SetUserGroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	counter := 0
-	for _, groupId := range groupIds {
-		group, err := GroupRepo.GetGroupByRecID(r.Context(), groupId)
+	for _, groupID := range groupIds {
+		group, err := GroupRepo.GetGroupByRecID(r.Context(), groupID)
 		if err != nil {
-			fLog.Warnf("GroupRepo.GetGroupByRecID got %s, this group %s will not be joined by user %s", err.Error(), groupId, user.RecID)
+			fLog.Warnf("GroupRepo.GetGroupByRecID got %s, this group %s will not be joined by user %s", err.Error(), groupID, user.RecID)
 		} else {
 			_, err := UserGroupRepo.CreateUserGroup(r.Context(), user, group)
 			if err != nil {
-				fLog.Warnf("UserGroupRepo.CreateUserGroup got %s, this group %s will not be joined by user %s", err.Error(), groupId, user.RecID)
+				fLog.Warnf("UserGroupRepo.CreateUserGroup got %s, this group %s will not be joined by user %s", err.Error(), groupID, user.RecID)
 			} else {
 				counter++
 			}
@@ -161,6 +165,7 @@ func SetUserGroups(w http.ResponseWriter, r *http.Request) {
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, fmt.Sprintf("%d groups joined by user", counter), nil, nil)
 }
 
+// DeleteUserGroups removes the user from groups
 func DeleteUserGroups(w http.ResponseWriter, r *http.Request) {
 	fLog := userMgmtLogger.WithField("func", "DeleteUserGroups").WithField("RequestID", r.Context().Value(constants.RequestID)).WithField("path", r.URL.Path).WithField("method", r.Method)
 	params, err := helper.ParsePathParams(fmt.Sprintf("%s/management/user/{userRecId}/groups", apiPrefix), r.URL.Path)

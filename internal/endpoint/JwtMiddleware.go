@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/hyperjumptech/hansip/internal/constants"
 	"github.com/hyperjumptech/hansip/internal/hansipcontext"
 	"github.com/hyperjumptech/hansip/internal/hansiperrors"
 	"github.com/hyperjumptech/hansip/pkg/helper"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 var (
@@ -32,16 +33,16 @@ func JwtMiddleware(next http.Handler) http.Handler {
 				tokenCtx := context.WithValue(r.Context(), constants.HansipAuthentication, hansipContext)
 				next.ServeHTTP(w, r.WithContext(tokenCtx))
 				return
-			} else {
-				pathNotAllowedError := &hansiperrors.ErrPathNotAllowed{}
-				audienceNotAllowedErr := &hansiperrors.ErrAudienceNotAllowed{}
-				if errors.As(err, &pathNotAllowedError) {
-					middlewareLog.Tracef("Traced Path Not Allowed %v", err)
-				}
-				if errors.As(err, &audienceNotAllowedErr) {
-					middlewareLog.Tracef("Traced Audience Not Allowed %v", err)
-				}
 			}
+			pathNotAllowedError := &hansiperrors.ErrPathNotAllowed{}
+			audienceNotAllowedErr := &hansiperrors.ErrAudienceNotAllowed{}
+			if errors.As(err, &pathNotAllowedError) {
+				middlewareLog.Tracef("Traced Path Not Allowed %v", err)
+			}
+			if errors.As(err, &audienceNotAllowedErr) {
+				middlewareLog.Tracef("Traced Audience Not Allowed %v", err)
+			}
+
 		}
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusUnauthorized, fmt.Sprintf("You are not authorized to access this end point %s", r.URL.Path), nil, nil)
 		return
