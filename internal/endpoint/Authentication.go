@@ -366,7 +366,7 @@ func Authentication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user.Enable2FactorAuth {
-		user.Token2FA = helper.MakeRandomString(16, true, true, true, false)
+		user.Token2FA = helper.MakeRandomString(6, true, true, true, false)
 		ret := make(map[string]string)
 		ret["2FA_token"] = user.Token2FA
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusAccepted, "2FA needed", nil, ret)

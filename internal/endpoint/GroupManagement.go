@@ -39,6 +39,11 @@ func SetGroupUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
+		fLog.Error(err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group recID %s not found", params["groupRecId"]), nil, nil)
 		return
 	}
@@ -75,6 +80,8 @@ func SetGroupUsers(w http.ResponseWriter, r *http.Request) {
 		user, err := UserRepo.GetUserByRecID(r.Context(), userID)
 		if err != nil {
 			fLog.Warnf("UserRepo.GetUserByRecID got %s, this user %s will not be added to group %s user", err.Error(), userID, group.RecID)
+		} else if user == nil {
+			fLog.Warnf("this user %s not exist and will not be added to group %s user", userID, group.RecID)
 		} else {
 			_, err := UserGroupRepo.CreateUserGroup(r.Context(), user, group)
 			if err != nil {
@@ -104,6 +111,11 @@ func DeleteGroupUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
+		fLog.Error(err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group recID %s not found", params["groupRecId"]), nil, nil)
 		return
 	}
@@ -139,6 +151,11 @@ func SetGroupRoles(w http.ResponseWriter, r *http.Request) {
 	}
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
+		fLog.Error(err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group recID %s not found", params["groupRecId"]), nil, nil)
 		return
 	}
@@ -174,7 +191,9 @@ func SetGroupRoles(w http.ResponseWriter, r *http.Request) {
 	for _, roleID := range roleIds {
 		role, err := RoleRepo.GetRoleByRecID(r.Context(), roleID)
 		if err != nil {
-			fLog.Warnf("RoleRepo.GetRoleByRecID got %s, this role %s will not be added to group %s role", err.Error(), roleID, group.RecID)
+			fLog.Error("RoleRepo.GetRoleByRecID got %s, this role %s will not be added to group %s role", err.Error(), roleID, group.RecID)
+		} else if role == nil {
+			fLog.Warnf("This role %s is not exist and will not be added to group %s role", roleID, group.RecID)
 		} else {
 			_, err := GroupRoleRepo.CreateGroupRole(r.Context(), group, role)
 			if err != nil {
@@ -203,6 +222,11 @@ func DeleteGroupRoles(w http.ResponseWriter, r *http.Request) {
 	}
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
+		fLog.Error(err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group recID %s not found", params["groupRecId"]), nil, nil)
 		return
 	}
@@ -240,7 +264,11 @@ func ListAllGroup(w http.ResponseWriter, r *http.Request) {
 	tenant, err := TenantRepo.GetTenantByRecID(r.Context(), params["tenantRecId"])
 	if err != nil {
 		fLog.Errorf("TenantRepo.GetTenantByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if tenant == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Tenant %s not found", params["tenantRecId"]), nil, nil)
 		return
 	}
 
@@ -298,10 +326,14 @@ func CreateNewGroup(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
 		return
 	}
-	_, err = TenantRepo.GetTenantByDomain(r.Context(), req.GroupDomain)
+	tenant, err := TenantRepo.GetTenantByDomain(r.Context(), req.GroupDomain)
 	if err != nil {
 		fLog.Errorf("TenantRepo.GetTenantByDomain got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if tenant == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("tenant with domain %s is not exist", req.GroupDomain), nil, nil)
 		return
 	}
 
@@ -344,7 +376,11 @@ func GetGroupDetail(w http.ResponseWriter, r *http.Request) {
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
 		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group with recid %d is not exist", params["groupRecId"]), nil, nil)
 		return
 	}
 
@@ -389,7 +425,11 @@ func UpdateGroup(w http.ResponseWriter, r *http.Request) {
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
 		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group with recid %d is not exist", params["groupRecId"]), nil, nil)
 		return
 	}
 
@@ -404,9 +444,14 @@ func UpdateGroup(w http.ResponseWriter, r *http.Request) {
 	group.Description = req.Description
 
 	exGroup, err := GroupRepo.GetGroupByName(r.Context(), req.GroupName, req.GroupDomain)
-	if err == nil && exGroup.GroupName == req.GroupName && exGroup.RecID != params["groupRecId"] {
+	if err == nil && exGroup != nil && exGroup.GroupName == req.GroupName && exGroup.RecID != params["groupRecId"] {
 		fLog.Errorf("Duplicate group name. group %s already exist", req.GroupName)
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		return
+	}
+	if err != nil {
+		fLog.Errorf(err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
 
@@ -436,8 +481,13 @@ func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	}
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		fLog.Errorf(err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
+		fLog.Errorf(err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group with recid %s not exist", params["groupRecId"]), nil, nil)
 		return
 	}
 
@@ -468,7 +518,12 @@ func ListGroupUser(w http.ResponseWriter, r *http.Request) {
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
 		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
+		fLog.Errorf(err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group with recid %s not exist", params["groupRecId"]), nil, nil)
 		return
 	}
 
@@ -520,7 +575,12 @@ func CreateGroupUser(w http.ResponseWriter, r *http.Request) {
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
 		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
+		fLog.Errorf(err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group with recid %s not exist", params["groupRecId"]), nil, nil)
 		return
 	}
 
@@ -563,7 +623,11 @@ func DeleteGroupUser(w http.ResponseWriter, r *http.Request) {
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
 		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group with recid %s not exist", params["groupRecId"]), nil, nil)
 		return
 	}
 
@@ -576,15 +640,25 @@ func DeleteGroupUser(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User with recid %s not exist", params["userRecId"]), nil, nil)
+		return
+	}
+
 	ug, err := UserGroupRepo.GetUserGroup(r.Context(), user, group)
 	if err != nil {
 		fLog.Errorf("UserGroupRepo.GetUserGroup got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
+	if ug == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, "User is not belong to group", nil, nil)
+		return
+	}
+
 	err = UserGroupRepo.DeleteUserGroup(r.Context(), ug)
 	if err != nil {
 		fLog.Errorf("UserGroupRepo.DeleteUserGroup got %s", err.Error())
@@ -612,7 +686,11 @@ func ListGroupRole(w http.ResponseWriter, r *http.Request) {
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
 		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group with recid %s not exist", params["groupRecId"]), nil, nil)
 		return
 	}
 
@@ -662,7 +740,11 @@ func CreateGroupRole(w http.ResponseWriter, r *http.Request) {
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
 		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group with recid %s not exist", params["groupRecId"]), nil, nil)
 		return
 	}
 
@@ -675,7 +757,11 @@ func CreateGroupRole(w http.ResponseWriter, r *http.Request) {
 	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
 		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if role == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Role with recid %s not exist", params["roleRecId"]), nil, nil)
 		return
 	}
 
@@ -710,7 +796,11 @@ func DeleteGroupRole(w http.ResponseWriter, r *http.Request) {
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
 		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group with recid %s not exist", params["groupRecId"]), nil, nil)
 		return
 	}
 
@@ -723,15 +813,25 @@ func DeleteGroupRole(w http.ResponseWriter, r *http.Request) {
 	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
 		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
+	if role == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Role with recid %s not exist", params["roleRecId"]), nil, nil)
+		return
+	}
+
 	gr, err := GroupRoleRepo.GetGroupRole(r.Context(), group, role)
 	if err != nil {
 		fLog.Errorf("GroupRoleRepo.GetGroupRole got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
+	if gr == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, "Role do not belong to group", nil, nil)
+		return
+	}
+
 	err = GroupRoleRepo.DeleteGroupRole(r.Context(), gr)
 	if err != nil {
 		fLog.Errorf("GroupRoleRepo.DeleteGroupRole got %s", err.Error())

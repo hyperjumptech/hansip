@@ -1,6 +1,6 @@
 module github.com/hyperjumptech/hansip
 
-go 1.15
+go 1.16
 
 require (
 	github.com/SermoDigital/jose v0.0.0-20180104203859-803625baeddc

@@ -5,8 +5,22 @@ import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
+	"sort"
 	"testing"
 )
+
+func TestSorting(t *testing.T) {
+	arr := []string{
+		"abc", "cde",
+	}
+	sort.Slice(arr, func(i, j int) bool {
+		return i < j
+	})
+	if arr[0] != "abc" {
+		t.Log(arr[0])
+		t.FailNow()
+	}
+}
 
 func TestUpdateuser(t *testing.T) {
 	logrus.SetLevel(logrus.TraceLevel)

@@ -91,6 +91,16 @@ func InitializeRouter() {
 		endpoint.GroupRoleRepo = connector.GetMySQLDBInstance()
 		endpoint.TenantRepo = connector.GetMySQLDBInstance()
 		endpoint.RevocationRepo = connector.GetMySQLDBInstance()
+	} else if config.Get("db.type") == "SQLITE" {
+		log.Warnf("Using SQLITE")
+		endpoint.UserRepo = connector.GetSqliteDBInstance()
+		endpoint.GroupRepo = connector.GetSqliteDBInstance()
+		endpoint.RoleRepo = connector.GetSqliteDBInstance()
+		endpoint.UserGroupRepo = connector.GetSqliteDBInstance()
+		endpoint.UserRoleRepo = connector.GetSqliteDBInstance()
+		endpoint.GroupRoleRepo = connector.GetSqliteDBInstance()
+		endpoint.TenantRepo = connector.GetSqliteDBInstance()
+		endpoint.RevocationRepo = connector.GetSqliteDBInstance()
 	} else {
 		panic(fmt.Sprintf("unknown database type %s. Correct your configuration 'db.type' or env-var 'AAA_DB_TYPE'. allowed values are INMEMORY or MYSQL", config.Get("db.type")))
 	}
@@ -158,7 +168,6 @@ func Start() {
 		panic(err)
 	}
 	wait = graceShut
-
 	WriteTimeout, err := jiffy.DurationOf(config.Get("server.timeout.write"))
 	if err != nil {
 		panic(err)

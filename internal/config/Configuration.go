@@ -44,14 +44,15 @@ func initialize() {
 	defCfg["token.crypt.key"] = "th15mustb3CH@ngedINprodUCT10N"
 	defCfg["token.crypt.method"] = "HS512"
 
-	defCfg["db.type"] = "MYSQL" // INMEMORY, MYSQL
+	defCfg["db.type"] = "MYSQL" // MYSQL, SQLITE
 	defCfg["db.mysql.host"] = "localhost"
 	defCfg["db.mysql.port"] = "3306"
 	defCfg["db.mysql.user"] = "devuser"
 	defCfg["db.mysql.password"] = "devpassword"
 	defCfg["db.mysql.database"] = "devdb"
-	defCfg["db.mysql.maxidle"] = "3"
-	defCfg["db.mysql.maxopen"] = "10"
+
+	defCfg["db.pool.maxidle"] = "3"
+	defCfg["db.pool.maxopen"] = "10"
 
 	defCfg["hansip.domain"] = "hansip"
 	defCfg["hansip.admin"] = "admin"

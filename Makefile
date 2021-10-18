@@ -16,7 +16,7 @@ build: build-static
 #	export GO111MODULE=on; \
 #	GO_ENABLED=0 go build -a -o $(IMAGE_NAME).app cmd/main/Main.go
 #   Use bellow if you're running on linux.
-	GO_ENABLED=0 go build -a -ldflags '-extldflags "-static"' -o $(IMAGE_NAME).app cmd/main/Main.go
+	GO_ENABLED=0 go build -a -o $(IMAGE_NAME).app cmd/main/Main.go
 
 lint: build-static
 #	golint -set_exit_status ./internal/... ./pkg/... ./cmd/...
@@ -41,13 +41,8 @@ run: build
 	export AAA_SERVER_HTTP_CORS_IGNOREOPTION=false; \
 	export AAA_SERVER_HTTP_CORS_OPTIONSTATUS=200; \
 	export AAA_TOKEN_ISSUER=aaa.hansip.go.id; \
-	export AAA_MAILER_TYPE=SENDGRID; \
-	export AAA_MAILER_SENDGRID_TOKEN=sgaseasefasefasef; \
+	export AAA_MAILER_TYPE=DUMMY; \
 	export AAA_MAILER_FROM=aaa@hansip.go.id; \
-	export AAA_MAILER_SENDMAIL_HOST=hansip.go.id; \
-	export AAA_MAILER_SENDMAIL_PORT=25; \
-	export AAA_MAILER_SENDMAIL_USER=user; \
-	export AAA_MAILER_SENDMAIL_PASSWORD=password; \
 	./$(IMAGE_NAME).app
 	rm -f $(IMAGE_NAME).app
 

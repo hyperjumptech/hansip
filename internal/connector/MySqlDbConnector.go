@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/hyperjumptech/hansip/pkg/store/cache"
 
@@ -22,11 +23,11 @@ import (
 )
 
 const (
-	// DropAllSQL contains SQL to drop all existing table for hansip
-	DropAllSQL = `DROP TABLE IF EXISTS HANSIP_REVOCATION, HANSIP_TOTP_RECOVERY_CODES, HANSIP_USER_GROUP, HANSIP_USER_ROLE, HANSIP_GROUP_ROLE, HANSIP_USER, HANSIP_GROUP, HANSIP_ROLE, HANSIP_TENANT;`
+	// DropAllMySQL contains SQL to drop all existing table for hansip
+	DropAllMySQL = `DROP TABLE IF EXISTS HANSIP_REVOCATION, HANSIP_TOTP_RECOVERY_CODES, HANSIP_USER_GROUP, HANSIP_USER_ROLE, HANSIP_GROUP_ROLE, HANSIP_USER, HANSIP_GROUP, HANSIP_ROLE, HANSIP_TENANT;`
 
-	// CreateTenantSQL contains SQL to create HANSIP_ROLE table
-	CreateTenantSQL = `CREATE TABLE IF NOT EXISTS HANSIP_TENANT (
+	// CreateTenantMySQL contains SQL to create HANSIP_ROLE table
+	CreateTenantMySQL = `CREATE TABLE IF NOT EXISTS HANSIP_TENANT (
     REC_ID VARCHAR(32) NOT NULL UNIQUE,
     TENANT_NAME VARCHAR(128) NOT NULL UNIQUE,
     TENANT_DOMAIN VARCHAR(255),
@@ -35,8 +36,8 @@ const (
     PRIMARY KEY (REC_ID)
 ) ENGINE=INNODB;`
 
-	// CreateUserSQL will create HANSIP_USER table
-	CreateUserSQL = `CREATE TABLE IF NOT EXISTS HANSIP_USER (
+	// CreateUserMySQL will create HANSIP_USER table
+	CreateUserMySQL = `CREATE TABLE IF NOT EXISTS HANSIP_USER (
     REC_ID VARCHAR(32) NOT NULL UNIQUE,
     EMAIL VARCHAR(128)  NOT NULL UNIQUE,
     HASHED_PASSPHRASE VARCHAR(128),
@@ -54,8 +55,8 @@ const (
     INDEX (REC_ID, EMAIL),
     PRIMARY KEY (REC_ID)
 ) ENGINE=INNODB;`
-	// CreateGroupSQL contains SQL to  create HANSIP_GROUP
-	CreateGroupSQL = `CREATE TABLE IF NOT EXISTS HANSIP_GROUP (
+	// CreateGroupMySQL contains SQL to  create HANSIP_GROUP
+	CreateGroupMySQL = `CREATE TABLE IF NOT EXISTS HANSIP_GROUP (
     REC_ID VARCHAR(32) NOT NULL UNIQUE,
     GROUP_NAME VARCHAR(128) NOT NULL,
     GROUP_DOMAIN VARCHAR(128) NOT NULL,
@@ -64,8 +65,8 @@ const (
     UNIQUE (GROUP_NAME, GROUP_DOMAIN),
     PRIMARY KEY (REC_ID)
 ) ENGINE=INNODB;`
-	// CreateRoleSQL contains SQL to create HANSIP_ROLE table
-	CreateRoleSQL = `CREATE TABLE IF NOT EXISTS HANSIP_ROLE (
+	// CreateRoleMySQL contains SQL to create HANSIP_ROLE table
+	CreateRoleMySQL = `CREATE TABLE IF NOT EXISTS HANSIP_ROLE (
     REC_ID VARCHAR(32) NOT NULL UNIQUE,
     ROLE_NAME VARCHAR(128) NOT NULL,
     ROLE_DOMAIN VARCHAR(128) NOT NULL,
@@ -74,32 +75,32 @@ const (
     UNIQUE (ROLE_NAME, ROLE_DOMAIN),
     PRIMARY KEY (REC_ID)
 ) ENGINE=INNODB;`
-	// CreateUserRoleSQL contains SQL to create HANSIP_USER_ROLE table
-	CreateUserRoleSQL = `CREATE TABLE IF NOT EXISTS HANSIP_USER_ROLE (
+	// CreateUserRoleMySQL contains SQL to create HANSIP_USER_ROLE table
+	CreateUserRoleMySQL = `CREATE TABLE IF NOT EXISTS HANSIP_USER_ROLE (
     USER_REC_ID VARCHAR(32) NOT NULL,
     ROLE_REC_ID VARCHAR(32) NOT NULL,
     PRIMARY KEY (USER_REC_ID,ROLE_REC_ID),
     FOREIGN KEY (USER_REC_ID) REFERENCES HANSIP_USER(REC_ID) ON DELETE CASCADE,
     FOREIGN KEY (ROLE_REC_ID) REFERENCES HANSIP_ROLE(REC_ID) ON DELETE CASCADE
 ) ENGINE=INNODB;`
-	// CreateUserGroupSQL contains SQL to create HANSIP_USER_GROUP
-	CreateUserGroupSQL = `CREATE TABLE IF NOT EXISTS HANSIP_USER_GROUP (
+	// CreateUserGroupMySQL contains SQL to create HANSIP_USER_GROUP
+	CreateUserGroupMySQL = `CREATE TABLE IF NOT EXISTS HANSIP_USER_GROUP (
     USER_REC_ID VARCHAR(32) NOT NULL,
     GROUP_REC_ID VARCHAR(32) NOT NULL,
     PRIMARY KEY (USER_REC_ID,GROUP_REC_ID),
     FOREIGN KEY (USER_REC_ID) REFERENCES HANSIP_USER(REC_ID) ON DELETE CASCADE,
     FOREIGN KEY (GROUP_REC_ID) REFERENCES HANSIP_GROUP(REC_ID) ON DELETE CASCADE
 ) ENGINE=INNODB;`
-	// CreateGroupRoleSQL contains SQL to create HANSIP_GROUP_ROLE table
-	CreateGroupRoleSQL = `CREATE TABLE IF NOT EXISTS HANSIP_GROUP_ROLE (
+	// CreateGroupRoleMySQL contains SQL to create HANSIP_GROUP_ROLE table
+	CreateGroupRoleMySQL = `CREATE TABLE IF NOT EXISTS HANSIP_GROUP_ROLE (
     GROUP_REC_ID VARCHAR(32) NOT NULL,
     ROLE_REC_ID VARCHAR(32) NOT NULL,
     PRIMARY KEY (GROUP_REC_ID,ROLE_REC_ID),
     FOREIGN KEY (GROUP_REC_ID) REFERENCES HANSIP_GROUP(REC_ID) ON DELETE CASCADE,
     FOREIGN KEY (ROLE_REC_ID) REFERENCES HANSIP_ROLE(REC_ID) ON DELETE CASCADE
 ) ENGINE=INNODB;`
-	// CreateTOTPRecoveryCodeSQL contains SQL to create HANSIP_TOTP_RECOVERY_CODES table
-	CreateTOTPRecoveryCodeSQL = `CREATE TABLE IF NOT EXISTS HANSIP_TOTP_RECOVERY_CODES (
+	// CreateTOTPRecoveryCodeMySQL contains SQL to create HANSIP_TOTP_RECOVERY_CODES table
+	CreateTOTPRecoveryCodeMySQL = `CREATE TABLE IF NOT EXISTS HANSIP_TOTP_RECOVERY_CODES (
     REC_ID VARCHAR(32) NOT NULL,
     RECOVERY_CODE VARCHAR(8) NOT NULL,
     USED_FLAG TINYINT(1) UNSIGNED DEFAULT 0,
@@ -107,8 +108,8 @@ const (
     PRIMARY KEY (REC_ID),
     FOREIGN KEY (USER_REC_ID) REFERENCES HANSIP_USER(REC_ID) ON DELETE CASCADE
 ) ENGINE=INNODB;`
-	// CreateRevocationSQL contains SQL to create HANSIP_REVOCATION table
-	CreateRevocationSQL = `CREATE TABLE IF NOT EXISTS HANSIP_REVOCATION (
+	// CreateRevocationMySQL contains SQL to create HANSIP_REVOCATION table
+	CreateRevocationMySQL = `CREATE TABLE IF NOT EXISTS HANSIP_REVOCATION (
     SUBJECT VARCHAR(128) NOT NULL UNIQUE,
     ACTIVATION_DATE DATETIME,
     PRIMARY KEY (SUBJECT)
@@ -135,8 +136,8 @@ func GetMySQLDBInstance() *MySQLDB {
 			mysqlLog.WithField("func", "GetMySQLDBInstance").Fatalf("sql.Open got %s", err.Error())
 		}
 
-		//db.SetMaxOpenConns(config.GetInt("db.mysql.maxopen"))
-		//db.SetMaxIdleConns(config.GetInt("db.mysql.maxidle"))
+		db.SetMaxOpenConns(config.GetInt("db.pool.maxopen"))
+		db.SetMaxIdleConns(config.GetInt("db.pool.maxidle"))
 
 		mySQLDBInstance = &MySQLDB{
 			instance: db,
@@ -168,9 +169,9 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 	}
 	if !exist {
 		fLog.Infof("Create table HANSIP_TENANT")
-		_, err := db.instance.ExecContext(ctx, CreateTenantSQL)
+		_, err := db.instance.ExecContext(ctx, CreateTenantMySQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_TENANT Got %s. SQL = %s", err.Error(), CreateTenantSQL)
+			fLog.Errorf("db.instance.ExecContext HANSIP_TENANT Got %s. SQL = %s", err.Error(), CreateTenantMySQL)
 		}
 	}
 
@@ -181,9 +182,9 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 	}
 	if !exist {
 		fLog.Infof("Create table HANSIP_USER")
-		_, err := db.instance.ExecContext(ctx, CreateUserSQL)
+		_, err := db.instance.ExecContext(ctx, CreateUserMySQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_USER Got %s. SQL = %s", err.Error(), CreateUserSQL)
+			fLog.Errorf("db.instance.ExecContext HANSIP_USER Got %s. SQL = %s", err.Error(), CreateUserMySQL)
 		}
 	}
 
@@ -194,9 +195,9 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 	}
 	if !exist {
 		fLog.Infof("Create table HANSIP_GROUP")
-		_, err := db.instance.ExecContext(ctx, CreateGroupSQL)
+		_, err := db.instance.ExecContext(ctx, CreateGroupMySQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_GROUP Got %s. SQL = %s", err.Error(), CreateGroupSQL)
+			fLog.Errorf("db.instance.ExecContext HANSIP_GROUP Got %s. SQL = %s", err.Error(), CreateGroupMySQL)
 		}
 	}
 
@@ -207,9 +208,9 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 	}
 	if !exist {
 		fLog.Infof("Create table HANSIP_ROLE")
-		_, err := db.instance.ExecContext(ctx, CreateRoleSQL)
+		_, err := db.instance.ExecContext(ctx, CreateRoleMySQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_ROLE Got %s. SQL = %s", err.Error(), CreateRoleSQL)
+			fLog.Errorf("db.instance.ExecContext HANSIP_ROLE Got %s. SQL = %s", err.Error(), CreateRoleMySQL)
 		}
 	}
 
@@ -220,9 +221,9 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 	}
 	if !exist {
 		fLog.Infof("Create table HANSIP_USER_ROLE")
-		_, err := db.instance.ExecContext(ctx, CreateUserRoleSQL)
+		_, err := db.instance.ExecContext(ctx, CreateUserRoleMySQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_USER_ROLE Got %s. SQL = %s", err.Error(), CreateUserRoleSQL)
+			fLog.Errorf("db.instance.ExecContext HANSIP_USER_ROLE Got %s. SQL = %s", err.Error(), CreateUserRoleMySQL)
 		}
 	}
 
@@ -233,9 +234,9 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 	}
 	if !exist {
 		fLog.Infof("Create table HANSIP_USER_GROUP")
-		_, err := db.instance.ExecContext(ctx, CreateUserGroupSQL)
+		_, err := db.instance.ExecContext(ctx, CreateUserGroupMySQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_USER_GROUP Got %s. SQL = %s", err.Error(), CreateUserGroupSQL)
+			fLog.Errorf("db.instance.ExecContext HANSIP_USER_GROUP Got %s. SQL = %s", err.Error(), CreateUserGroupMySQL)
 		}
 	}
 
@@ -246,9 +247,9 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 	}
 	if !exist {
 		fLog.Infof("Create table HANSIP_GROUP_ROLE")
-		_, err := db.instance.ExecContext(ctx, CreateGroupRoleSQL)
+		_, err := db.instance.ExecContext(ctx, CreateGroupRoleMySQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s. SQL = %s", err.Error(), CreateGroupRoleSQL)
+			fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s. SQL = %s", err.Error(), CreateGroupRoleMySQL)
 		}
 	}
 
@@ -259,9 +260,9 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 	}
 	if !exist {
 		fLog.Infof("Create table HANSIP_TOTP_RECOVERY_CODES")
-		_, err := db.instance.ExecContext(ctx, CreateTOTPRecoveryCodeSQL)
+		_, err := db.instance.ExecContext(ctx, CreateTOTPRecoveryCodeMySQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_TOTP_RECOVERY_CODES Got %s. SQL = %s", err.Error(), CreateTOTPRecoveryCodeSQL)
+			fLog.Errorf("db.instance.ExecContext HANSIP_TOTP_RECOVERY_CODES Got %s. SQL = %s", err.Error(), CreateTOTPRecoveryCodeMySQL)
 		}
 	}
 
@@ -272,9 +273,9 @@ func (db *MySQLDB) InitDB(ctx context.Context) error {
 	}
 	if !exist {
 		fLog.Infof("Create table HANSIP_REVOCATION")
-		_, err := db.instance.ExecContext(ctx, CreateRevocationSQL)
+		_, err := db.instance.ExecContext(ctx, CreateRevocationMySQL)
 		if err != nil {
-			fLog.Errorf("db.instance.ExecContext HANSIP_REVOCATION Got %s. SQL = %s", err.Error(), CreateRevocationSQL)
+			fLog.Errorf("db.instance.ExecContext HANSIP_REVOCATION Got %s. SQL = %s", err.Error(), CreateRevocationMySQL)
 		}
 	}
 
@@ -371,6 +372,7 @@ func (db *MySQLDB) isTableExist(ctx context.Context, tableName string) (bool, er
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	if rows.Next() {
 		count := 0
 		err := rows.Scan(&count)
@@ -388,13 +390,13 @@ func (db *MySQLDB) isTableExist(ctx context.Context, tableName string) (bool, er
 
 // DropAllTables will drop all tables used by Hansip
 func (db *MySQLDB) DropAllTables(ctx context.Context) error {
-	_, err := db.instance.ExecContext(ctx, DropAllSQL)
+	_, err := db.instance.ExecContext(ctx, DropAllMySQL)
 	if err != nil {
-		mysqlLog.WithField("func", "DropAllTables").WithField("RequestID", ctx.Value(constants.RequestID)).Errorf("got %s, SQL = %s", err.Error(), DropAllSQL)
+		mysqlLog.WithField("func", "DropAllTables").WithField("RequestID", ctx.Value(constants.RequestID)).Errorf("got %s, SQL = %s", err.Error(), DropAllMySQL)
 		return &ErrDBExecuteError{
 			Wrapped: err,
 			Message: "Error while trying to drop all table",
-			SQL:     DropAllSQL,
+			SQL:     DropAllMySQL,
 		}
 	}
 	return nil
@@ -407,13 +409,13 @@ func (db *MySQLDB) CreateAllTable(ctx context.Context) error {
 	hansipDomain := config.Get("hansip.domain")
 	hansipAdmin := config.Get("hansip.admin")
 
-	_, err := db.instance.ExecContext(ctx, CreateTenantSQL)
+	_, err := db.instance.ExecContext(ctx, CreateTenantMySQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_TENANT Got %s. SQL = %s", err.Error(), CreateTenantSQL)
+		fLog.Errorf("db.instance.ExecContext HANSIP_TENANT Got %s. SQL = %s", err.Error(), CreateTenantMySQL)
 		return &ErrDBExecuteError{
 			Wrapped: err,
 			Message: "Error while trying to create table HANSIP_TENANT",
-			SQL:     CreateTenantSQL,
+			SQL:     CreateTenantMySQL,
 		}
 	}
 	_, err = db.CreateTenantRecord(ctx, "Hansip System", "hansip", "Hansip built in tenant")
@@ -421,76 +423,76 @@ func (db *MySQLDB) CreateAllTable(ctx context.Context) error {
 		fLog.Errorf("db.CreateTenantRecord Got %s", err.Error())
 		return err
 	}
-	_, err = db.instance.ExecContext(ctx, CreateUserSQL)
+	_, err = db.instance.ExecContext(ctx, CreateUserMySQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_USER Got %s. SQL = %s", err.Error(), CreateUserSQL)
+		fLog.Errorf("db.instance.ExecContext HANSIP_USER Got %s. SQL = %s", err.Error(), CreateUserMySQL)
 		return &ErrDBExecuteError{
 			Wrapped: err,
 			Message: "Error while trying to create table HANSIP_USER",
-			SQL:     CreateUserSQL,
+			SQL:     CreateUserMySQL,
 		}
 	}
-	_, err = db.instance.ExecContext(ctx, CreateGroupSQL)
+	_, err = db.instance.ExecContext(ctx, CreateGroupMySQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP Got %s. SQL = %s", err.Error(), CreateGroupSQL)
+		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP Got %s. SQL = %s", err.Error(), CreateGroupMySQL)
 		return &ErrDBExecuteError{
 			Wrapped: err,
 			Message: "Error while trying to create table HANSIP_GROUP",
-			SQL:     CreateGroupSQL,
+			SQL:     CreateGroupMySQL,
 		}
 	}
-	_, err = db.instance.ExecContext(ctx, CreateRoleSQL)
+	_, err = db.instance.ExecContext(ctx, CreateRoleMySQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_ROLE Got %s. SQL = %s", err.Error(), CreateRoleSQL)
+		fLog.Errorf("db.instance.ExecContext HANSIP_ROLE Got %s. SQL = %s", err.Error(), CreateRoleMySQL)
 		return &ErrDBExecuteError{
 			Wrapped: err,
 			Message: "Error while trying to create table HANSIP_ROLE",
-			SQL:     CreateRoleSQL,
+			SQL:     CreateRoleMySQL,
 		}
 	}
-	_, err = db.instance.ExecContext(ctx, CreateUserRoleSQL)
+	_, err = db.instance.ExecContext(ctx, CreateUserRoleMySQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_USER_ROLE Got %s. SQL = %s", err.Error(), CreateUserRoleSQL)
+		fLog.Errorf("db.instance.ExecContext HANSIP_USER_ROLE Got %s. SQL = %s", err.Error(), CreateUserRoleMySQL)
 		return &ErrDBExecuteError{
 			Wrapped: err,
 			Message: "Error while trying to create table HANSIP_USER_ROLE",
-			SQL:     CreateUserRoleSQL,
+			SQL:     CreateUserRoleMySQL,
 		}
 	}
-	_, err = db.instance.ExecContext(ctx, CreateUserGroupSQL)
+	_, err = db.instance.ExecContext(ctx, CreateUserGroupMySQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_USER_GROUP Got %s. SQL = %s", err.Error(), CreateUserGroupSQL)
+		fLog.Errorf("db.instance.ExecContext HANSIP_USER_GROUP Got %s. SQL = %s", err.Error(), CreateUserGroupMySQL)
 		return &ErrDBExecuteError{
 			Wrapped: err,
 			Message: "Error while trying to create table HANSIP_USER_GROUP",
-			SQL:     CreateUserGroupSQL,
+			SQL:     CreateUserGroupMySQL,
 		}
 	}
-	_, err = db.instance.ExecContext(ctx, CreateGroupRoleSQL)
+	_, err = db.instance.ExecContext(ctx, CreateGroupRoleMySQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s. SQL = %s", err.Error(), CreateGroupRoleSQL)
+		fLog.Errorf("db.instance.ExecContext HANSIP_GROUP_ROLE Got %s. SQL = %s", err.Error(), CreateGroupRoleMySQL)
 		return &ErrDBExecuteError{
 			Wrapped: err,
 			Message: "Error while trying to create table HANSIP_GROUP_ROLE",
-			SQL:     CreateGroupRoleSQL,
+			SQL:     CreateGroupRoleMySQL,
 		}
 	}
-	_, err = db.instance.ExecContext(ctx, CreateTOTPRecoveryCodeSQL)
+	_, err = db.instance.ExecContext(ctx, CreateTOTPRecoveryCodeMySQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_TOTP_RECOVERY_CODES Got %s. SQL = %s", err.Error(), CreateTOTPRecoveryCodeSQL)
+		fLog.Errorf("db.instance.ExecContext HANSIP_TOTP_RECOVERY_CODES Got %s. SQL = %s", err.Error(), CreateTOTPRecoveryCodeMySQL)
 		return &ErrDBExecuteError{
 			Wrapped: err,
 			Message: "Error while trying to create table HANSIP_TOTP_RECOVERY_CODES",
-			SQL:     CreateTOTPRecoveryCodeSQL,
+			SQL:     CreateTOTPRecoveryCodeMySQL,
 		}
 	}
-	_, err = db.instance.ExecContext(ctx, CreateRevocationSQL)
+	_, err = db.instance.ExecContext(ctx, CreateRevocationMySQL)
 	if err != nil {
-		fLog.Errorf("db.instance.ExecContext HANSIP_REVOCATION Got %s. SQL = %s", err.Error(), CreateRevocationSQL)
+		fLog.Errorf("db.instance.ExecContext HANSIP_REVOCATION Got %s. SQL = %s", err.Error(), CreateRevocationMySQL)
 		return &ErrDBExecuteError{
 			Wrapped: err,
 			Message: "Error while trying to create table HANSIP_REVOCATION",
-			SQL:     CreateRevocationSQL,
+			SQL:     CreateRevocationMySQL,
 		}
 	}
 	_, err = db.CreateRole(ctx, hansipAdmin, hansipDomain, "Administrator role")
@@ -509,11 +511,8 @@ func (db *MySQLDB) GetTenantByDomain(ctx context.Context, tenantDomain string) (
 	row := db.instance.QueryRowContext(ctx, q, tenantDomain)
 	err := row.Scan(&tenant.RecID, &tenant.Name, &tenant.Domain, &tenant.Description)
 	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
-			return nil, &ErrDBNoResult{
-				Message: "GetTenantByDomain returns no result",
-				SQL:     q,
-			}
+		if err == sql.ErrNoRows {
+			return nil, nil
 		}
 		fLog.Errorf("row.Scan got %s", err.Error())
 		return nil, &ErrDBScanError{
@@ -533,6 +532,9 @@ func (db *MySQLDB) GetTenantByRecID(ctx context.Context, recID string) (*Tenant,
 	row := db.instance.QueryRowContext(ctx, q, recID)
 	err := row.Scan(&tenant.RecID, &tenant.Name, &tenant.Domain, &tenant.Description)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		fLog.Errorf("row.Scan got %s", err.Error())
 		return nil, &ErrDBScanError{
 			Wrapped: err,
@@ -723,6 +725,7 @@ func (db *MySQLDB) IsTenantRecIDExist(ctx context.Context, recID string) (bool, 
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	if rows.Next() {
 		count := 0
 		err := rows.Scan(&count)
@@ -743,10 +746,14 @@ func (db *MySQLDB) IsTenantRecIDExist(ctx context.Context, recID string) (bool, 
 func (db *MySQLDB) ListTenant(ctx context.Context, request *helper.PageRequest) ([]*Tenant, *helper.Page, error) {
 	fLog := mysqlLog.WithField("func", "GetUserByRecID").WithField("RequestID", ctx.Value(constants.RequestID))
 	q := "SELECT COUNT(*) AS CNT FROM HANSIP_TENANT"
+	ret := make([]*Tenant, 0)
 	row := db.instance.QueryRowContext(ctx, q)
 	count := 0
 	err := row.Scan(&count)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return ret, helper.NewPage(request, uint(count)), nil
+		}
 		fLog.Errorf("db.instance.QueryRowContext got  %s", err.Error())
 		return nil, nil, &ErrDBQueryError{
 			Wrapped: err,
@@ -754,9 +761,19 @@ func (db *MySQLDB) ListTenant(ctx context.Context, request *helper.PageRequest) 
 			SQL:     q,
 		}
 	}
+
+	var OrderBy string
+	switch strings.ToUpper(request.OrderBy) {
+	case "TENANT_NAME":
+		OrderBy = "TENANT_NAME"
+	case "TENANT_DOMAIN":
+		OrderBy = "TENANT_DOMAIN"
+	default:
+		OrderBy = "TENANT_NAME"
+	}
+
 	page := helper.NewPage(request, uint(count))
-	q = fmt.Sprintf("SELECT REC_ID, TENANT_NAME, TENANT_DOMAIN, DESCRIPTION FROM HANSIP_TENANT ORDER BY TENANT_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
-	ret := make([]*Tenant, 0)
+	q = fmt.Sprintf("SELECT REC_ID, TENANT_NAME, TENANT_DOMAIN, DESCRIPTION FROM HANSIP_TENANT ORDER BY %s %s LIMIT %d, %d", OrderBy, request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	rows, err := db.instance.QueryContext(ctx, q)
 	if err != nil {
 		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
@@ -766,11 +783,12 @@ func (db *MySQLDB) ListTenant(ctx context.Context, request *helper.PageRequest) 
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	for rows.Next() {
 		t := &Tenant{}
 		err := rows.Scan(&t.RecID, &t.Name, &t.Domain, &t.Description)
 		if err != nil {
-			fLog.Warnf("row.Scan got  %s", err.Error())
+			fLog.Warnf("rows.Scan got  %s", err.Error())
 			return nil, nil, &ErrDBScanError{
 				Wrapped: err,
 				Message: "Error ListTenant",
@@ -793,6 +811,9 @@ func (db *MySQLDB) GetUserByRecID(ctx context.Context, recID string) (*User, err
 	err := row.Scan(&user.RecID, &user.Email, &user.HashedPassphrase, &enabled, &suspended, &user.LastSeen, &user.LastLogin, &user.FailCount, &user.ActivationCode,
 		&user.ActivationDate, &user.UserTotpSecretKey, &enable2fa, &user.Token2FA, &user.RecoveryCode)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		fLog.Errorf("row.Scan got %s", err.Error())
 		return nil, &ErrDBScanError{
 			Wrapped: err,
@@ -874,6 +895,7 @@ func (db *MySQLDB) GetTOTPRecoveryCodes(ctx context.Context, user *User) ([]stri
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	for rows.Next() {
 		code := ""
 		err = rows.Scan(&code)
@@ -960,6 +982,9 @@ func (db *MySQLDB) GetUserByEmail(ctx context.Context, email string) (*User, err
 	err := row.Scan(&user.RecID, &user.Email, &user.HashedPassphrase, &enabled, &suspended, &user.LastSeen, &user.LastLogin, &user.FailCount, &user.ActivationCode,
 		&user.ActivationDate, &user.UserTotpSecretKey, &enable2fa, &user.Token2FA, &user.RecoveryCode)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		fLog.Errorf("row.Scan got %s", err.Error())
 		return nil, &ErrDBScanError{
 			Wrapped: err,
@@ -989,6 +1014,9 @@ func (db *MySQLDB) GetUserBy2FAToken(ctx context.Context, token string) (*User, 
 	err := row.Scan(&user.RecID, &user.Email, &user.HashedPassphrase, &enabled, &suspended, &user.LastSeen, &user.LastLogin, &user.FailCount, &user.ActivationCode,
 		&user.ActivationDate, &user.UserTotpSecretKey, &enable2fa, &user.Token2FA, &user.RecoveryCode)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		fLog.Errorf("row.Scan got %s", err.Error())
 		return nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1018,6 +1046,9 @@ func (db *MySQLDB) GetUserByRecoveryToken(ctx context.Context, token string) (*U
 	err := row.Scan(&user.RecID, &user.Email, &user.HashedPassphrase, &enabled, &suspended, &user.LastSeen, &user.LastLogin, &user.FailCount, &user.ActivationCode,
 		&user.ActivationDate, &user.UserTotpSecretKey, &enable2fa, &user.Token2FA, &user.RecoveryCode)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		fLog.Errorf("row.Scan got %s", err.Error())
 		return nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1068,6 +1099,7 @@ func (db *MySQLDB) IsUserRecIDExist(ctx context.Context, recID string) (bool, er
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	if rows.Next() {
 		count := 0
 		err = rows.Scan(&count)
@@ -1108,20 +1140,12 @@ func (db *MySQLDB) UpdateUser(ctx context.Context, user *User) error {
 		enable2fa = 1
 	}
 
-	// q := "UPDATE HANSIP_USER SET EMAIL=?,HASHED_PASSPHRASE=?,ENABLED=?, SUSPENDED=?,LAST_SEEN=?,LAST_LOGIN=?,FAIL_COUNT=?,ACTIVATION_CODE=?,ACTIVATION_DATE=?,TOTP_KEY=?,ENABLE_2FE=?,TOKEN_2FE=?,RECOVERY_CODE=? WHERE REC_ID=?"
-
-	q := fmt.Sprintf("UPDATE HANSIP_USER SET EMAIL='%s',HASHED_PASSPHRASE='%s',ENABLED=%d, SUSPENDED=%d,LAST_SEEN='%s',LAST_LOGIN='%s',FAIL_COUNT='%d',ACTIVATION_CODE='%s',ACTIVATION_DATE='%s',TOTP_KEY='%s',ENABLE_2FE=%d,TOKEN_2FE='%s',RECOVERY_CODE='%s' WHERE REC_ID='%s';", user.Email, user.HashedPassphrase, enabled, suspended, user.LastSeen.Format("2006-01-02 15:04:05"), user.LastLogin.Format("2006-01-02 15:04:05"), user.FailCount, user.ActivationCode,
-		user.ActivationDate.Format("2006-01-02 15:04:05"), user.UserTotpSecretKey, enable2fa, user.Token2FA, user.RecoveryCode, user.RecID)
+	q := "UPDATE HANSIP_USER SET EMAIL=?,HASHED_PASSPHRASE=?,ENABLED=?, SUSPENDED=?,LAST_SEEN=?,LAST_LOGIN=?,FAIL_COUNT=?,ACTIVATION_CODE=?,ACTIVATION_DATE=?,TOTP_KEY=?,ENABLE_2FE=?,TOKEN_2FE=?,RECOVERY_CODE=? WHERE REC_ID=?"
 
 	fLog.Infof("Updating user %s", user.Email)
-	//_, err = db.instance.ExecContext(ctx, q,
-	//	user.Email, user.HashedPassphrase, enabled, suspended, user.LastSeen, user.LastLogin, user.FailCount, user.ActivationCode,
-	//	user.ActivationDate, user.UserTotpSecretKey, enable2fa, user.Token2FA, user.RecoveryCode, user.RecID)
-	_, err = db.instance.ExecContext(ctx, q)
-	//_, err = db.instance.Exec(q)
-	//sParams := fmt.Sprintln(user.Email, user.HashedPassphrase, enabled, suspended, user.LastSeen, user.LastLogin, user.FailCount, user.ActivationCode,
-	//	user.ActivationDate, user.UserTotpSecretKey, enable2fa, user.Token2FA, user.RecoveryCode, user.RecID)
-	//fLog.Warn(sParams)
+	_, err = db.instance.ExecContext(ctx, q,
+		user.Email, user.HashedPassphrase, enabled, suspended, user.LastSeen, user.LastLogin, user.FailCount, user.ActivationCode,
+		user.ActivationDate, user.UserTotpSecretKey, enable2fa, user.Token2FA, user.RecoveryCode, user.RecID)
 	if err != nil {
 		fLog.Errorf("db.instance.ExecContext got %s. SQL = %s", err.Error(), q)
 		return &ErrDBExecuteError{
@@ -1143,7 +1167,24 @@ func (db *MySQLDB) ListUser(ctx context.Context, request *helper.PageRequest) ([
 	}
 	page := helper.NewPage(request, uint(count))
 	userList := make([]*User, 0)
-	q := fmt.Sprintf("SELECT REC_ID, EMAIL,HASHED_PASSPHRASE,ENABLED, SUSPENDED,LAST_SEEN,LAST_LOGIN,FAIL_COUNT,ACTIVATION_CODE,ACTIVATION_DATE,TOTP_KEY,ENABLE_2FE,TOKEN_2FE,RECOVERY_CODE FROM HANSIP_USER ORDER BY EMAIL %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
+
+	var OrderBy string
+	switch strings.ToUpper(request.OrderBy) {
+	case "EMAIL":
+		OrderBy = "EMAIL"
+	case "ENABLED":
+		OrderBy = "ENABLED"
+	case "SUSPENDED":
+		OrderBy = "SUSPENDED"
+	case "LAST_SEEN":
+		OrderBy = "LAST_SEEN"
+	case "LAST_LOGIN":
+		OrderBy = "LAST_LOGIN"
+	default:
+		OrderBy = "EMAIL"
+	}
+
+	q := fmt.Sprintf("SELECT REC_ID, EMAIL,HASHED_PASSPHRASE,ENABLED, SUSPENDED,LAST_SEEN,LAST_LOGIN,FAIL_COUNT,ACTIVATION_CODE,ACTIVATION_DATE,TOTP_KEY,ENABLE_2FE,TOKEN_2FE,RECOVERY_CODE FROM HANSIP_USER ORDER BY %s %s LIMIT %d, %d", OrderBy, request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
 	rows, err := db.instance.QueryContext(ctx, q)
 	if err != nil {
 		fLog.Errorf("db.instance.QueryContext got %s. SQL = %s", err.Error(), q)
@@ -1153,6 +1194,7 @@ func (db *MySQLDB) ListUser(ctx context.Context, request *helper.PageRequest) ([
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	for rows.Next() {
 		user := &User{}
 		var enabled, suspended, enable2fa int
@@ -1217,6 +1259,7 @@ func (db *MySQLDB) ListAllUserRoles(ctx context.Context, user *User, request *he
 		err = rows.Scan(&r.RecID, &r.RoleName, &r.RoleDomain, &r.Description)
 		if err != nil {
 			fLog.Warnf("rows.Scan got  %s", err.Error())
+			rows.Close()
 			return nil, nil, &ErrDBScanError{
 				Wrapped: err,
 				Message: "Error ListAllUserRoles",
@@ -1226,6 +1269,7 @@ func (db *MySQLDB) ListAllUserRoles(ctx context.Context, user *User, request *he
 			roleMap[r.RecID] = r
 		}
 	}
+	rows.Close()
 	q = "SELECT DISTINCT R.REC_ID, R.ROLE_NAME, R.ROLE_DOMAIN, R.DESCRIPTION FROM HANSIP_ROLE R, HANSIP_GROUP_ROLE GR, HANSIP_USER_GROUP UG WHERE R.REC_ID = GR.ROLE_REC_ID AND GR.GROUP_REC_ID = UG.GROUP_REC_ID AND UG.USER_REC_ID = ?"
 	rows, err = db.instance.QueryContext(ctx, q, user.RecID)
 	if err != nil {
@@ -1236,6 +1280,7 @@ func (db *MySQLDB) ListAllUserRoles(ctx context.Context, user *User, request *he
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	for rows.Next() {
 		r := &Role{}
 		err = rows.Scan(&r.RecID, &r.RoleName, &r.RoleDomain, &r.Description)
@@ -1267,6 +1312,23 @@ func (db *MySQLDB) ListAllUserRoles(ctx context.Context, user *User, request *he
 			})
 		}
 	}
+
+	if request.OrderBy == "ROLE_DOMAIN" {
+		sort.Slice(roles, func(i, j int) bool {
+			if request.Sort == "ASC" {
+				return roles[i].RoleDomain < roles[j].RoleDomain
+			}
+			return roles[i].RoleDomain > roles[j].RoleDomain
+		})
+	} else {
+		sort.Slice(roles, func(i, j int) bool {
+			if request.Sort == "ASC" {
+				return roles[i].RoleName < roles[j].RoleName
+			}
+			return roles[i].RoleDomain > roles[j].RoleDomain
+		})
+	}
+
 	return roles[page.OffsetStart:page.OffsetEnd], page, nil
 }
 
@@ -1278,6 +1340,9 @@ func (db *MySQLDB) GetUserRole(ctx context.Context, user *User, role *Role) (*Us
 	count := 0
 	err := row.Scan(&count)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		fLog.Errorf("db.instance.QueryRowContext got  %s", err.Error())
 		return nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1320,10 +1385,14 @@ func (db *MySQLDB) CreateUserRole(ctx context.Context, user *User, role *Role) (
 func (db *MySQLDB) ListUserRoleByUser(ctx context.Context, user *User, request *helper.PageRequest) ([]*Role, *helper.Page, error) {
 	fLog := mysqlLog.WithField("func", "ListUserRoleByUser").WithField("RequestID", ctx.Value(constants.RequestID))
 	q := "SELECT COUNT(*) FROM HANSIP_USER_ROLE WHERE USER_REC_ID=?"
+	ret := make([]*Role, 0)
 	row := db.instance.QueryRowContext(ctx, q, user.RecID)
 	count := 0
 	err := row.Scan(&count)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return ret, helper.NewPage(request, uint(count)), nil
+		}
 		fLog.Errorf("row.Scan got  %s", err.Error())
 		return nil, nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1333,7 +1402,6 @@ func (db *MySQLDB) ListUserRoleByUser(ctx context.Context, user *User, request *
 	}
 	page := helper.NewPage(request, uint(count))
 	q = fmt.Sprintf("SELECT R.REC_ID, R.ROLE_NAME, R.ROLE_DOMAIN, R.DESCRIPTION FROM HANSIP_USER_ROLE UR, HANSIP_ROLE R WHERE UR.ROLE_REC_ID = R.REC_ID AND UR.USER_REC_ID = ? ORDER BY R.ROLE_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
-	ret := make([]*Role, 0)
 	rows, err := db.instance.QueryContext(ctx, q, user.RecID)
 	if err != nil {
 		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
@@ -1343,6 +1411,7 @@ func (db *MySQLDB) ListUserRoleByUser(ctx context.Context, user *User, request *
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	for rows.Next() {
 		r := &Role{}
 		err := rows.Scan(&r.RecID, &r.RoleName, &r.RoleDomain, &r.Description)
@@ -1364,10 +1433,14 @@ func (db *MySQLDB) ListUserRoleByUser(ctx context.Context, user *User, request *
 func (db *MySQLDB) ListUserRoleByRole(ctx context.Context, role *Role, request *helper.PageRequest) ([]*User, *helper.Page, error) {
 	fLog := mysqlLog.WithField("func", "ListUserRoleByRole").WithField("RequestID", ctx.Value(constants.RequestID))
 	q := "SELECT COUNT(*) FROM HANSIP_USER_ROLE WHERE ROLE_REC_ID=?"
+	ret := make([]*User, 0)
 	row := db.instance.QueryRowContext(ctx, q, role.RecID)
 	count := 0
 	err := row.Scan(&count)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return ret, helper.NewPage(request, uint(count)), nil
+		}
 		fLog.Errorf("row.Scan got  %s", err.Error())
 		return nil, nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1377,7 +1450,6 @@ func (db *MySQLDB) ListUserRoleByRole(ctx context.Context, role *Role, request *
 	}
 	page := helper.NewPage(request, uint(count))
 	q = fmt.Sprintf("SELECT R.REC_ID,R.EMAIL,R.HASHED_PASSPHRASE,R.ENABLED, R.SUSPENDED,R.LAST_SEEN,R.LAST_LOGIN,R.FAIL_COUNT,R.ACTIVATION_CODE,R.ACTIVATION_DATE,R.TOTP_KEY,R.ENABLE_2FE,R.TOKEN_2FE,R.RECOVERY_CODE FROM HANSIP_USER_ROLE UR, HANSIP_USER R WHERE UR.USER_REC_ID = R.REC_ID AND UR.ROLE_REC_ID = ? ORDER BY R.EMAIL %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
-	ret := make([]*User, 0)
 	rows, err := db.instance.QueryContext(ctx, q, role.RecID)
 	if err != nil {
 		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
@@ -1387,6 +1459,7 @@ func (db *MySQLDB) ListUserRoleByRole(ctx context.Context, role *Role, request *
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	for rows.Next() {
 		user := &User{}
 		var enabled, suspended, enable2fa int
@@ -1471,6 +1544,9 @@ func (db *MySQLDB) GetRoleByRecID(ctx context.Context, recID string) (*Role, err
 	r := &Role{}
 	err := row.Scan(&r.RecID, &r.RoleName, &r.RoleDomain, &r.Description)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		fLog.Errorf("db.instance.QueryRowContext got  %s", err.Error())
 		return nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1489,6 +1565,9 @@ func (db *MySQLDB) GetRoleByName(ctx context.Context, roleName, roleDomain strin
 	r := &Role{}
 	err := row.Scan(&r.RecID, &r.RoleName, &r.RoleDomain, &r.Description)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		fLog.Errorf("db.instance.QueryRowContext got  %s", err.Error())
 		return nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1525,10 +1604,14 @@ func (db *MySQLDB) CreateRole(ctx context.Context, roleName, roleDomain, descrip
 func (db *MySQLDB) ListRoles(ctx context.Context, tenant *Tenant, request *helper.PageRequest) ([]*Role, *helper.Page, error) {
 	fLog := mysqlLog.WithField("func", "ListRoles").WithField("RequestID", ctx.Value(constants.RequestID))
 	q := "SELECT COUNT(*) AS CNT FROM HANSIP_ROLE"
+	ret := make([]*Role, 0)
 	row := db.instance.QueryRowContext(ctx, q)
 	count := 0
 	err := row.Scan(&count)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return ret, helper.NewPage(request, uint(count)), nil
+		}
 		fLog.Errorf("db.instance.QueryRowContext got  %s", err.Error())
 		return nil, nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1538,7 +1621,6 @@ func (db *MySQLDB) ListRoles(ctx context.Context, tenant *Tenant, request *helpe
 	}
 	page := helper.NewPage(request, uint(count))
 	q = fmt.Sprintf("SELECT REC_ID, ROLE_NAME,ROLE_DOMAIN, DESCRIPTION FROM HANSIP_ROLE WHERE ROLE_DOMAIN=? ORDER BY ROLE_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
-	ret := make([]*Role, 0)
 	rows, err := db.instance.QueryContext(ctx, q, tenant.Domain)
 	if err != nil {
 		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
@@ -1548,10 +1630,14 @@ func (db *MySQLDB) ListRoles(ctx context.Context, tenant *Tenant, request *helpe
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	for rows.Next() {
 		r := &Role{}
 		err := rows.Scan(&r.RecID, &r.RoleName, &r.RoleDomain, &r.Description)
 		if err != nil {
+			if err == sql.ErrNoRows {
+				return ret, helper.NewPage(request, uint(len(ret))), nil
+			}
 			fLog.Warnf("row.Scan got  %s", err.Error())
 			return nil, nil, &ErrDBScanError{
 				Wrapped: err,
@@ -1594,6 +1680,7 @@ func (db *MySQLDB) IsRoleRecIDExist(ctx context.Context, recID string) (bool, er
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	if rows.Next() {
 		count := 0
 		err := rows.Scan(&count)
@@ -1642,6 +1729,9 @@ func (db *MySQLDB) GetGroupByRecID(ctx context.Context, recID string) (*Group, e
 	r := &Group{}
 	err := row.Scan(&r.RecID, &r.GroupName, &r.GroupDomain, &r.Description)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		fLog.Errorf("db.instance.QueryRowContext got %s", err.Error())
 		return nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1659,6 +1749,9 @@ func (db *MySQLDB) GetGroupByName(ctx context.Context, groupName, groupDomain st
 	r := &Group{}
 	err := row.Scan(&r.RecID, &r.GroupName, &r.GroupDomain, &r.Description)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		fLog.Errorf("db.instance.QueryRowContext got %s", err.Error())
 		return nil, &ErrDBExecuteError{
 			Wrapped: err,
@@ -1695,10 +1788,14 @@ func (db *MySQLDB) CreateGroup(ctx context.Context, groupName, groupDomain, desc
 func (db *MySQLDB) ListGroups(ctx context.Context, tenant *Tenant, request *helper.PageRequest) ([]*Group, *helper.Page, error) {
 	fLog := mysqlLog.WithField("func", "ListGroups").WithField("RequestID", ctx.Value(constants.RequestID))
 	q := "SELECT COUNT(*) AS CNT FROM HANSIP_GROUP"
+	ret := make([]*Group, 0)
 	row := db.instance.QueryRowContext(ctx, q)
 	count := 0
 	err := row.Scan(&count)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return ret, helper.NewPage(request, uint(count)), nil
+		}
 		fLog.Errorf("row.Scan got  %s", err.Error())
 		return nil, nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1708,7 +1805,6 @@ func (db *MySQLDB) ListGroups(ctx context.Context, tenant *Tenant, request *help
 	}
 	page := helper.NewPage(request, uint(count))
 	q = fmt.Sprintf("SELECT REC_ID, GROUP_NAME, GROUP_DOMAIN, DESCRIPTION FROM HANSIP_GROUP WHERE GROUP_DOMAIN=? ORDER BY GROUP_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
-	ret := make([]*Group, 0)
 	rows, err := db.instance.QueryContext(ctx, q, tenant.Domain)
 	if err != nil {
 		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
@@ -1718,6 +1814,7 @@ func (db *MySQLDB) ListGroups(ctx context.Context, tenant *Tenant, request *help
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	for rows.Next() {
 		r := &Group{}
 		err := rows.Scan(&r.RecID, &r.GroupName, &r.GroupDomain, &r.Description)
@@ -1764,6 +1861,7 @@ func (db *MySQLDB) IsGroupRecIDExist(ctx context.Context, recID string) (bool, e
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	if rows.Next() {
 		count := 0
 		err := rows.Scan(&count)
@@ -1812,6 +1910,9 @@ func (db *MySQLDB) GetGroupRole(ctx context.Context, group *Group, role *Role) (
 	count := 0
 	err := row.Scan(&count)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		fLog.Errorf("row.Scan got %s", err.Error())
 		return nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1865,10 +1966,14 @@ func (db *MySQLDB) CreateGroupRole(ctx context.Context, group *Group, role *Role
 func (db *MySQLDB) ListGroupRoleByGroup(ctx context.Context, group *Group, request *helper.PageRequest) ([]*Role, *helper.Page, error) {
 	fLog := mysqlLog.WithField("func", "ListGroupRoleByGroup").WithField("RequestID", ctx.Value(constants.RequestID))
 	q := "SELECT COUNT(*) FROM HANSIP_GROUP_ROLE WHERE GROUP_REC_ID=?"
+	ret := make([]*Role, 0)
 	row := db.instance.QueryRowContext(ctx, q, group.RecID)
 	count := 0
 	err := row.Scan(&count)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return ret, helper.NewPage(request, uint(count)), nil
+		}
 		fLog.Errorf("row.Scan got  %s", err.Error())
 		return nil, nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1878,7 +1983,6 @@ func (db *MySQLDB) ListGroupRoleByGroup(ctx context.Context, group *Group, reque
 	}
 	page := helper.NewPage(request, uint(count))
 	q = fmt.Sprintf("SELECT R.REC_ID, R.ROLE_NAME, R.ROLE_DOMAIN, R.DESCRIPTION FROM HANSIP_GROUP_ROLE UR, HANSIP_ROLE R WHERE UR.ROLE_REC_ID = R.REC_ID AND UR.GROUP_REC_ID = ? ORDER BY R.ROLE_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
-	ret := make([]*Role, 0)
 	rows, err := db.instance.QueryContext(ctx, q, group.RecID)
 	if err != nil {
 		fLog.Errorf("db.instance.QueryContext got %s. SQL = %s", err.Error(), q)
@@ -1888,6 +1992,7 @@ func (db *MySQLDB) ListGroupRoleByGroup(ctx context.Context, group *Group, reque
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	for rows.Next() {
 		role := &Role{}
 		err := rows.Scan(&role.RecID, &role.RoleName, &role.RoleDomain, &role.Description)
@@ -1909,10 +2014,14 @@ func (db *MySQLDB) ListGroupRoleByGroup(ctx context.Context, group *Group, reque
 func (db *MySQLDB) ListGroupRoleByRole(ctx context.Context, role *Role, request *helper.PageRequest) ([]*Group, *helper.Page, error) {
 	fLog := mysqlLog.WithField("func", "ListGroupRoleByRole").WithField("RequestID", ctx.Value(constants.RequestID))
 	q := "SELECT COUNT(*) FROM HANSIP_GROUP_ROLE WHERE ROLE_REC_ID=?"
+	ret := make([]*Group, 0)
 	row := db.instance.QueryRowContext(ctx, q, role.RecID)
 	count := 0
 	err := row.Scan(&count)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return ret, helper.NewPage(request, uint(count)), nil
+		}
 		fLog.Errorf("row.Scan got  %s", err.Error())
 		return nil, nil, &ErrDBScanError{
 			Wrapped: err,
@@ -1922,7 +2031,6 @@ func (db *MySQLDB) ListGroupRoleByRole(ctx context.Context, role *Role, request 
 	}
 	page := helper.NewPage(request, uint(count))
 	q = fmt.Sprintf("SELECT R.REC_ID, R.GROUP_NAME, R.GROUP_DOMAIN, R.DESCRIPTION FROM HANSIP_GROUP_ROLE UR, HANSIP_GROUP R WHERE UR.GROUP_REC_ID = R.REC_ID AND UR.ROLE_REC_ID = ? ORDER BY R.GROUP_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
-	ret := make([]*Group, 0)
 	rows, err := db.instance.QueryContext(ctx, q, role.RecID)
 	if err != nil {
 		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
@@ -1932,6 +2040,7 @@ func (db *MySQLDB) ListGroupRoleByRole(ctx context.Context, role *Role, request 
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	for rows.Next() {
 		group := &Group{}
 		err := rows.Scan(&group.RecID, &group.GroupName, &group.GroupDomain, &group.Description)
@@ -2005,6 +2114,9 @@ func (db *MySQLDB) GetUserGroup(ctx context.Context, user *User, group *Group) (
 	count := 0
 	err := row.Scan(&count)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		fLog.Errorf("row.Scan got  %s. SQL = %s", err.Error(), q)
 		return nil, &ErrDBScanError{
 			Wrapped: err,
@@ -2047,10 +2159,14 @@ func (db *MySQLDB) CreateUserGroup(ctx context.Context, user *User, group *Group
 func (db *MySQLDB) ListUserGroupByUser(ctx context.Context, user *User, request *helper.PageRequest) ([]*Group, *helper.Page, error) {
 	fLog := mysqlLog.WithField("func", "ListUserGroupByUser").WithField("RequestID", ctx.Value(constants.RequestID))
 	q := "SELECT COUNT(*) FROM HANSIP_USER_GROUP WHERE USER_REC_ID=?"
+	ret := make([]*Group, 0)
 	row := db.instance.QueryRowContext(ctx, q, user.RecID)
 	count := 0
 	err := row.Scan(&count)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return ret, helper.NewPage(request, uint(count)), nil
+		}
 		fLog.Errorf("row.Scan got  %s", err.Error())
 		return nil, nil, &ErrDBScanError{
 			Wrapped: err,
@@ -2060,7 +2176,6 @@ func (db *MySQLDB) ListUserGroupByUser(ctx context.Context, user *User, request 
 	}
 	page := helper.NewPage(request, uint(count))
 	q = fmt.Sprintf("SELECT R.REC_ID, R.GROUP_NAME, R.GROUP_DOMAIN, R.DESCRIPTION FROM HANSIP_USER_GROUP UR, HANSIP_GROUP R WHERE UR.GROUP_REC_ID = R.REC_ID AND UR.USER_REC_ID = ? ORDER BY R.GROUP_NAME %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
-	ret := make([]*Group, 0)
 	rows, err := db.instance.QueryContext(ctx, q, user.RecID)
 	if err != nil {
 		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
@@ -2070,6 +2185,7 @@ func (db *MySQLDB) ListUserGroupByUser(ctx context.Context, user *User, request 
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	for rows.Next() {
 		group := &Group{}
 		err := rows.Scan(&group.RecID, &group.GroupName, &group.GroupDomain, &group.Description)
@@ -2091,10 +2207,14 @@ func (db *MySQLDB) ListUserGroupByUser(ctx context.Context, user *User, request 
 func (db *MySQLDB) ListUserGroupByGroup(ctx context.Context, group *Group, request *helper.PageRequest) ([]*User, *helper.Page, error) {
 	fLog := mysqlLog.WithField("func", "ListUserGroupByGroup").WithField("RequestID", ctx.Value(constants.RequestID))
 	q := "SELECT COUNT(*) FROM HANSIP_USER_GROUP WHERE GROUP_REC_ID=?"
+	ret := make([]*User, 0)
 	row := db.instance.QueryRowContext(ctx, q, group.RecID)
 	count := 0
 	err := row.Scan(&count)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return ret, helper.NewPage(request, uint(count)), nil
+		}
 		fLog.Errorf("rows.Scan got  %s", err.Error())
 		return nil, nil, &ErrDBScanError{
 			Wrapped: err,
@@ -2104,7 +2224,6 @@ func (db *MySQLDB) ListUserGroupByGroup(ctx context.Context, group *Group, reque
 	}
 	page := helper.NewPage(request, uint(count))
 	q = fmt.Sprintf("SELECT R.REC_ID,R.EMAIL,R.HASHED_PASSPHRASE,R.ENABLED, R.SUSPENDED,R.LAST_SEEN,R.LAST_LOGIN,R.FAIL_COUNT,R.ACTIVATION_CODE,R.ACTIVATION_DATE,R.TOTP_KEY,R.ENABLE_2FE,R.TOKEN_2FE,R.RECOVERY_CODE FROM HANSIP_USER_GROUP UR, HANSIP_USER R WHERE UR.USER_REC_ID = R.REC_ID AND UR.GROUP_REC_ID = ? ORDER BY R.EMAIL %s LIMIT %d, %d", request.Sort, page.OffsetStart, page.OffsetEnd-page.OffsetStart)
-	ret := make([]*User, 0)
 	rows, err := db.instance.QueryContext(ctx, q, group.RecID)
 	if err != nil {
 		fLog.Errorf("db.instance.QueryContext got  %s. SQL = %s", err.Error(), q)
@@ -2114,6 +2233,7 @@ func (db *MySQLDB) ListUserGroupByGroup(ctx context.Context, group *Group, reque
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	for rows.Next() {
 		user := &User{}
 		var enabled, suspended, enable2fa int
@@ -2250,6 +2370,7 @@ func (db *MySQLDB) IsRevoked(ctx context.Context, subject string) (bool, error) 
 			SQL:     q,
 		}
 	}
+	defer rows.Close()
 	if rows.Next() {
 		count := 0
 		err := rows.Scan(&count)

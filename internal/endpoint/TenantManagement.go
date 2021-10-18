@@ -121,7 +121,11 @@ func GetTenantDetail(w http.ResponseWriter, r *http.Request) {
 	tenant, err := TenantRepo.GetTenantByRecID(r.Context(), params["tenantRecId"])
 	if err != nil {
 		fLog.Errorf("TenantRepo.GetTenantByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if tenant == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Tenant recid %s not exist", params["tenantRecId"]), nil, nil)
 		return
 	}
 	helper.WriteHTTPResponse(r.Context(), w, http.StatusOK, "Tenant retrieved", nil, tenant)
@@ -162,8 +166,12 @@ func UpdateTenantDetail(w http.ResponseWriter, r *http.Request) {
 
 	tenant, err := TenantRepo.GetTenantByRecID(r.Context(), params["tenantRecId"])
 	if err != nil {
-		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		fLog.Errorf("TenantRepo.GetTenantByRecID got %s", err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if tenant == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Tenant recid %s not exist", params["tenantRecId"]), nil, nil)
 		return
 	}
 	tenant.Name = req.TenantName
@@ -209,7 +217,11 @@ func DeleteTenant(w http.ResponseWriter, r *http.Request) {
 	tenant, err := TenantRepo.GetTenantByRecID(r.Context(), params["tenantRecId"])
 	if err != nil {
 		fLog.Errorf("TenantRepo.GetTenantByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if tenant == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Tenant recid %s not exist", params["tenantRecId"]), nil, nil)
 		return
 	}
 	err = TenantRepo.DeleteTenant(r.Context(), tenant)

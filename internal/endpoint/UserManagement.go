@@ -39,6 +39,11 @@ func SetUserRoles(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
+		fLog.Error(err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, fmt.Sprintf("User recID %s not found", params["userRecId"]), nil, nil)
+		return
+	}
+	if user == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recID %s not found", params["userRecId"]), nil, nil)
 		return
 	}
@@ -61,6 +66,9 @@ func SetUserRoles(w http.ResponseWriter, r *http.Request) {
 		role, err := RoleRepo.GetRoleByRecID(r.Context(), roleID)
 		if err != nil {
 			fLog.Warnf("RoleRepo.GetRoleByRecID got %s, this role %s will not be added to user %s role", err.Error(), roleID, user.RecID)
+		}
+		if role == nil {
+			fLog.Warnf("This role %s is not exist and will not be added to user %s role", roleId, user.RecID)
 		}
 		authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
 		if !authCtx.IsAdminOfDomain(role.RoleDomain) {
@@ -99,6 +107,11 @@ func DeleteUserRoles(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
+		fLog.Error(err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, fmt.Sprintf("User recID %s not found", params["userRecId"]), nil, nil)
+		return
+	}
+	if user == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recID %s not found", params["userRecId"]), nil, nil)
 		return
 	}
@@ -121,9 +134,15 @@ func SetUserGroups(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
+		fLog.Error(err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if user == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recID %s not found", params["userRecId"]), nil, nil)
 		return
 	}
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fLog.Errorf("ioutil.ReadAll got %s", err.Error())
@@ -174,9 +193,15 @@ func DeleteUserGroups(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
+		fLog.Error(err.Error())
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if user == nil {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recID %s not found", params["userRecId"]), nil, nil)
 		return
 	}
+
 	err = UserGroupRepo.DeleteUserGroupByUser(r.Context(), user)
 	if err != nil {
 		fLog.Errorf("UserGroupRepo.DeleteUserGroupByUser got %s", err.Error())
@@ -194,7 +219,11 @@ func Show2FAQrCode(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByEmail(r.Context(), authCtx.Subject)
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByEmail got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User email %s not found", authCtx.Subject), nil, nil)
 		return
 	}
 
@@ -394,7 +423,11 @@ func ChangePassphrase(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recid %s not found", params["userRecId"]), nil, nil)
 		return
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(user.HashedPassphrase), []byte(c.OldPassphrase))
@@ -469,7 +502,11 @@ func Activate2FA(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByEmail(r.Context(), authCtx.Subject)
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByEmail got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User email %s not found", authCtx.Subject), nil, nil)
 		return
 	}
 	body, err := ioutil.ReadAll(r.Body)
@@ -524,7 +561,11 @@ func WhoAmI(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByEmail(r.Context(), authCtx.Subject)
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByEmail got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, fmt.Sprintf("subject not found : %s. got %s", authCtx.Subject, err.Error()))
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User email %s not found", authCtx.Subject), nil, nil)
 		return
 	}
 	whoami := &WhoAmIResponse{
@@ -625,7 +666,11 @@ func ActivateUser(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByEmail(r.Context(), c.Email)
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByEmail got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User email %s not found", c.Email), nil, nil)
 		return
 	}
 	if user.ActivationCode == c.ActivationToken {
@@ -667,7 +712,11 @@ func GetUserDetail(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recid %s not found", params["userRecId"]), nil, nil)
 		return
 	}
 	ret := make(map[string]interface{})
@@ -699,7 +748,11 @@ func UpdateUserDetail(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recid %s not found", params["userRecId"]), nil, nil)
 		return
 	}
 	req := &UpdateUserRequest{}
@@ -774,7 +827,11 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recid %s not found", params["userRecId"]), nil, nil)
 		return
 	}
 	UserRepo.DeleteUser(r.Context(), user)
@@ -799,7 +856,11 @@ func ListUserRole(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recid %s not found", params["userRecId"]), nil, nil)
 		return
 	}
 	pageRequest, err := helper.NewPageRequestFromRequest(r)
@@ -836,7 +897,11 @@ func ListAllUserRole(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recid %s not found", params["userRecId"]), nil, nil)
 		return
 	}
 	pageRequest, err := helper.NewPageRequestFromRequest(r)
@@ -880,7 +945,11 @@ func CreateUserRole(w http.ResponseWriter, r *http.Request) {
 	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
 		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if role == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Role recid %s not found", params["roleRecId"]), nil, nil)
 		return
 	}
 
@@ -893,7 +962,11 @@ func CreateUserRole(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recid %s not found", params["userRecId"]), nil, nil)
 		return
 	}
 
@@ -925,7 +998,11 @@ func DeleteUserRole(w http.ResponseWriter, r *http.Request) {
 	role, err := RoleRepo.GetRoleByRecID(r.Context(), params["roleRecId"])
 	if err != nil {
 		fLog.Errorf("RoleRepo.GetRoleByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if role == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Role recid %s not found", params["roleRecId"]), nil, nil)
 		return
 	}
 
@@ -938,20 +1015,29 @@ func DeleteUserRole(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recid %s not found", params["userRecId"]), nil, nil)
 		return
 	}
 
 	userRole, err := UserRoleRepo.GetUserRole(r.Context(), user, role)
 	if err != nil {
 		fLog.Errorf("UserRoleRepo.GetUserRole got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
+	if userRole == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, "Role not belong to user", nil, nil)
+		return
+	}
+
 	err = UserRoleRepo.DeleteUserRole(r.Context(), userRole)
 	if err != nil {
 		fLog.Errorf("UserRoleRepo.DeleteUserRole got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusBadRequest, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
 	RevocationRepo.Revoke(r.Context(), user.Email)
@@ -975,9 +1061,14 @@ func ListUserGroup(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recid %s not found", params["userRecId"]), nil, nil)
+		return
+	}
+
 	pageRequest, err := helper.NewPageRequestFromRequest(r)
 	if err != nil {
 		fLog.Errorf("helper.NewPageRequestFromRequest got %s", err.Error())
@@ -1019,7 +1110,11 @@ func CreateUserGroup(w http.ResponseWriter, r *http.Request) {
 	group, err := GroupRepo.GetGroupByRecID(r.Context(), params["groupRecId"])
 	if err != nil {
 		fLog.Errorf("GroupRepo.GetGroupByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if group == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group recid %s not found", params["groupRecId"]), nil, nil)
 		return
 	}
 
@@ -1032,7 +1127,11 @@ func CreateUserGroup(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recid %s not found", params["userRecId"]), nil, nil)
 		return
 	}
 
@@ -1067,6 +1166,10 @@ func DeleteUserGroup(w http.ResponseWriter, r *http.Request) {
 		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
 		return
 	}
+	if group == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("Group recid %s not found", params["groupRecId"]), nil, nil)
+		return
+	}
 
 	authCtx := iauthctx.(*hansipcontext.AuthenticationContext)
 	if !authCtx.IsAdminOfDomain(group.GroupDomain) {
@@ -1077,20 +1180,29 @@ func DeleteUserGroup(w http.ResponseWriter, r *http.Request) {
 	user, err := UserRepo.GetUserByRecID(r.Context(), params["userRecId"])
 	if err != nil {
 		fLog.Errorf("UserRepo.GetUserByRecID got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
+		return
+	}
+	if user == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, fmt.Sprintf("User recid %s not found", params["userRecId"]), nil, nil)
 		return
 	}
 
 	ug, err := UserGroupRepo.GetUserGroup(r.Context(), user, group)
 	if err != nil {
 		fLog.Errorf("UserGroupRepo.GetUserGroup got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
+	if ug == nil {
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, "User is not belong to group", nil, nil)
+		return
+	}
+
 	err = UserGroupRepo.DeleteUserGroup(r.Context(), ug)
 	if err != nil {
 		fLog.Errorf("UserGroupRepo.DeleteUserGroup got %s", err.Error())
-		helper.WriteHTTPResponse(r.Context(), w, http.StatusNotFound, err.Error(), nil, nil)
+		helper.WriteHTTPResponse(r.Context(), w, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
 	RevocationRepo.Revoke(r.Context(), user.Email)
